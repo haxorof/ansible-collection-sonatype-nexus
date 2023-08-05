@@ -2,6 +2,10 @@
 
 Ansible collection for managing Sonatype Nexus Repository Manager 3.x via its REST API.
 
+## Features
+
+* Manage routing rules
+
 ## Installation
 
 Different was of installing this collection are listed below.
