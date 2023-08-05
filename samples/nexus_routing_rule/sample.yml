@@ -1,0 +1,28 @@
+---
+- name: Manage routing rules
+  hosts: localhost
+  become: false
+  gather_facts: no
+  tasks:
+  - name: Create routing rule
+    haxorof.sonatype_nexus.nexus_routing_rule:
+      url: http://nexus.localdomain:8081
+      validate_certs: no
+      username: admin
+      password: password
+      name: blockrule
+      description: This is a blocking routing rule
+      mode: block
+      matchers:
+        - "^/com/example/.*"
+        - "^/org/example/.*"
+      state: present
+
+  - name: Delete routing rule
+    haxorof.sonatype_nexus.nexus_routing_rule:
+      url: http://nexus.localdomain:8081
+      validate_certs: no
+      username: admin
+      password: password
+      name: blockrule
+      state: absent
