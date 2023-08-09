@@ -26,6 +26,7 @@ class NexusHelper:
     NEXUS_API_URL = "http://localhost:8081"
 
     NEXUS_API_ENDPOINTS = {
+        "read-only": "{url}/service/rest/v1/read-only",
         "routing-rules": "{url}/service/rest/v1/routing-rules",
     }
 

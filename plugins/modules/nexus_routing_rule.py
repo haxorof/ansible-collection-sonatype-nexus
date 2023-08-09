@@ -140,7 +140,7 @@ def main():
             required=False,
             no_log=False,
             default="block",
-            choices=["allow", "block"],
+            choices=["allow", "ALLOW", "block", "BLOCK"],
         ),
         matchers=dict(
             type="list", elements="str", required=False, no_log=False, default=list()
@@ -153,7 +153,7 @@ def main():
         required_together=[("username", "password")],
     )
 
-    nexus = NexusHelper(module)
+    helper = NexusHelper(module)
 
     # Seed the result dict in the object
     result = dict(
@@ -167,7 +167,7 @@ def main():
     content = {}
     changed = True
     if not module.check_mode:
-        content, changed = update_routing_rule(nexus)
+        content, changed = update_routing_rule(helper)
     result["json"] = content
     result["changed"] = changed
 

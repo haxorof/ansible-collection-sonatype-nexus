@@ -1,0 +1,37 @@
+---
+- name: Manage read-only
+  hosts: localhost
+  become: false
+  gather_facts: no
+  tasks:
+  - name: Enable read-only
+    haxorof.sonatype_nexus.nexus_read_only:
+      url: http://nexus.localdomain:8081
+      validate_certs: no
+      username: admin
+      password: password
+      status: freeze
+
+  - name: Get read-only
+    haxorof.sonatype_nexus.nexus_read_only:
+      url: http://nexus.localdomain:8081
+      validate_certs: no
+      username: admin
+      password: password
+      status: current
+
+  - name: Release read-only
+    haxorof.sonatype_nexus.nexus_read_only:
+      url: http://nexus.localdomain:8081
+      validate_certs: no
+      username: admin
+      password: password
+      status: release
+
+  - name: Forcibly release read-only
+    haxorof.sonatype_nexus.nexus_read_only:
+      url: http://nexus.localdomain:8081
+      validate_certs: no
+      username: admin
+      password: password
+      status: force-release
