@@ -12,7 +12,7 @@ __metaclass__ = type
 DOCUMENTATION = r"""
 ---
 module: nexus_read_only_info
-short_description: Fetches read-only system status
+short_description: Get read-only state
 """
 
 EXAMPLES = r"""

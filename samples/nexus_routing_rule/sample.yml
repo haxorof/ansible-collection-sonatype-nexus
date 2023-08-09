@@ -4,7 +4,7 @@
   become: false
   gather_facts: no
   tasks:
-  - name: Create routing rule
+  - name: Create routing rule (block)
     haxorof.sonatype_nexus.nexus_routing_rule:
       url: http://nexus.localdomain:8081
       validate_certs: no
@@ -18,11 +18,52 @@
         - "^/org/example/.*"
       state: present
 
-  - name: Delete routing rule
+  - name: Create routing rule (allow)
     haxorof.sonatype_nexus.nexus_routing_rule:
       url: http://nexus.localdomain:8081
       validate_certs: no
       username: admin
       password: password
+      name: allowrule
+      description: This is an allow routing rule
+      mode: allow
+      matchers:
+        - "^/com/myorg/.*"
+      state: present
+
+  - name: List routing rules
+    haxorof.sonatype_nexus.nexus_routing_rule_info:
+      url: http://nexus.localdomain:8081
+      validate_certs: no
+      username: admin
+      password: password
+    register: _result
+
+  - name: Print _result
+    ansible.builtin.debug:
+      var: _result
+
+  - name: Get routing rule blockrule
+    haxorof.sonatype_nexus.nexus_routing_rule_info:
+      url: http://nexus.localdomain:8081
+      validate_certs: no
+      username: admin
+      password: password
       name: blockrule
+    register: _result
+
+  - name: Print _result
+    ansible.builtin.debug:
+      var: _result
+
+  - name: Delete routing rules
+    haxorof.sonatype_nexus.nexus_routing_rule:
+      url: http://nexus.localdomain:8081
+      validate_certs: no
+      username: admin
+      password: password
+      name: "{{ item }}"
       state: absent
+    with_items:
+      - blockrule
+      - allowrule
