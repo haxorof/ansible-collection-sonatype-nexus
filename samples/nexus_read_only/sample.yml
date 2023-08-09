@@ -12,13 +12,12 @@
       password: password
       status: freeze
 
-  - name: Get read-only
-    haxorof.sonatype_nexus.nexus_read_only:
+  - name: Get read-only system status
+    haxorof.sonatype_nexus.nexus_read_only_info:
       url: http://nexus.localdomain:8081
       validate_certs: no
       username: admin
       password: password
-      status: current
 
   - name: Release read-only
     haxorof.sonatype_nexus.nexus_read_only:

@@ -11,8 +11,8 @@ __metaclass__ = type
 
 DOCUMENTATION = r"""
 ---
-module: nexus_read_only
-short_description: Manage read-only system status
+module: nexus_read_only_info
+short_description: Fetches read-only system status
 """
 
 EXAMPLES = r"""
@@ -26,42 +26,21 @@ from ansible_collections.haxorof.sonatype_nexus.plugins.module_utils.nexus impor
     NexusHelper,
 )
 
-def update_read_only(helper):
+def read_only_status(helper):
     endpoint = "read-only"
-    info = None
-    content = None
-    changed = True
-    successful = False
-
     info, content = helper.request(
-        api_url=(helper.NEXUS_API_ENDPOINTS[endpoint] + "/{action}").format(
+        api_url=(helper.NEXUS_API_ENDPOINTS[endpoint]).format(
             url=helper.module.params["url"],
-            action=helper.module.params["status"],
         ),
-        method="POST",
+        method="GET",
     )
-
-    if info["status"] in [204]:
-        # System is now read-only / System is no longer read-only
-        successful = True
-    elif info["status"] == 403:
-        helper.module.fail_json(msg="Authentication required.")
-    elif info["status"] in [404]:
-        # No change to read-only state
-        changed = False
-        successful = True
-
-    if successful:
+    if info["status"] in [200]:
         content.pop("fetch_url_retries", None)
-
-    return content, changed
+    return content, False
 
 
 def main():
     argument_spec = NexusHelper.nexus_argument_spec()
-    argument_spec.update(
-        status=dict(type="str", choices=["freeze", "release", "force-release"], default="freeze"),
-    )
     module = AnsibleModule(
         argument_spec=argument_spec,
         supports_check_mode=True,
@@ -73,15 +52,11 @@ def main():
     # Seed the result dict in the object
     result = dict(
         changed=False,
-        status=module.params["status"],
         messages=[],
         json={},
     )
 
-    content = {}
-    changed = True
-    if not module.check_mode:
-        content, changed = update_read_only(helper)
+    content, changed = read_only_status(helper)
     result["json"] = content
     result["changed"] = changed
 
