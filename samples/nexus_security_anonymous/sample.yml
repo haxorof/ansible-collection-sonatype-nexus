@@ -1,0 +1,36 @@
+---
+- name: Manage anonymous setting
+  hosts: localhost
+  become: false
+  gather_facts: no
+  tasks:
+  - name: Get anonymous access setting
+    haxorof.sonatype_nexus.nexus_security_anonymous_info:
+      url: http://nexus.localdomain:8081
+      validate_certs: no
+      username: admin
+      password: password
+    register: _result
+
+  - name: Print _result
+    ansible.builtin.debug:
+      var: _result
+
+  - name: Set anonymous access setting (enable)
+    haxorof.sonatype_nexus.nexus_security_anonymous:
+      url: http://nexus.localdomain:8081
+      validate_certs: no
+      username: admin
+      password: password
+      user_id: anonymous
+      realm_name: NexusAuthorizingRealm
+      state: enabled
+
+  - name: Set anonymous access setting (disable)
+    haxorof.sonatype_nexus.nexus_security_anonymous:
+      url: http://nexus.localdomain:8081
+      validate_certs: no
+      username: admin
+      password: password
+      user_id: anonymous
+      state: disabled
