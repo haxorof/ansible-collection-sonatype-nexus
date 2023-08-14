@@ -39,7 +39,7 @@ def get_routing_rule(helper):
     if info["status"] in [200]:
         content.pop("fetch_url_retries", None)
         content = [content]
-    if info["status"] in [404]:
+    elif info["status"] in [404]:
         content = []
     elif info["status"] == 403:
         helper.module.fail_json(
@@ -47,7 +47,7 @@ def get_routing_rule(helper):
                 routing_rule_name=helper.module.params["name"],
             )
         )
-    elif info["status"] not in [200, 404]:
+    else:
         helper.module.fail_json(
             msg="Failed to read routing rule '{routing_rule_name}', http_status={status}.".format(
                 routing_rule_name=helper.module.params["name"],

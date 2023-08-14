@@ -24,11 +24,35 @@ from ansible.module_utils.urls import fetch_url, basic_auth_header
 
 class NexusHelper:
     NEXUS_API_URL = "http://localhost:8081"
+    NEXUS_API_BASE_PATH = "/service/rest"
 
     NEXUS_API_ENDPOINTS = {
-        "read-only": "{url}/service/rest/v1/read-only",
-        "routing-rules": "{url}/service/rest/v1/routing-rules",
-        "users": "{url}/service/rest/v1/security/users",
+        "anonymous": "{url}" + NEXUS_API_BASE_PATH + "/v1/security/anonymous",
+        # "assets": "{url}" + NEXUS_API_BASE_PATH + "/v1/assets",
+        # "azureblobstore": "{url}" + NEXUS_API_BASE_PATH + "/v1/azureblobstore",
+        # "blobstores": "{url}" + NEXUS_API_BASE_PATH + "/v1/blobstores",
+        # "certificates": "{url}" + NEXUS_API_BASE_PATH + "/v1/ssl",
+        # "components": "{url}" + NEXUS_API_BASE_PATH + "/v1/components",
+        # "content-selectors": "{url}" + NEXUS_API_BASE_PATH + "/v1/security/content-selectors",
+        # "email": "{url}" + NEXUS_API_BASE_PATH + "/v1/email",
+        # "formats": "{url}" + NEXUS_API_BASE_PATH + "/v1/formats",
+        # "iq": "{url}" + NEXUS_API_BASE_PATH + "/v1/iq",
+        # "ldap": "{url}" + NEXUS_API_BASE_PATH + "/v1/security/ldap",
+        # "lifecycle": "{url}" + NEXUS_API_BASE_PATH + "/v1/lifecycle",
+        # "privileges": "{url}" + NEXUS_API_BASE_PATH + "/v1/security/privileges",
+        "read-only": "{url}" + NEXUS_API_BASE_PATH + "/v1/read-only",
+        # "realms": "{url}" + NEXUS_API_BASE_PATH + "/v1/security/realms",
+        # "repositories": "{url}" + NEXUS_API_BASE_PATH + "/v1/repositories",
+        # "roles": "{url}" + NEXUS_API_BASE_PATH + "/v1/security/roles",
+        "routing-rules": "{url}" + NEXUS_API_BASE_PATH + "/v1/routing-rules",
+        # "script": "{url}" + NEXUS_API_BASE_PATH + "/v1/script",
+        # "search": "{url}" + NEXUS_API_BASE_PATH + "/v1/search",
+        "status": "{url}" + NEXUS_API_BASE_PATH + "/v1/status",
+        # "support": "{url}" + NEXUS_API_BASE_PATH + "/v1/support",
+        # "system": "{url}" + NEXUS_API_BASE_PATH + "/v1/system",
+        # "tasks": "{url}" + NEXUS_API_BASE_PATH + "/v1/tasks",
+        "user-sources": "{url}" + NEXUS_API_BASE_PATH + "/v1/security/user-sources",
+        "users": "{url}" + NEXUS_API_BASE_PATH + "/v1/security/users",
     }
 
     def __init__(self, module):
@@ -138,3 +162,8 @@ class NexusHelper:
                 )
         query = "&".join(query_params)
         return "?" + query if len(query) > 0 else ""
+
+    def is_json_data_equal(self, new_data, existing_data):
+        return all(
+            existing_data[k] == v for k, v in new_data.items() if k in existing_data
+        )

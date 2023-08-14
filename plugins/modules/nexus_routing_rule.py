@@ -61,9 +61,7 @@ def update_routing_rule(helper):
         }
         rule_exists, existing_data = routing_rule_exists(helper)
         if rule_exists:
-            no_update_needed = all(
-                existing_data[k] == v for k, v in data.items() if k in existing_data
-            )
+            no_update_needed = helper.is_json_data_equal(data, existing_data)
             if no_update_needed == False:
                 info, content = helper.request(
                     api_url=(helper.NEXUS_API_ENDPOINTS[endpoint] + "/{name}").format(
