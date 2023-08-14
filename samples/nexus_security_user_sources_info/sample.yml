@@ -1,0 +1,18 @@
+---
+- name: User sources
+  hosts: localhost
+  become: false
+  gather_facts: no
+  tasks:
+  - name: List user sources
+    haxorof.sonatype_nexus.nexus_security_user_sources_info:
+      url: http://nexus.localdomain:8081
+      validate_certs: no
+      username: admin
+      password: password
+    register: _result
+
+  - name: Print _result
+    ansible.builtin.debug:
+      var: _result
+
