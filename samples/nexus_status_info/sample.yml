@@ -1,0 +1,36 @@
+---
+- name: Status checks
+  hosts: localhost
+  become: false
+  gather_facts: no
+  tasks:
+  - name: Readable check
+    haxorof.sonatype_nexus.nexus_status_info:
+      url: http://nexus.localdomain:8081
+      validate_certs: no
+      username: admin
+      password: password
+      check_type: readable
+    register: _result
+
+  - name: Writable check
+    haxorof.sonatype_nexus.nexus_status_info:
+      url: http://nexus.localdomain:8081
+      validate_certs: no
+      username: admin
+      password: password
+      check_type: writable
+    register: _result
+
+  - name: System status check
+    haxorof.sonatype_nexus.nexus_status_info:
+      url: http://nexus.localdomain:8081
+      validate_certs: no
+      username: admin
+      password: password
+      check_type: system
+    register: _result
+
+  - name: Print _result
+    ansible.builtin.debug:
+      var: _result
