@@ -28,6 +28,7 @@ class NexusHelper:
     NEXUS_API_ENDPOINTS = {
         "read-only": "{url}/service/rest/v1/read-only",
         "routing-rules": "{url}/service/rest/v1/routing-rules",
+        "users": "{url}/service/rest/v1/security/users",
     }
 
     def __init__(self, module):
@@ -49,7 +50,13 @@ class NexusHelper:
                 aliases=["user"],
                 fallback=(env_fallback, ["NEXUS_USERNAME"]),
             ),
-            password=dict(type="str", no_log=True, required=False, default=None),
+            password=dict(
+                type="str",
+                no_log=True,
+                required=False,
+                default=None,
+                fallback=(env_fallback, ["NEXUS_PASSWORD"]),
+            ),
             validate_certs=dict(type="bool", default=True),
             use_proxy=dict(type="bool", default=True),
             return_content=dict(type="bool", default=True),
@@ -109,4 +116,25 @@ class NexusHelper:
 
         content["fetch_url_retries"] = retries
 
+        # For debugging
+        # if info["status"] not in [200]:
+        #     self.module.fail_json(msg="{info} # {content}".format(info=info, content=content))
         return info, content
+
+    def generate_url_query(self, params: dict):
+        """Generates a complete URL query including question mark.
+
+        Args:
+            params (dict): A dictionary with query parameter key and what module parameter to map it with
+
+        Returns:
+            string: Returns a query as a string including question mark in front.
+        """
+        query_params = []
+        for k, v in params.items():
+            if self.module.params[v] != None:
+                query_params.append(
+                    "{key}={value}".format(key=k, value=self.module.params[v])
+                )
+        query = "&".join(query_params)
+        return "?" + query if len(query) > 0 else ""

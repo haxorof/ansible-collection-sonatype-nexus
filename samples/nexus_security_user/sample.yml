@@ -1,0 +1,79 @@
+---
+- name: Manage users
+  hosts: localhost
+  become: false
+  gather_facts: no
+  tasks:
+  - name: List users
+    haxorof.sonatype_nexus.nexus_security_user_info:
+      url: http://nexus.localdomain:8081
+      validate_certs: no
+      username: admin
+      password: password
+    register: _result
+
+  - name: Print _result
+    ansible.builtin.debug:
+      var: _result
+
+  - name: List user in source default
+    haxorof.sonatype_nexus.nexus_security_user_info:
+      url: http://nexus.localdomain:8081
+      validate_certs: no
+      username: admin
+      password: password
+      source: default
+    register: _result
+
+  - name: Print _result
+    ansible.builtin.debug:
+      var: _result
+
+  - name: Create user
+    haxorof.sonatype_nexus.nexus_security_user:
+      url: http://nexus.localdomain:8081
+      validate_certs: no
+      username: admin
+      password: password
+      user_id: myadminuser
+      user_password: password
+      first_name: My
+      last_name: Admin
+      email_address: myadmin@localhost
+      status: active
+      roles: [
+        "nx-admin"
+      ]
+      state: present
+
+  - name: List user myadmin
+    haxorof.sonatype_nexus.nexus_security_user_info:
+      url: http://nexus.localdomain:8081
+      validate_certs: no
+      username: admin
+      password: password
+      user_id: myadmin
+    register: _result
+
+  - name: Print _result
+    ansible.builtin.debug:
+      var: _result
+
+  - name: Update user to disabled
+    haxorof.sonatype_nexus.nexus_security_user:
+      url: http://nexus.localdomain:8081
+      validate_certs: no
+      username: admin
+      password: password
+      user_id: myadminuser
+      status: disabled
+      state: present
+
+  - name: Delete user
+    haxorof.sonatype_nexus.nexus_security_user:
+      url: http://nexus.localdomain:8081
+      validate_certs: no
+      username: admin
+      password: password
+      user_id: myadminuser
+      state: absent

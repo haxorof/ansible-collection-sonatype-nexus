@@ -6,6 +6,7 @@ Ansible collection for managing Sonatype Nexus Repository Manager 3.x via its RE
 
 * Manage read-only system status
 * Manage routing rules
+* Manage users
 
 ## Installation
 
