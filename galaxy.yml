@@ -50,7 +50,7 @@ dependencies: {}
 repository: https://github.com/haxorof/ansible-collection-sonatype-nexus.git
 
 # The URL to any online docs
-documentation: https://github.com/haxorof/ansible-collection-sonatype-nexus/blob/master/README.md
+documentation: https://github.com/haxorof/ansible-collection-sonatype-nexus/blob/main/README.md
 
 # The URL to the homepage of the collection/project
 homepage: https://github.com/haxorof/ansible-collection-sonatype-nexus
