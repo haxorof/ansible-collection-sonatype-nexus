@@ -43,6 +43,7 @@ class NexusHelper:
         "read-only": "{url}" + NEXUS_API_BASE_PATH + "/v1/read-only",
         # "realms": "{url}" + NEXUS_API_BASE_PATH + "/v1/security/realms",
         # "repositories": "{url}" + NEXUS_API_BASE_PATH + "/v1/repositories",
+        "repository-settings": "{url}" + NEXUS_API_BASE_PATH + "/v1/repositorySettings",
         # "roles": "{url}" + NEXUS_API_BASE_PATH + "/v1/security/roles",
         "routing-rules": "{url}" + NEXUS_API_BASE_PATH + "/v1/routing-rules",
         # "script": "{url}" + NEXUS_API_BASE_PATH + "/v1/script",
@@ -167,3 +168,30 @@ class NexusHelper:
         return all(
             existing_data[k] == v for k, v in new_data.items() if k in existing_data
         )
+
+
+class NexusRepositoryHelper:
+    def list_repositories(helper):
+        endpoint = "repository-settings"
+        info, content = helper.request(
+            api_url=(helper.NEXUS_API_ENDPOINTS[endpoint]).format(
+                url=helper.module.params["url"],
+            ),
+            method="GET",
+        )
+        if info["status"] in [200]:
+            content.pop("fetch_url_retries", None)
+            content = content["json"]
+        else:
+            helper.module.fail_json(
+                msg="Failed to list repositories, http_status={http_status}, error_msg='{error_msg}'.".format(
+                    http_status=info["status"],
+                    error_msg=info["msg"],
+                )
+            )
+        return content
+
+    def list_filtered_repositories(helper, repository_filter):
+        content = NexusRepositoryHelper.list_repositories(helper)
+        content = list(filter(lambda item: repository_filter(item, helper), content))
+        return content

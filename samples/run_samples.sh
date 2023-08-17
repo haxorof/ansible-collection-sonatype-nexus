@@ -7,6 +7,7 @@ SAMPLES=(
     "nexus_security_user"
     "nexus_security_user_sources_info"
     "nexus_status_info"
+    "nexus_repository_info"
 )
 
 for SAMPLE in ${SAMPLES[@]}; do

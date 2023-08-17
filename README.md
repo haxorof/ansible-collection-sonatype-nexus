@@ -11,6 +11,7 @@ Ansible collection for managing Sonatype Nexus Repository Manager 3.x via its RE
 * Retrieve user sources
 * Manage anonymous access
 * Check status
+* List repositories
 
 ## Installation
 

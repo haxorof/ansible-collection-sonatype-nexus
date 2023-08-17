@@ -1,0 +1,58 @@
+---
+- name: Manage Docker proxy repositories
+  hosts: localhost
+  become: false
+  gather_facts: no
+  tasks:
+  - name: List all repositories
+    haxorof.sonatype_nexus.nexus_repository_info:
+      url: http://nexus.localdomain:8081
+      validate_certs: no
+      username: admin
+      password: password
+    register: _result
+
+  - name: Print _result
+    ansible.builtin.debug:
+      var: _result
+
+  - name: List NuGet proxy repositories
+    haxorof.sonatype_nexus.nexus_repository_info:
+      url: http://nexus.localdomain:8081
+      validate_certs: no
+      username: admin
+      password: password
+      type: proxy
+      format: nuget
+    register: _result
+
+  - name: Print _result
+    ansible.builtin.debug:
+      var: _result
+
+  - name: List Maven proxy repositories
+    haxorof.sonatype_nexus.nexus_repository_info:
+      url: http://nexus.localdomain:8081
+      validate_certs: no
+      username: admin
+      password: password
+      type: proxy
+      format: maven2
+    register: _result
+
+  - name: Print _result
+    ansible.builtin.debug:
+      var: _result
+
+  - name: List maven-central
+    haxorof.sonatype_nexus.nexus_repository_info:
+      url: http://nexus.localdomain:8081
+      validate_certs: no
+      username: admin
+      password: password
+      name: maven-central
+    register: _result
+
+  - name: Print _result
+    ansible.builtin.debug:
+      var: _result

@@ -36,11 +36,12 @@ def routing_rule_exists(helper):
         ),
         method="GET",
     )
-    rule_exists = (info["status"] in [200])
+    rule_exists = info["status"] in [200]
     if rule_exists:
         content.pop("fetch_url_retries", None)
 
     return rule_exists, content
+
 
 def create_routing_rule(helper):
     endpoint = "routing-rules"
@@ -82,6 +83,7 @@ def create_routing_rule(helper):
         )
 
     return content, changed
+
 
 def delete_routing_rule(helper):
     endpoint = "routing-rules"
