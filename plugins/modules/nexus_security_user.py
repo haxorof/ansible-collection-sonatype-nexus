@@ -198,9 +198,7 @@ def update_user(helper, existing_user):
             }
         )
     endpoint = "users"
-    changed = not all(
-        existing_user[k] == v for k, v in data.items() if k in existing_user
-    )
+    changed = not helper.is_json_data_equal(data, existing_user)
     info, content = helper.request(
         api_url=(helper.NEXUS_API_ENDPOINTS[endpoint] + "/{user_id}").format(
             url=helper.module.params["url"],

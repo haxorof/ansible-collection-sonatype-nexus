@@ -42,88 +42,127 @@ def routing_rule_exists(helper):
 
     return rule_exists, content
 
-
-def update_routing_rule(helper):
-    state = helper.module.params["state"]
+def create_routing_rule(helper):
     endpoint = "routing-rules"
-    info = None
-    content = None
     changed = True
-    successful = False
-
-    if state == "present":
-        no_update_needed = False
-        data = {
-            "name": helper.module.params["name"],
-            "description": helper.module.params["description"],
-            "mode": helper.module.params["mode"].upper(),
-            "matchers": helper.module.params["matchers"],
-        }
-        rule_exists, existing_data = routing_rule_exists(helper)
-        if rule_exists:
-            no_update_needed = helper.is_json_data_equal(data, existing_data)
-            if no_update_needed == False:
-                info, content = helper.request(
-                    api_url=(helper.NEXUS_API_ENDPOINTS[endpoint] + "/{name}").format(
-                        url=helper.module.params["url"],
-                        name=helper.module.params["name"],
-                    ),
-                    method="PUT",
-                    data=data,
-                )
-        else:
-            info, content = helper.request(
-                api_url=(helper.NEXUS_API_ENDPOINTS[endpoint]).format(
-                    url=helper.module.params["url"],
-                ),
-                method="POST",
-                data=data,
-            )
-        if no_update_needed:
-            changed = False
-            content = existing_data
-            successful = True
-        elif info["status"] in [204]:
-            successful = True
-
-    elif state == "absent":
-        info, content = helper.request(
-            api_url=(helper.NEXUS_API_ENDPOINTS[endpoint] + "/{name}").format(
-                url=helper.module.params["url"],
-                name=helper.module.params["name"],
-            ),
-            method="DELETE",
-        )
-        if info["status"] in [204]:
-            successful = True
-        elif info["status"] in [404]:
-            # Routing rule not found = OK
-            changed = False
-            successful = True
-
-    if successful:
-        # Routing rule was successfully created/updated/deleted
+    data = {
+        "name": helper.module.params["name"],
+        "description": helper.module.params["description"],
+        "mode": helper.module.params["mode"].upper(),
+        "matchers": helper.module.params["matchers"],
+    }
+    info, content = helper.request(
+        api_url=(helper.NEXUS_API_ENDPOINTS[endpoint]).format(
+            url=helper.module.params["url"],
+        ),
+        method="POST",
+        data=data,
+    )
+    if info["status"] == 204:
         content.pop("fetch_url_retries", None)
+    elif info["status"] == 400:
+        helper.module.fail_json(
+            msg="A routing rule with the same name '{routing_rule_name}' already exists or required parameters missing.".format(
+                routing_rule_name=helper.module.params["name"],
+            )
+        )
+    elif info["status"] == 403:
+        helper.module.fail_json(
+            msg="Insufficient permissions to create routing rule '{routing_rule_name}'.".format(
+                routing_rule_name=helper.module.params["name"],
+            )
+        )
     else:
-        if info["status"] == 400:
-            helper.module.fail_json(
-                msg="A routing rule with the same name '{routing_rule_name}' already exists or required parameters missing.".format(
-                    routing_rule_name=helper.module.params["name"],
-                )
+        helper.module.fail_json(
+            msg="Failed to create routing rule '{routing_rule_name}', http_status={http_status}, error_msg='{error_msg}'.".format(
+                routing_rule_name=helper.module.params["name"],
+                http_status=info["status"],
+                error_msg=info["msg"],
             )
-        elif info["status"] == 403:
-            helper.module.fail_json(
-                msg="Insufficient permissions to create/update routing rule '{routing_rule_name}'.".format(
-                    routing_rule_name=helper.module.params["name"],
-                )
+        )
+
+    return content, changed
+
+def delete_routing_rule(helper):
+    endpoint = "routing-rules"
+    changed = True
+
+    info, content = helper.request(
+        api_url=(helper.NEXUS_API_ENDPOINTS[endpoint] + "/{name}").format(
+            url=helper.module.params["url"],
+            name=helper.module.params["name"],
+        ),
+        method="DELETE",
+    )
+    if info["status"] in [204]:
+        content.pop("fetch_url_retries", None)
+    elif info["status"] in [404]:
+        # Routing rule not found = OK
+        changed = False
+    elif info["status"] == 403:
+        helper.module.fail_json(
+            msg="Insufficient permissions to delete routing rule '{routing_rule_name}'.".format(
+                routing_rule_name=helper.module.params["name"],
             )
-        elif info["status"] != 204:
-            helper.module.fail_json(
-                msg="Failed to create/update/delete routing rule '{routing_rule_name}', http_status={status}.".format(
-                    routing_rule_name=helper.module.params["name"],
-                    status=info["status"],
-                )
+        )
+    else:
+        helper.module.fail_json(
+            msg="Failed to delete routing rule '{routing_rule_name}', http_status={http_status}, error_msg='{error_msg}'.".format(
+                routing_rule_name=helper.module.params["name"],
+                http_status=info["status"],
+                error_msg=info["msg"],
             )
+        )
+
+    return content, changed
+
+
+def update_routing_rule(helper, current_data):
+    endpoint = "routing-rules"
+    changed = True
+    data = {
+        "name": helper.module.params["name"],
+        "description": helper.module.params["description"],
+        "mode": helper.module.params["mode"].upper(),
+        "matchers": helper.module.params["matchers"],
+    }
+    changed = not helper.is_json_data_equal(data, current_data)
+    info, content = helper.request(
+        api_url=(helper.NEXUS_API_ENDPOINTS[endpoint] + "/{name}").format(
+            url=helper.module.params["url"],
+            name=helper.module.params["name"],
+        ),
+        method="PUT",
+        data=data,
+    )
+    if info["status"] in [204]:
+        content.pop("fetch_url_retries", None)
+    elif info["status"] == 400:
+        helper.module.fail_json(
+            msg="A routing rule with the same name '{routing_rule_name}' already exists or required parameters missing.".format(
+                routing_rule_name=helper.module.params["name"],
+            )
+        )
+    elif info["status"] == 403:
+        helper.module.fail_json(
+            msg="Insufficient permissions to update routing rule '{routing_rule_name}'.".format(
+                routing_rule_name=helper.module.params["name"],
+            )
+        )
+    elif info["status"] in [404]:
+        helper.module.fail_json(
+            msg="Routing rule '{routing_rule_name}' not found.".format(
+                routing_rule_name=helper.module.params["name"],
+            )
+        )
+    else:
+        helper.module.fail_json(
+            msg="Failed to update routing rule '{routing_rule_name}', http_status={http_status}, error_msg='{error_msg}'.".format(
+                routing_rule_name=helper.module.params["name"],
+                http_status=info["status"],
+                error_msg=info["msg"],
+            )
+        )
 
     return content, changed
 
@@ -164,8 +203,18 @@ def main():
 
     content = {}
     changed = True
+    rule_exists, existing_rule = routing_rule_exists(helper)
     if not module.check_mode:
-        content, changed = update_routing_rule(helper)
+        if module.params["state"] == "present":
+            if rule_exists == True:
+                content, changed = update_routing_rule(helper, existing_rule)
+            else:
+                content, changed = create_routing_rule(helper)
+        else:
+            if rule_exists == True:
+                content, changed = delete_routing_rule(helper)
+            else:
+                changed = False
     result["json"] = content
     result["changed"] = changed
 
