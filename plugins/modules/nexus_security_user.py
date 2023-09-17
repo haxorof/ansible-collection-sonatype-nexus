@@ -87,7 +87,7 @@ def create_user(helper):
         )
     else:
         helper.module.fail_json(
-            msg="Failed to create user {user}., http_status={http_status}, error_msg='{error_msg}'.".format(
+            msg="Failed to create user {user}, http_status={http_status}, error_msg='{error_msg}'.".format(
                 error_msg=info["msg"],
                 http_status=info["status"],
                 user=helper.module.params["user_id"],
@@ -198,7 +198,9 @@ def update_user(helper, existing_user):
             }
         )
     endpoint = "users"
-    changed = not helper.is_json_data_equal(data, existing_user)
+    if helper.is_json_data_equal(data, existing_user):
+        return existing_user, False
+
     info, content = helper.request(
         api_url=(helper.NEXUS_API_ENDPOINTS[endpoint] + "/{user_id}").format(
             url=helper.module.params["url"],
@@ -249,7 +251,7 @@ def main():
     )
     module = AnsibleModule(
         argument_spec=argument_spec,
-        supports_check_mode=True,
+        supports_check_mode=False,
         required_together=[("username", "password")],
     )
 
@@ -265,17 +267,16 @@ def main():
     content = {}
     changed = True
     existing_user = list_users(helper)
-    if not module.check_mode:
-        if len(existing_user) > 0:
-            if module.params["state"] == "present":
-                content, changed = update_user(helper, existing_user[0])
-            else:
-                content, changed = delete_user(helper)
+    if len(existing_user) > 0:
+        if module.params["state"] == "present":
+            content, changed = update_user(helper, existing_user[0])
         else:
-            if module.params["state"] == "present":
-                content, changed = create_user(helper)
-            else:
-                changed = False
+            content, changed = delete_user(helper)
+    else:
+        if module.params["state"] == "present":
+            content, changed = create_user(helper)
+        else:
+            changed = False
     result["json"] = content
     result["changed"] = changed
 

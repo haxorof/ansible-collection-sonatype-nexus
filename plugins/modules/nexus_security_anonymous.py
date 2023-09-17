@@ -99,7 +99,7 @@ def update_anonymous_setting(helper, current_data):
         )
     else:
         helper.module.fail_json(
-            msg="Failed to update anonymous setting., http_status={http_status}, error_msg='{error_msg}'.".format(
+            msg="Failed to update anonymous setting, http_status={http_status}, error_msg='{error_msg}'.".format(
                 error_msg=info["msg"],
                 http_status=info["status"],
             )
@@ -117,7 +117,7 @@ def main():
     )
     module = AnsibleModule(
         argument_spec=argument_spec,
-        supports_check_mode=True,
+        supports_check_mode=False,
         required_together=[("username", "password")],
     )
 
@@ -130,11 +130,7 @@ def main():
         json={},
     )
 
-    content = {}
-    changed = True
-    current_setting = get_anonymous_setting(helper)
-    if not module.check_mode:
-        content, changed = update_anonymous_setting(helper, current_setting)
+    content, changed = update_anonymous_setting(helper, get_anonymous_setting(helper))
     result["json"] = content
     result["changed"] = changed
 

@@ -11,8 +11,8 @@ __metaclass__ = type
 
 DOCUMENTATION = r"""
 ---
-module: nexus_repository_docker_proxy_info
-short_description: List Docker proxy repositories
+module: nexus_repository_info
+short_description: List repositories
 """
 
 EXAMPLES = r"""

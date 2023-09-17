@@ -12,7 +12,7 @@
       password: password
       name: blockrule
       description: This is a blocking routing rule
-      mode: block
+      mode: BLOCK
       matchers:
         - "^/com/example/.*"
         - "^/org/example/.*"
@@ -26,7 +26,7 @@
       password: password
       name: allowrule
       description: This is an allow routing rule
-      mode: allow
+      mode: ALLOW
       matchers:
         - "^/com/myorg/.*"
       state: present

@@ -49,7 +49,7 @@ def create_routing_rule(helper):
     data = {
         "name": helper.module.params["name"],
         "description": helper.module.params["description"],
-        "mode": helper.module.params["mode"].upper(),
+        "mode": helper.module.params["mode"],
         "matchers": helper.module.params["matchers"],
     }
     info, content = helper.request(
@@ -125,7 +125,7 @@ def update_routing_rule(helper, current_data):
     data = {
         "name": helper.module.params["name"],
         "description": helper.module.params["description"],
-        "mode": helper.module.params["mode"].upper(),
+        "mode": helper.module.params["mode"],
         "matchers": helper.module.params["matchers"],
     }
     changed = not helper.is_json_data_equal(data, current_data)
@@ -178,8 +178,8 @@ def main():
             type="str",
             required=False,
             no_log=False,
-            default="block",
-            choices=["allow", "ALLOW", "block", "BLOCK"],
+            default="BLOCK",
+            choices=["ALLOW", "BLOCK"],
         ),
         matchers=dict(
             type="list", elements="str", required=False, no_log=False, default=list()
@@ -188,7 +188,7 @@ def main():
     )
     module = AnsibleModule(
         argument_spec=argument_spec,
-        supports_check_mode=True,
+        supports_check_mode=False,
         required_together=[("username", "password")],
     )
 
@@ -206,17 +206,16 @@ def main():
     content = {}
     changed = True
     rule_exists, existing_rule = routing_rule_exists(helper)
-    if not module.check_mode:
-        if module.params["state"] == "present":
-            if rule_exists == True:
-                content, changed = update_routing_rule(helper, existing_rule)
-            else:
-                content, changed = create_routing_rule(helper)
+    if module.params["state"] == "present":
+        if rule_exists == True:
+            content, changed = update_routing_rule(helper, existing_rule)
         else:
-            if rule_exists == True:
-                content, changed = delete_routing_rule(helper)
-            else:
-                changed = False
+            content, changed = create_routing_rule(helper)
+    else:
+        if rule_exists == True:
+            content, changed = delete_routing_rule(helper)
+        else:
+            changed = False
     result["json"] = content
     result["changed"] = changed
 
