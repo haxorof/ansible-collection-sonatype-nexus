@@ -12,6 +12,7 @@ import json
 import time
 import os
 import stat
+import humps
 
 from os import close
 from tempfile import mkstemp
@@ -42,7 +43,7 @@ class NexusHelper:
         # "privileges": "{url}" + NEXUS_API_BASE_PATH + "/v1/security/privileges",
         "read-only": "{url}" + NEXUS_API_BASE_PATH + "/v1/read-only",
         # "realms": "{url}" + NEXUS_API_BASE_PATH + "/v1/security/realms",
-        # "repositories": "{url}" + NEXUS_API_BASE_PATH + "/v1/repositories",
+        "repositories": "{url}" + NEXUS_API_BASE_PATH + "/v1/repositories",
         "repository-settings": "{url}" + NEXUS_API_BASE_PATH + "/v1/repositorySettings",
         # "roles": "{url}" + NEXUS_API_BASE_PATH + "/v1/security/roles",
         "routing-rules": "{url}" + NEXUS_API_BASE_PATH + "/v1/routing-rules",
@@ -63,7 +64,6 @@ class NexusHelper:
         if self.module.params["url"] is None:
             self.module.params["url"] = self.NEXUS_API_URL
 
-    @staticmethod
     def nexus_argument_spec():
         return dict(
             url=dict(type="str", no_log=False, required=False),
@@ -165,12 +165,123 @@ class NexusHelper:
         return "?" + query if len(query) > 0 else ""
 
     def is_json_data_equal(self, new_data, existing_data):
+        """ Compares JSON data and is considered equal if all keys and its values in new_data exists in existing_data.
+
+        Args:
+            new_data (_type_): new data.
+            existing_data (_type_): existing data.
+
+        Returns:
+            _type_: Returns true if all keys and its values in new_data exists in existing_data.
+        """
         return all(
             existing_data[k] == v for k, v in new_data.items() if k in existing_data
         )
 
+    def camalize_param(helper, param_name):
+        ret_value = None if helper.module.params[param_name] is None else humps.camelize(helper.module.params[param_name])
+        return ret_value
+
 
 class NexusRepositoryHelper:
+    def storage_argument_spec():
+        return dict(
+            type='dict',
+            # apply_defaults=True,
+            options=dict(
+                blob_store_name=dict(type="str", no_log=False, required=False), # Required for create
+                strict_content_type_validation=dict(type="bool", default=True),
+            ),
+        )
+
+    def cleanup_policy_argument_spec():
+        return  dict(
+            type='dict',
+            # apply_defaults=True,
+            options=dict(
+                policy_names=dict(type="list", elements="str", required=False, no_log=False, default=list()),
+            ),
+        )
+
+    def proxy_argument_spec():
+        return dict(
+            type='dict',
+            # apply_defaults=True,
+            options=dict(
+                remote_url=dict(type="str", no_log=False, required=False), # Required for create/update
+                content_max_age=dict(type="int", default=1440),
+                metadata_max_age=dict(type="int", default=1440),
+            ),
+        )
+
+    def negative_cache_argument_spec():
+        return dict(
+            type='dict',
+            apply_defaults=True,
+            options=dict(
+                enabled=dict(type="bool", default=True),
+                time_to_live=dict(type="int", default=1440),
+            ),
+        )
+
+    def http_client_argument_spec():
+        return dict(
+            type='dict',
+            apply_defaults=True,
+            options=dict(
+                blocked=dict(type="bool", default=False),
+                auto_block=dict(type="bool", default=True),
+                connection=dict(
+                    type='dict',
+                    apply_defaults=True,
+                    options=dict(
+                        retries=dict(type="int"),
+                        user_agent_suffix=dict(type="str", no_log=False, required=False),
+                        timeout=dict(type="int"),
+                        enable_circular_redirects=dict(type="bool", default=False),
+                        enable_cookies=dict(type="bool", default=False),
+                        use_trust_store=dict(type="bool", default=False),
+                    ),
+                ),
+                authentication=dict(
+                    type='dict',
+                    # apply_defaults=True,
+                    options=dict(
+                        type=dict(type="str", no_log=False, required=False),
+                        username=dict(type="str", no_log=False, required=False),
+                        password=dict(type="str", no_log=False, required=False),
+                        ntlmHost=dict(type="str", no_log=False, required=False),
+                        ntlmDomain=dict(type="str", no_log=False, required=False),
+                        preemptive=dict(type="bool", default=True),
+                    ),
+                ),
+            ),
+        )
+
+    def replication_argument_spec():
+        return dict(
+            type='dict',
+            # apply_defaults=True,
+            options=dict(
+                preemptive_pull_enabled=dict(type="bool", default=False),
+                asset_path_regex=dict(type="str", no_log=False, required=False),
+            ),
+        )
+
+    def common_proxy_argument_spec():
+        return dict(
+            state=dict(type="str", choices=["present", "absent"], default="present"),
+            name=dict(type="str", no_log=False, required=True),
+            online=dict(type="bool", default=True),
+            storage=NexusRepositoryHelper.storage_argument_spec(),
+            cleanup=NexusRepositoryHelper.cleanup_policy_argument_spec(),
+            proxy=NexusRepositoryHelper.proxy_argument_spec(),
+            negative_cache=NexusRepositoryHelper.negative_cache_argument_spec(),
+            http_client=NexusRepositoryHelper.http_client_argument_spec(),
+            routing_rule=dict(type="str", no_log=False, required=False),
+            replication=NexusRepositoryHelper.replication_argument_spec(),
+        )
+
     def list_repositories(helper):
         endpoint = "repository-settings"
         info, content = helper.request(
@@ -195,3 +306,148 @@ class NexusRepositoryHelper:
         content = NexusRepositoryHelper.list_repositories(helper)
         content = list(filter(lambda item: repository_filter(item, helper), content))
         return content
+
+    def create_repository(helper, endpoint_path, additional_data):
+        changed = True
+        data = {
+            "name": helper.module.params["name"],
+            "online": helper.module.params["online"],
+            "storage": NexusHelper.camalize_param(helper, "storage"),
+            "cleanup": NexusHelper.camalize_param(helper, "cleanup"),
+            "proxy": NexusHelper.camalize_param(helper, "proxy"),
+            "negativeCache": NexusHelper.camalize_param(helper, "negative_cache"),
+            "httpClient": NexusHelper.camalize_param(helper, "http_client"),
+            "routingRule": helper.module.params["routing_rule"],
+        }
+        data.update(additional_data)
+        # helper.module.fail_json(
+        #     msg="{data}".format(
+        #         data=data,
+        #     )
+        # )
+        endpoint = "repositories"
+        info, content = helper.request(
+            api_url=(helper.NEXUS_API_ENDPOINTS[endpoint] + endpoint_path).format(
+                url=helper.module.params["url"],
+            ),
+            method="POST",
+            data=data,
+        )
+
+        if info["status"] in [201]:
+            content.pop("fetch_url_retries", None)
+        elif info["status"] == 401:
+            helper.module.fail_json(
+                msg="Authentication required."
+            )
+        elif info["status"] == 403:
+            helper.module.fail_json(
+                msg="The user does not have permission to perform the operation."
+            )
+        else:
+            helper.module.fail_json(
+                msg="Failed to create repository {repository}, http_status={http_status}, error_msg='{error_msg}, body={body}'.".format(
+                    body=info["body"],
+                    error_msg=info["msg"],
+                    http_status=info["status"],
+                    repository=helper.module.params["name"],
+                )
+            )
+
+        return content, changed
+
+    def update_repository(helper, endpoint_path, additional_data, existing_data):
+        data = {
+            "name": helper.module.params["name"],
+            "online": helper.module.params["online"],
+            "storage": NexusHelper.camalize_param(helper, "storage"),
+            "cleanup": NexusHelper.camalize_param(helper, "cleanup"),
+            "proxy": NexusHelper.camalize_param(helper, "proxy"),
+            "negativeCache": NexusHelper.camalize_param(helper, "negative_cache"),
+            "httpClient": NexusHelper.camalize_param(helper, "http_client"),
+            "routingRule": helper.module.params["routing_rule"],
+        }
+
+        data.update(additional_data)
+        # Does not exist for proxy repos but is still returned from API for proxy repos.
+        existing_data["storage"].pop("writePolicy")
+        # Compensate because return data from API having key routingRuleName while input JSON have routingRule.
+        existing_data.update({"routingRule": existing_data.pop("routingRuleName")})
+        # helper.module.fail_json(
+        #     msg="{data} ==== {existing_data} #### {equal}".format(
+        #         data=data,
+        #         existing_data=existing_data,
+        #         equal=helper.is_json_data_equal(data, existing_data)
+        #     )
+        # )
+        if helper.is_json_data_equal(data, existing_data):
+            return existing_data, False
+
+        endpoint = "repositories"
+        info, content = helper.request(
+            api_url=(helper.NEXUS_API_ENDPOINTS[endpoint] + "{path}/{repository}").format(
+                url=helper.module.params["url"],
+                path=endpoint_path,
+                repository=helper.module.params["name"],
+            ),
+            method="PUT",
+            data=data,
+        )
+
+        if info["status"] in [204]:
+            content.pop("fetch_url_retries", None)
+        elif info["status"] == 401:
+            helper.module.fail_json(
+                msg="Authentication required."
+            )
+        elif info["status"] == 403:
+            helper.module.fail_json(
+                msg="The user does not have permission to perform the operation."
+            )
+        else:
+            helper.module.fail_json(
+                msg="Failed to update repository {repository}, http_status={http_status}, error_msg='{error_msg}, body={body}'.".format(
+                    body=info["body"],
+                    error_msg=info["msg"],
+                    http_status=info["status"],
+                    repository=helper.module.params["name"],
+                )
+            )
+
+        return content, True
+
+
+    def delete_repository(helper):
+        changed = True
+        endpoint = "repositories"
+        info, content = helper.request(
+            api_url=(helper.NEXUS_API_ENDPOINTS[endpoint] + "/{name}").format(
+                url=helper.module.params["url"],
+                name=helper.module.params["name"],
+            ),
+            method="DELETE",
+        )
+
+        if info["status"] in [204]:
+            content.pop("fetch_url_retries", None)
+        elif info["status"] in [404]:
+            content.pop("fetch_url_retries", None)
+            changed = False
+        elif info["status"] == 401:
+            helper.module.fail_json(
+                msg="Authentication required."
+            )
+        elif info["status"] == 403:
+            helper.module.fail_json(
+                msg="The user does not have permission to perform the operation."
+            )
+        else:
+            helper.module.fail_json(
+                msg="Failed to delete {repository}., http_status={http_status}, error_msg='{error_msg}'.".format(
+                    error_msg=info["msg"],
+                    http_status=info["status"],
+                    repository=helper.module.params["name"],
+                )
+            )
+
+        return content, changed
