@@ -31,7 +31,11 @@ def invalidate_user_tokens(helper):
     changed = True
     endpoint = "user-tokens"
     info, content = helper.request(
-        api_url=helper.NEXUS_API_ENDPOINTS[endpoint],
+        api_url=(
+            helper.NEXUS_API_ENDPOINTS[endpoint]
+        ).format(
+            url=helper.module.params["url"],
+        ),
         method="DELETE",
     )
 
@@ -60,7 +64,11 @@ def update_user_token(helper):
     }
     endpoint = "user-tokens"
     info, content = helper.request(
-        api_url=helper.NEXUS_API_ENDPOINTS[endpoint],
+        api_url=(
+            helper.NEXUS_API_ENDPOINTS[endpoint]
+        ).format(
+            url=helper.module.params["url"],
+        ),
         method="PUT",
         data=data,
     )
