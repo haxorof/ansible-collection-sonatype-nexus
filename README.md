@@ -4,6 +4,8 @@ Ansible collection for managing Sonatype Nexus Repository Manager 3.x via its RE
 
 ## Features
 
+### OSS Features
+
 * Manage read-only system status
 * Manage routing rules
 * Manage users
@@ -16,6 +18,10 @@ Ansible collection for managing Sonatype Nexus Repository Manager 3.x via its RE
   * Limited to:
     * Docker proxy
     * Maven proxy
+
+### PRO Features
+
+* Manage user tokes capability
 
 ## Installation
 

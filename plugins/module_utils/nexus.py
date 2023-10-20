@@ -55,6 +55,7 @@ class NexusHelper:
         # "tasks": "{url}" + NEXUS_API_BASE_PATH + "/v1/tasks",
         "user-sources": "{url}" + NEXUS_API_BASE_PATH + "/v1/security/user-sources",
         "users": "{url}" + NEXUS_API_BASE_PATH + "/v1/security/users",
+        "user-tokens": "{url}" + NEXUS_API_BASE_PATH + "/v1/security/user-tokens",
     }
 
     def __init__(self, module):

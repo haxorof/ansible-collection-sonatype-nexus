@@ -11,8 +11,8 @@ __metaclass__ = type
 
 DOCUMENTATION = r"""
 ---
-module: nexus_security_user_info
-short_description: List user(s)
+module: nexus_security_user_token_info
+short_description: Show if the user token capability is enabled or not
 """
 
 EXAMPLES = r"""
@@ -27,17 +27,11 @@ from ansible_collections.haxorof.sonatype_nexus.plugins.module_utils.nexus impor
 )
 
 
-def list_users(helper):
-    endpoint = "users"
+def get_user_token_info(helper):
+    endpoint = "user-tokens"
     info, content = helper.request(
         api_url=(
             helper.NEXUS_API_ENDPOINTS[endpoint]
-            + helper.generate_url_query(
-                {
-                    "source": "source",
-                    "userId": "user_id",
-                }
-            )
         ).format(
             url=helper.module.params["url"],
         ),
@@ -52,7 +46,7 @@ def list_users(helper):
         )
     else:
         helper.module.fail_json(
-            msg="Failed to fetch users, http_status={status}.".format(
+            msg="Failed to user token information, http_status={status}.".format(
                 status=info["status"],
             )
         )
@@ -80,7 +74,7 @@ def main():
         json={},
     )
 
-    content = list_users(helper)
+    content = get_user_token_info(helper)
     result["json"] = content
     result["changed"] = False
 

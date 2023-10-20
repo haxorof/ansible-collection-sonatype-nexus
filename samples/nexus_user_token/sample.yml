@@ -1,0 +1,53 @@
+---
+- name: Manage user tokens
+  hosts: localhost
+  become: false
+  gather_facts: no
+  tasks:
+  - name: Show current user token information
+    haxorof.sonatype_nexus.nexus_security_user_token_info:
+      url: http://nexus.localdomain:8081
+      validate_certs: no
+      username: admin
+      password: password
+    register: _result
+
+  - name: Print _result
+    ansible.builtin.debug:
+      var: _result
+
+  - name: Enable user token capability
+    haxorof.sonatype_nexus.nexus_security_user_token:
+      url: http://nexus.localdomain:8081
+      validate_certs: no
+      username: admin
+      password: password
+      # Below not required but show default values
+      protect_content: no
+      enabled: yes
+    register: _result
+
+  - name: Print _result
+    ansible.builtin.debug:
+      var: _result
+
+  - name: Invalidate all user tokens
+    haxorof.sonatype_nexus.nexus_security_user_token:
+      url: http://nexus.localdomain:8081
+      validate_certs: no
+      username: admin
+      password: password
+      invalidate_tokens: yes
+
+  - name: Disable user token capablity
+    haxorof.sonatype_nexus.nexus_security_user_token:
+      url: http://nexus.localdomain:8081
+      validate_certs: no
+      username: admin
+      password: password
+      enabled: no
+    register: _result
+
+  - name: Print _result
+    ansible.builtin.debug:
+      var: _result
