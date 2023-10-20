@@ -55,8 +55,8 @@ def invalidate_user_tokens(helper):
 def update_user_token(helper):
     changed = True
     data = {
-        "enabled": existing_user["enabled"],
-        "protectContent": existing_user["protect_content"],
+        "enabled": helper.module.params["enabled"],
+        "protectContent": helper.module.params["protect_content"],
     }
     endpoint = "user-tokens"
     info, content = helper.request(
