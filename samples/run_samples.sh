@@ -1,6 +1,7 @@
 #!/usr/bin/env bash
 
 SAMPLES=(
+    "nexus_blobstore_file"
     "nexus_read_only"
     "nexus_routing_rule"
     "nexus_security_anonymous"

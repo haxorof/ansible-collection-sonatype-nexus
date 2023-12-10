@@ -18,6 +18,9 @@ Ansible collection for managing Sonatype Nexus Repository Manager 3.x via its RE
   * Limited to:
     * Docker proxy
     * Maven proxy
+* Manage blob stores:
+  * Limited to:
+    * File
 
 ### PRO Features
 

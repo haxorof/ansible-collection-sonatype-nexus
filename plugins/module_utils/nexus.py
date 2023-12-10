@@ -31,7 +31,7 @@ class NexusHelper:
         "anonymous": "{url}" + NEXUS_API_BASE_PATH + "/v1/security/anonymous",
         # "assets": "{url}" + NEXUS_API_BASE_PATH + "/v1/assets",
         # "azureblobstore": "{url}" + NEXUS_API_BASE_PATH + "/v1/azureblobstore",
-        # "blobstores": "{url}" + NEXUS_API_BASE_PATH + "/v1/blobstores",
+        "blobstores": "{url}" + NEXUS_API_BASE_PATH + "/v1/blobstores",
         # "certificates": "{url}" + NEXUS_API_BASE_PATH + "/v1/ssl",
         # "components": "{url}" + NEXUS_API_BASE_PATH + "/v1/components",
         # "content-selectors": "{url}" + NEXUS_API_BASE_PATH + "/v1/security/content-selectors",
@@ -451,4 +451,85 @@ class NexusRepositoryHelper:
                 )
             )
 
+        return content, changed
+
+class NexusBlobstoreHelper:
+
+    def common_argument_spec():
+        return dict(
+            state=dict(type="str", choices=["present", "absent"], default="present"),
+            name=dict(type="str", no_log=False, required=True),
+            soft_quota=NexusBlobstoreHelper.soft_quota_argument_spec(),
+        )
+
+    def soft_quota_argument_spec():
+        return dict(
+            type='dict',
+            apply_defaults=False,
+            options=dict(
+                type=dict(type="str", choices=["spaceRemainingQuota", "spaceUsedQuota "], default="spaceRemainingQuota"),
+                limit=dict(type="int", default=0),
+            ),
+        )
+
+    def get_blobstore(helper, blobstore_type):
+        endpoint = "blobstores"
+        info, content = helper.request(
+            api_url=(helper.NEXUS_API_ENDPOINTS[endpoint] + "/" + blobstore_type + "/{name}").format(
+                url=helper.module.params["url"],
+                name=helper.module.params["name"],
+            ),
+            method="GET",
+        )
+        if info["status"] in [200]:
+            content.pop("fetch_url_retries", None)
+            content = [content]
+        elif info["status"] in [404]:
+            content = []
+        elif info["status"] == 403:
+            helper.module.fail_json(
+                msg="Insufficient permissions to read configuration for blob store '{name}' of type '{type}'.".format(
+                    name=helper.module.params["name"],
+                    type=blobstore_type,
+                )
+            )
+        else:
+            helper.module.fail_json(
+                msg="Failed to read configration for blob store '{name}' of type '{type}', http_status={status}, error_msg='{error_msg}.".format(
+                    name=helper.module.params["name"],
+                    type=blobstore_type,
+                    status=info["status"],
+                    error_msg=info["msg"],
+                )
+            )
+        return content
+
+    def delete_blobstore(helper):
+        changed = True
+        endpoint = "blobstores"
+        info, content = helper.request(
+            api_url=(helper.NEXUS_API_ENDPOINTS[endpoint] + "/{name}").format(
+                url=helper.module.params["url"],
+                name=helper.module.params["name"],
+            ),
+            method="DELETE",
+        )
+        if info["status"] in [204]:
+            content.pop("fetch_url_retries", None)
+        elif info["status"] in [404]:
+            changed = False
+        elif info["status"] == 403:
+            helper.module.fail_json(
+                msg="Insufficient permissions to delete blob store '{name}'.".format(
+                    name=helper.module.params["name"],
+                )
+            )
+        else:
+            helper.module.fail_json(
+                msg="Failed to delete blob store '{name}', http_status={status}, error_msg='{error_msg}.".format(
+                    name=helper.module.params["name"],
+                    status=info["status"],
+                    error_msg=info["msg"],
+                )
+            )
         return content, changed

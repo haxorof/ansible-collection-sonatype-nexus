@@ -1,0 +1,46 @@
+---
+- name: Manage blob stores of type file
+  hosts: localhost
+  become: false
+  gather_facts: no
+  tasks:
+  - name: Create blob store of type file
+    haxorof.sonatype_nexus.nexus_blobstore_file:
+      url: http://nexus.localdomain:8081
+      validate_certs: no
+      name: default2
+      username: admin
+      password: password
+      state: present
+    register: _result
+
+  - name: Print _result
+    ansible.builtin.debug:
+      var: _result
+
+  - name: Get blob store configuration
+    haxorof.sonatype_nexus.nexus_blobstore_file_info:
+      url: http://nexus.localdomain:8081
+      validate_certs: no
+      name: default2
+      username: admin
+      password: password
+    register: _result
+
+  - name: Print _result
+    ansible.builtin.debug:
+      var: _result
+
+  - name: Delete blob store of type file
+    haxorof.sonatype_nexus.nexus_blobstore_file:
+      url: http://nexus.localdomain:8081
+      validate_certs: no
+      name: default2
+      username: admin
+      password: password
+      state: absent
+    register: _result
+
+  - name: Print _result
+    ansible.builtin.debug:
+      var: _result
