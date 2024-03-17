@@ -1,4 +1,6 @@
 #!/usr/bin/env bash
+SCRIPT_DIR="$(cd -P -- "$(dirname -- "${BASH_SOURCE[0]}")" && pwd -P)"
+
 SAMPLES=(
     "nexus_status_info"
     "nexus_blobstore_file"
@@ -17,6 +19,7 @@ SAMPLES_PRO=(
 )
 
 NEXUS_HOST=${NEXUS_HOST:-"nexus.localdomain"}
+. $SCRIPT_DIR/../.linuxenv/bin/activate
 
 for SAMPLE in ${SAMPLES[@]}; do
     cd $SAMPLE
