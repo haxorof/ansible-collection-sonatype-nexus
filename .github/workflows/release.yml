@@ -1,0 +1,41 @@
+name: Release
+on:
+  push:
+    tags:
+      - '*'
+
+env:
+  GALAXY_COLLECTION_NAME: sonatype_nexus
+
+permissions:
+  contents: write
+
+jobs:
+  release:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+        with:
+          submodules: true
+
+      - name: ansible-galaxy version
+        run: ansible-galaxy --version
+
+      - name: Get version from GITHUB_REF
+        id: get_version
+        run: echo "VERSION=${GITHUB_REF#refs/tags/}" >> $GITHUB_OUTPUT
+
+      - name: Build Ansible collection
+        run: ansible-galaxy collection build
+
+      - name: Publish collection
+        run: ansible-galaxy collection publish --token ${ANSIBLE_GALAXY_API_KEY} ./haxorof-${{ env.GALAXY_COLLECTION_NAME }}-${{ steps.get_version.outputs.VERSION }}.tar.gz
+        env:
+          ANSIBLE_GALAXY_API_KEY: ${{ secrets.ANSIBLE_GALAXY_API_KEY }}
+
+      - name: Create Release
+        uses: ncipollo/release-action@v1
+        with:
+          body: |
+            See changelog [here](https://github.com/haxorof/ansible-collection-${{ env.GALAXY_COLLECTION_NAME }}/blob/${{ steps.get_version.outputs.VERSION }}/CHANGELOG.md)

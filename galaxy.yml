@@ -16,7 +16,7 @@ readme: README.md
 # A list of the collection's content authors. Can be just the name or in the format 'Full Name <email> (url)
 # @nicks:irc/im.site#channel'
 authors:
-- Björn Oscarsson
+  - Björn Oscarsson
 
 
 ### OPTIONAL but strongly recommended
@@ -26,7 +26,7 @@ description: Managing Sonatype Nexus Repository Manager 3.x
 # Either a single license or a list of licenses for content inside of a collection. Ansible Galaxy currently only
 # accepts L(SPDX,https://spdx.org/licenses/) licenses. This key is mutually exclusive with 'license_file'
 license:
-- MIT
+  - MIT
 
 # The path to the license file for the collection. This path is relative to the root of the collection. This key is
 # mutually exclusive with 'license'
@@ -35,10 +35,10 @@ license_file: COPYING
 # A list of tags you want to associate with the collection for indexing/searching. A tag name has the same character
 # requirements as 'namespace' and 'name'
 tags:
-- sonatype
-- nexus
-- nexus3
-- automation
+  - sonatype
+  - nexus
+  - nexus3
+  - automation
 
 # Collections that this collection requires to be installed for it to be usable. The key of the dict is the
 # collection label 'namespace.name'. The value is a version range
@@ -63,9 +63,18 @@ issues: https://github.com/haxorof/ansible-collection-sonatype-nexus/issues
 # uses 'fnmatch' to match the files or directories. Some directories and files like 'galaxy.yml', '*.pyc', '*.retry',
 # and '.git' are always filtered
 build_ignore:
-- .env
-- '*.tar.gz'
-- test
-- tools
-- playbooks
-
+  - .gitmodules
+  - .gitignore
+  - '**/.gitignore'
+  - '**/.gitattributes'
+  - '**/.editorconfig'
+  - '**/.ansible-lint'
+  - .env
+  - '**/.env'
+  - .github
+  - '**/.github'
+  - '**/.git'
+  - '*.tar.gz'
+  - test
+  - tools
+  - playbooks
