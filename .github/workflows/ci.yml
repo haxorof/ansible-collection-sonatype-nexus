@@ -22,6 +22,10 @@ jobs:
       - name: Test to build Ansible collection
         run: ansible-galaxy collection build --force --ignore-certs
 
+  test:
+    runs-on: ubuntu-latest
+    needs: validate
+    steps:
       - name: Prepare Ansible for testing
-        run: ./setup_ansible.sh
+        run: bash -l ./setup_ansible.sh
         working-directory: ./samples
