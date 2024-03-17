@@ -16,9 +16,11 @@ SAMPLES_PRO=(
     # "nexus_security_user_token"
 )
 
+NEXUS_HOST=${NEXUS_HOST:-"nexus.localdomain"}
+
 for SAMPLE in ${SAMPLES[@]}; do
     cd $SAMPLE
-    ansible-playbook -c local sample.yml
+    ansible-playbook -c local --extra-vars "nexus_host=$NEXUS_HOST" sample.yml
     cd -
 done
 
@@ -26,7 +28,7 @@ if [[ "$1" == "--all" ]]; then
     echo "--> Testing PRO features"
     for SAMPLE in ${SAMPLES_PRO[@]}; do
         cd $SAMPLE
-        ansible-playbook -c local sample.yml
+        ansible-playbook -c local --extra-vars "nexus_host=$NEXUS_HOST" sample.yml
         cd -
     done
 fi

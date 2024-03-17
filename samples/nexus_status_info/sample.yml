@@ -6,7 +6,7 @@
   tasks:
   - name: Readable check
     haxorof.sonatype_nexus.nexus_status_info:
-      url: http://nexus.localdomain:8081
+      url: http://{{ nexus_host }}:8081
       validate_certs: no
       username: admin
       password: admin123
@@ -15,7 +15,7 @@
 
   - name: Writable check
     haxorof.sonatype_nexus.nexus_status_info:
-      url: http://nexus.localdomain:8081
+      url: http://{{ nexus_host }}:8081
       validate_certs: no
       username: admin
       password: admin123
@@ -24,7 +24,7 @@
 
   - name: System status check
     haxorof.sonatype_nexus.nexus_status_info:
-      url: http://nexus.localdomain:8081
+      url: http://{{ nexus_host }}:8081
       validate_certs: no
       username: admin
       password: admin123

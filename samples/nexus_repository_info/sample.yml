@@ -6,7 +6,7 @@
   tasks:
   - name: List all repositories
     haxorof.sonatype_nexus.nexus_repository_info:
-      url: http://nexus.localdomain:8081
+      url: http://{{ nexus_host }}:8081
       validate_certs: no
       username: admin
       password: admin123
@@ -18,7 +18,7 @@
 
   - name: List NuGet proxy repositories
     haxorof.sonatype_nexus.nexus_repository_info:
-      url: http://nexus.localdomain:8081
+      url: http://{{ nexus_host }}:8081
       validate_certs: no
       username: admin
       password: admin123
@@ -32,7 +32,7 @@
 
   - name: List Maven proxy repositories
     haxorof.sonatype_nexus.nexus_repository_info:
-      url: http://nexus.localdomain:8081
+      url: http://{{ nexus_host }}:8081
       validate_certs: no
       username: admin
       password: admin123
@@ -46,7 +46,7 @@
 
   - name: List maven-central
     haxorof.sonatype_nexus.nexus_repository_info:
-      url: http://nexus.localdomain:8081
+      url: http://{{ nexus_host }}:8081
       validate_certs: no
       username: admin
       password: admin123

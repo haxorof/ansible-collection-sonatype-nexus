@@ -6,7 +6,7 @@
   tasks:
   - name: List users
     haxorof.sonatype_nexus.nexus_security_user_info:
-      url: http://nexus.localdomain:8081
+      url: http://{{ nexus_host }}:8081
       validate_certs: no
       username: admin
       password: admin123
@@ -18,7 +18,7 @@
 
   - name: List user in source default
     haxorof.sonatype_nexus.nexus_security_user_info:
-      url: http://nexus.localdomain:8081
+      url: http://{{ nexus_host }}:8081
       validate_certs: no
       username: admin
       password: admin123
@@ -31,7 +31,7 @@
 
   - name: Create user
     haxorof.sonatype_nexus.nexus_security_user:
-      url: http://nexus.localdomain:8081
+      url: http://{{ nexus_host }}:8081
       validate_certs: no
       username: admin
       password: admin123
@@ -48,7 +48,7 @@
 
   - name: List user myadmin
     haxorof.sonatype_nexus.nexus_security_user_info:
-      url: http://nexus.localdomain:8081
+      url: http://{{ nexus_host }}:8081
       validate_certs: no
       username: admin
       password: admin123
@@ -61,7 +61,7 @@
 
   - name: Update user to disabled
     haxorof.sonatype_nexus.nexus_security_user:
-      url: http://nexus.localdomain:8081
+      url: http://{{ nexus_host }}:8081
       validate_certs: no
       username: admin
       password: admin123
@@ -71,7 +71,7 @@
 
   - name: Delete user
     haxorof.sonatype_nexus.nexus_security_user:
-      url: http://nexus.localdomain:8081
+      url: http://{{ nexus_host }}:8081
       validate_certs: no
       username: admin
       password: admin123

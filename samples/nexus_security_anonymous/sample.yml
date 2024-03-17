@@ -6,7 +6,7 @@
   tasks:
   - name: Get anonymous access setting
     haxorof.sonatype_nexus.nexus_security_anonymous_info:
-      url: http://nexus.localdomain:8081
+      url: http://{{ nexus_host }}:8081
       validate_certs: no
       username: admin
       password: admin123
@@ -18,7 +18,7 @@
 
   - name: Set anonymous access setting (enable)
     haxorof.sonatype_nexus.nexus_security_anonymous:
-      url: http://nexus.localdomain:8081
+      url: http://{{ nexus_host }}:8081
       validate_certs: no
       username: admin
       password: admin123
@@ -28,7 +28,7 @@
 
   - name: Set anonymous access setting (disable)
     haxorof.sonatype_nexus.nexus_security_anonymous:
-      url: http://nexus.localdomain:8081
+      url: http://{{ nexus_host }}:8081
       validate_certs: no
       username: admin
       password: admin123

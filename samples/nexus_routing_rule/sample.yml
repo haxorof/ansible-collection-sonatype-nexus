@@ -6,7 +6,7 @@
   tasks:
   - name: Create routing rule (block)
     haxorof.sonatype_nexus.nexus_routing_rule:
-      url: http://nexus.localdomain:8081
+      url: http://{{ nexus_host }}:8081
       validate_certs: no
       username: admin
       password: admin123
@@ -20,7 +20,7 @@
 
   - name: Create routing rule (allow)
     haxorof.sonatype_nexus.nexus_routing_rule:
-      url: http://nexus.localdomain:8081
+      url: http://{{ nexus_host }}:8081
       validate_certs: no
       username: admin
       password: admin123
@@ -33,7 +33,7 @@
 
   - name: List routing rules
     haxorof.sonatype_nexus.nexus_routing_rule_info:
-      url: http://nexus.localdomain:8081
+      url: http://{{ nexus_host }}:8081
       validate_certs: no
       username: admin
       password: admin123
@@ -45,7 +45,7 @@
 
   - name: Get routing rule blockrule
     haxorof.sonatype_nexus.nexus_routing_rule_info:
-      url: http://nexus.localdomain:8081
+      url: http://{{ nexus_host }}:8081
       validate_certs: no
       username: admin
       password: admin123
@@ -58,7 +58,7 @@
 
   - name: Delete routing rules
     haxorof.sonatype_nexus.nexus_routing_rule:
-      url: http://nexus.localdomain:8081
+      url: http://{{ nexus_host }}:8081
       validate_certs: no
       username: admin
       password: admin123

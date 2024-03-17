@@ -6,7 +6,7 @@
   tasks:
   - name: Enable read-only
     haxorof.sonatype_nexus.nexus_read_only:
-      url: http://nexus.localdomain:8081
+      url: http://{{ nexus_host }}:8081
       validate_certs: no
       username: admin
       password: "{{ lookup('env', 'NEXUS_PASSWORD') | default('password') }}"
@@ -14,14 +14,14 @@
 
   - name: Get read-only system status
     haxorof.sonatype_nexus.nexus_read_only_info:
-      url: http://nexus.localdomain:8081
+      url: http://{{ nexus_host }}:8081
       validate_certs: no
       username: admin
       password: admin123
 
   - name: Release read-only
     haxorof.sonatype_nexus.nexus_read_only:
-      url: http://nexus.localdomain:8081
+      url: http://{{ nexus_host }}:8081
       validate_certs: no
       username: admin
       password: admin123
@@ -29,7 +29,7 @@
 
   - name: Forcibly release read-only
     haxorof.sonatype_nexus.nexus_read_only:
-      url: http://nexus.localdomain:8081
+      url: http://{{ nexus_host }}:8081
       validate_certs: no
       username: admin
       password: admin123

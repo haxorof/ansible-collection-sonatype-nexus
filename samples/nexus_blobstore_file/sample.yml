@@ -6,7 +6,7 @@
   tasks:
   - name: Create blob store of type file
     haxorof.sonatype_nexus.nexus_blobstore_file:
-      url: http://nexus.localdomain:8081
+      url: http://{{ nexus_host }}:8081
       validate_certs: no
       name: default2
       username: admin
@@ -20,7 +20,7 @@
 
   - name: Get blob store configuration
     haxorof.sonatype_nexus.nexus_blobstore_file_info:
-      url: http://nexus.localdomain:8081
+      url: http://{{ nexus_host }}:8081
       validate_certs: no
       name: default2
       username: admin
@@ -33,7 +33,7 @@
 
   - name: Delete blob store of type file
     haxorof.sonatype_nexus.nexus_blobstore_file:
-      url: http://nexus.localdomain:8081
+      url: http://{{ nexus_host }}:8081
       validate_certs: no
       name: default2
       username: admin

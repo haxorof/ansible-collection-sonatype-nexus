@@ -6,7 +6,7 @@
   tasks:
   - name: Show current user token information
     haxorof.sonatype_nexus.nexus_security_user_token_info:
-      url: http://nexus.localdomain:8081
+      url: http://{{ nexus_host }}:8081
       validate_certs: no
       username: admin
       password: admin123
@@ -18,7 +18,7 @@
 
   - name: Enable user token capability
     haxorof.sonatype_nexus.nexus_security_user_token:
-      url: http://nexus.localdomain:8081
+      url: http://{{ nexus_host }}:8081
       validate_certs: no
       username: admin
       password: admin123
@@ -33,7 +33,7 @@
 
   - name: Invalidate all user tokens
     haxorof.sonatype_nexus.nexus_security_user_token:
-      url: http://nexus.localdomain:8081
+      url: http://{{ nexus_host }}:8081
       validate_certs: no
       username: admin
       password: admin123
@@ -41,7 +41,7 @@
 
   - name: Disable user token capablity
     haxorof.sonatype_nexus.nexus_security_user_token:
-      url: http://nexus.localdomain:8081
+      url: http://{{ nexus_host }}:8081
       validate_certs: no
       username: admin
       password: admin123

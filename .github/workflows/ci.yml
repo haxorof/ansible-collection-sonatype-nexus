@@ -45,6 +45,12 @@ jobs:
         env:
           NEXUS_HOST: localhost
 
+      - name: Run samples
+        run: ./run_samples.sh
+        working-directory: ./samples
+        env:
+          NEXUS_HOST: localhost
+
       - name: Teardown Nexus 3
         run: ./teardown_nexus.sh
         working-directory: ./samples

@@ -6,7 +6,7 @@
   tasks:
   - name: Create Docker proxy repository
     haxorof.sonatype_nexus.nexus_repository_docker_proxy:
-      url: http://nexus.localdomain:8081
+      url: http://{{ nexus_host }}:8081
       validate_certs: no
       username: admin
       password: admin123
@@ -64,7 +64,7 @@
 
   - name: Delete Docker proxy repository
     haxorof.sonatype_nexus.nexus_repository_docker_proxy:
-      url: http://nexus.localdomain:8081
+      url: http://{{ nexus_host }}:8081
       validate_certs: no
       username: admin
       password: admin123
