@@ -40,11 +40,9 @@ def check_status(helper):
         ),
         method="GET",
     )
-    if info["status"] in [200]:
-        content.pop("fetch_url_retries", None)
-    elif info["status"] in [503]:
+    if info["status"] in [503]:
         helper.module.fail_json(msg="Unavailable to service requests.")
-    else:
+    elif not helper.is_request_status_ok(info):
         helper.generic_failure_msg("Failed to check status", info)
     return content
 

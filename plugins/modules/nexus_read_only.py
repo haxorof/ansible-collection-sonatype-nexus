@@ -31,7 +31,6 @@ def update_read_only(helper):
     info = None
     content = None
     changed = True
-    successful = False
 
     info, content = helper.request(
         api_url=(helper.NEXUS_API_ENDPOINTS[endpoint] + "/{action}").format(
@@ -41,18 +40,14 @@ def update_read_only(helper):
         method="POST",
     )
 
-    if info["status"] in [204]:
-        # System is now read-only / System is no longer read-only
-        successful = True
-    elif info["status"] == 403:
+    if info["status"] == 403:
         helper.generic_permission_failure_msg()
     elif info["status"] in [404]:
         # No change to read-only state
         changed = False
-        successful = True
-
-    if successful:
         content.pop("fetch_url_retries", None)
+    elif not helper.is_request_status_ok(info):
+        helper.generic_failure_msg("Failed to update read-only", info)
 
     return content, changed
 

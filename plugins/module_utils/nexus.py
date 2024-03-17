@@ -154,9 +154,7 @@ class NexusHelper:
                 except ValueError as e:
                     content["content"] = body
 
-        if self.is_request_status_ok(info):
-            content["fetch_url_retries"] = None
-        else:
+        if not self.is_request_status_ok(info):
             content["fetch_url_retries"] = retries
 
         if info["status"] == 401:
