@@ -35,6 +35,10 @@ jobs:
         run: chmod +x *.sh
         working-directory: ./samples
 
-      - name: Prepare Ansible for testing
+      - name: Setup Ansible for testing
         run: ./setup_ansible.sh
+        working-directory: ./samples
+
+      - name: Setup Nexus 3
+        run: ./setup_nexus.sh
         working-directory: ./samples
