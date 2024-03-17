@@ -34,8 +34,7 @@ def read_only_status(helper):
         ),
         method="GET",
     )
-    if info["status"] in [200]:
-        content.pop("fetch_url_retries", None)
+
     return content, False
 
 

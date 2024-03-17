@@ -44,12 +44,9 @@ def list_users(helper):
         method="GET",
     )
     if info["status"] in [200]:
-        content.pop("fetch_url_retries", None)
         content = content["json"]
     elif info["status"] == 403:
-        helper.module.fail_json(
-            msg="The user does not have permission to perform the operation."
-        )
+        helper.generic_permission_failure_msg()
     else:
         helper.module.fail_json(
             msg="Failed to fetch users, http_status={status}.".format(

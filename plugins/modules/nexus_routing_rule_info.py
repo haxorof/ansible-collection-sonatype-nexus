@@ -37,7 +37,6 @@ def get_routing_rule(helper):
         method="GET",
     )
     if info["status"] in [200]:
-        content.pop("fetch_url_retries", None)
         content = [content]
     elif info["status"] in [404]:
         content = []
@@ -65,7 +64,6 @@ def list_routing_rule(helper):
         method="GET",
     )
     if info["status"] in [200]:
-        content.pop("fetch_url_retries", None)
         content = content["json"]
     if info["status"] in [404]:
         content.pop("fetch_url_retries", None)

@@ -90,6 +90,20 @@ class NexusHelper:
             retries=dict(type="int", default=3),
         )
 
+    def generic_permission_failure_msg(self):
+        self.module.fail_json(
+            msg="The user does not have permission to perform the operation."
+        )
+
+    def generic_failure_msg(self, message, request_info):
+        self.module.fail_json(
+            msg=message + ", http_status={http_status}, error_msg={error_msg}, body={body}.".format(
+                http_status=request_info["status"],
+                error_msg=request_info["msg"],
+                body=request_info["body"],
+            )
+        )
+
     def request(self, api_url, method, data=None, headers=None):
         headers = headers or {}
 
@@ -140,12 +154,27 @@ class NexusHelper:
                 except ValueError as e:
                     content["content"] = body
 
-        content["fetch_url_retries"] = retries
+        if self.is_request_status_ok(info):
+            content["fetch_url_retries"] = None
+        else:
+            content["fetch_url_retries"] = retries
+
+        if info["status"] == 401:
+            self.module.fail_json(
+                msg="Authentication required."
+            )
+        elif info["status"] in [503]:
+            self.module.fail_json(
+                msg="Unavailable to service requests."
+            )
 
         # For debugging
         # if info["status"] not in [200]:
         #     self.module.fail_json(msg="{info} # {content}".format(info=info, content=content))
         return info, content
+
+    def is_request_status_ok(self, info):
+        return info["status"] in [200, 201, 204]
 
     def generate_url_query(self, params: dict):
         """Generates a complete URL query including question mark.
@@ -292,15 +321,9 @@ class NexusRepositoryHelper:
             method="GET",
         )
         if info["status"] in [200]:
-            content.pop("fetch_url_retries", None)
             content = content["json"]
         else:
-            helper.module.fail_json(
-                msg="Failed to list repositories, http_status={http_status}, error_msg='{error_msg}'.".format(
-                    http_status=info["status"],
-                    error_msg=info["msg"],
-                )
-            )
+            helper.generic_failure_msg("Failed to list repositories", info)
         return content
 
     def list_filtered_repositories(helper, repository_filter):
@@ -335,25 +358,22 @@ class NexusRepositoryHelper:
             data=data,
         )
 
-        if info["status"] in [201]:
-            content.pop("fetch_url_retries", None)
-        elif info["status"] == 401:
-            helper.module.fail_json(
-                msg="Authentication required."
-            )
-        elif info["status"] == 403:
-            helper.module.fail_json(
-                msg="The user does not have permission to perform the operation."
-            )
-        else:
-            helper.module.fail_json(
-                msg="Failed to create repository {repository}, http_status={http_status}, error_msg='{error_msg}, body={body}'.".format(
-                    body=info["body"],
-                    error_msg=info["msg"],
-                    http_status=info["status"],
-                    repository=helper.module.params["name"],
+        if info["status"] not in [201]:
+            if info["status"] == 401:
+                helper.module.fail_json(
+                    msg="Authentication required."
                 )
-            )
+            elif info["status"] == 403:
+                helper.generic_permission_failure_msg()
+            else:
+                helper.module.fail_json(
+                    msg="Failed to create repository {repository}, http_status={http_status}, error_msg='{error_msg}, body={body}'.".format(
+                        body=info["body"],
+                        error_msg=info["msg"],
+                        http_status=info["status"],
+                        repository=helper.module.params["name"],
+                    )
+                )
 
         return content, changed
 
@@ -395,25 +415,22 @@ class NexusRepositoryHelper:
             data=data,
         )
 
-        if info["status"] in [204]:
-            content.pop("fetch_url_retries", None)
-        elif info["status"] == 401:
-            helper.module.fail_json(
-                msg="Authentication required."
-            )
-        elif info["status"] == 403:
-            helper.module.fail_json(
-                msg="The user does not have permission to perform the operation."
-            )
-        else:
-            helper.module.fail_json(
-                msg="Failed to update repository {repository}, http_status={http_status}, error_msg='{error_msg}, body={body}'.".format(
-                    body=info["body"],
-                    error_msg=info["msg"],
-                    http_status=info["status"],
-                    repository=helper.module.params["name"],
+        if info["status"] not in [204]:
+            if info["status"] == 401:
+                helper.module.fail_json(
+                    msg="Authentication required."
                 )
-            )
+            elif info["status"] == 403:
+                helper.generic_permission_failure_msg()
+            else:
+                helper.module.fail_json(
+                    msg="Failed to update repository {repository}, http_status={http_status}, error_msg='{error_msg}, body={body}'.".format(
+                        body=info["body"],
+                        error_msg=info["msg"],
+                        http_status=info["status"],
+                        repository=helper.module.params["name"],
+                    )
+                )
 
         return content, True
 
@@ -429,27 +446,26 @@ class NexusRepositoryHelper:
             method="DELETE",
         )
 
-        if info["status"] in [204]:
-            content.pop("fetch_url_retries", None)
-        elif info["status"] in [404]:
-            content.pop("fetch_url_retries", None)
-            changed = False
-        elif info["status"] == 401:
-            helper.module.fail_json(
-                msg="Authentication required."
-            )
-        elif info["status"] == 403:
-            helper.module.fail_json(
-                msg="The user does not have permission to perform the operation."
-            )
-        else:
-            helper.module.fail_json(
-                msg="Failed to delete {repository}., http_status={http_status}, error_msg='{error_msg}'.".format(
-                    error_msg=info["msg"],
-                    http_status=info["status"],
-                    repository=helper.module.params["name"],
+        if info["status"] not in [204]:
+            if info["status"] in [404]:
+                content.pop("fetch_url_retries", None)
+                changed = False
+            elif info["status"] == 401:
+                helper.module.fail_json(
+                    msg="Authentication required."
                 )
-            )
+            elif info["status"] == 403:
+                helper.module.fail_json(
+                    msg="The user does not have permission to perform the operation."
+                )
+            else:
+                helper.module.fail_json(
+                    msg="Failed to delete {repository}., http_status={http_status}, error_msg='{error_msg}'.".format(
+                        error_msg=info["msg"],
+                        http_status=info["status"],
+                        repository=helper.module.params["name"],
+                    )
+                )
 
         return content, changed
 
@@ -482,7 +498,6 @@ class NexusBlobstoreHelper:
             method="GET",
         )
         if info["status"] in [200]:
-            content.pop("fetch_url_retries", None)
             content = [content]
         elif info["status"] in [404]:
             content = []
@@ -514,22 +529,22 @@ class NexusBlobstoreHelper:
             ),
             method="DELETE",
         )
-        if info["status"] in [204]:
-            content.pop("fetch_url_retries", None)
-        elif info["status"] in [404]:
-            changed = False
-        elif info["status"] == 403:
-            helper.module.fail_json(
-                msg="Insufficient permissions to delete blob store '{name}'.".format(
-                    name=helper.module.params["name"],
+        if info["status"] not in [204]:
+            if info["status"] in [404]:
+                changed = False
+            elif info["status"] == 403:
+                helper.module.fail_json(
+                    msg="Insufficient permissions to delete blob store '{name}'.".format(
+                        name=helper.module.params["name"],
+                    )
                 )
-            )
-        else:
-            helper.module.fail_json(
-                msg="Failed to delete blob store '{name}', http_status={status}, error_msg='{error_msg}.".format(
-                    name=helper.module.params["name"],
-                    status=info["status"],
-                    error_msg=info["msg"],
+            else:
+                helper.module.fail_json(
+                    msg="Failed to delete blob store '{name}', http_status={status}, error_msg='{error_msg}.".format(
+                        name=helper.module.params["name"],
+                        status=info["status"],
+                        error_msg=info["msg"],
+                    )
                 )
-            )
+
         return content, changed

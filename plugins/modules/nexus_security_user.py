@@ -43,12 +43,9 @@ def list_users(helper):
         method="GET",
     )
     if info["status"] in [200]:
-        content.pop("fetch_url_retries", None)
         content = content["json"]
     elif info["status"] == 403:
-        helper.module.fail_json(
-            msg="The user does not have permission to perform the operation."
-        )
+        helper.generic_permission_failure_msg()
     else:
         helper.module.fail_json(
             msg="Failed to fetch users., http_status={status}.".format(
@@ -79,13 +76,9 @@ def create_user(helper):
         data=data,
     )
 
-    if info["status"] in [200]:
-        content.pop("fetch_url_retries", None)
-    elif info["status"] == 403:
-        helper.module.fail_json(
-            msg="The user does not have permission to perform the operation."
-        )
-    else:
+    if info["status"] == 403:
+        helper.generic_permission_failure_msg()
+    elif not helper.is_request_status_ok(info):
         helper.module.fail_json(
             msg="Failed to create user {user}, http_status={http_status}, error_msg='{error_msg}'.".format(
                 error_msg=info["msg"],
@@ -108,16 +101,12 @@ def delete_user(helper):
         method="DELETE",
     )
 
-    if info["status"] in [204]:
-        content.pop("fetch_url_retries", None)
-    elif info["status"] in [404]:
+    if info["status"] in [404]:
         content.pop("fetch_url_retries", None)
         changed = False
     elif info["status"] == 403:
-        helper.module.fail_json(
-            msg="The user does not have permission to perform the operation."
-        )
-    else:
+        helper.generic_permission_failure_msg()
+    elif not helper.is_request_status_ok(info):
         helper.module.fail_json(
             msg="Failed to delete {user}., http_status={http_status}, error_msg='{error_msg}'.".format(
                 error_msg=info["msg"],
@@ -211,12 +200,9 @@ def update_user(helper, existing_user):
     )
 
     if info["status"] in [204]:
-        content.pop("fetch_url_retries", None)
         content = data
     elif info["status"] == 403:
-        helper.module.fail_json(
-            msg="The user does not have permission to perform the operation."
-        )
+        helper.generic_permission_failure_msg()
     else:
         helper.module.fail_json(
             msg="Failed to update user {user}., http_status={http_status}, error_msg='{error_msg}'.".format(

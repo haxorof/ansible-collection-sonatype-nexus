@@ -35,18 +35,15 @@ def get_anonymous_setting(helper):
         ),
         method="GET",
     )
-    if info["status"] in [200]:
-        content.pop("fetch_url_retries", None)
-    elif info["status"] in [403]:
-        helper.module.fail_json(
-            msg="The user does not have permission to perform the operation."
-        )
-    else:
-        helper.module.fail_json(
-            msg="Failed to fetch anonymous setting., http_status={status}.".format(
-                status=info["status"],
+    if not helper.is_request_status_ok(info):
+        if info["status"] in [403]:
+            helper.generic_permission_failure_msg()
+        else:
+            helper.module.fail_json(
+                msg="Failed to fetch anonymous setting., http_status={status}.".format(
+                    status=info["status"],
+                )
             )
-        )
     return content
 
 

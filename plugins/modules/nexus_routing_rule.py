@@ -37,8 +37,6 @@ def routing_rule_exists(helper):
         method="GET",
     )
     rule_exists = info["status"] in [200]
-    if rule_exists:
-        content.pop("fetch_url_retries", None)
 
     return rule_exists, content
 
@@ -59,28 +57,27 @@ def create_routing_rule(helper):
         method="POST",
         data=data,
     )
-    if info["status"] == 204:
-        content.pop("fetch_url_retries", None)
-    elif info["status"] == 400:
-        helper.module.fail_json(
-            msg="A routing rule with the same name '{routing_rule_name}' already exists or required parameters missing.".format(
-                routing_rule_name=helper.module.params["name"],
+    if not helper.is_request_status_ok(info):
+        if info["status"] == 400:
+            helper.module.fail_json(
+                msg="A routing rule with the same name '{routing_rule_name}' already exists or required parameters missing.".format(
+                    routing_rule_name=helper.module.params["name"],
+                )
             )
-        )
-    elif info["status"] == 403:
-        helper.module.fail_json(
-            msg="Insufficient permissions to create routing rule '{routing_rule_name}'.".format(
-                routing_rule_name=helper.module.params["name"],
+        elif info["status"] == 403:
+            helper.module.fail_json(
+                msg="Insufficient permissions to create routing rule '{routing_rule_name}'.".format(
+                    routing_rule_name=helper.module.params["name"],
+                )
             )
-        )
-    else:
-        helper.module.fail_json(
-            msg="Failed to create routing rule '{routing_rule_name}', http_status={http_status}, error_msg='{error_msg}'.".format(
-                routing_rule_name=helper.module.params["name"],
-                http_status=info["status"],
-                error_msg=info["msg"],
+        else:
+            helper.module.fail_json(
+                msg="Failed to create routing rule '{routing_rule_name}', http_status={http_status}, error_msg='{error_msg}'.".format(
+                    routing_rule_name=helper.module.params["name"],
+                    http_status=info["status"],
+                    error_msg=info["msg"],
+                )
             )
-        )
 
     return content, changed
 
@@ -96,25 +93,24 @@ def delete_routing_rule(helper):
         ),
         method="DELETE",
     )
-    if info["status"] in [204]:
-        content.pop("fetch_url_retries", None)
-    elif info["status"] in [404]:
-        # Routing rule not found = OK
-        changed = False
-    elif info["status"] == 403:
-        helper.module.fail_json(
-            msg="Insufficient permissions to delete routing rule '{routing_rule_name}'.".format(
-                routing_rule_name=helper.module.params["name"],
+    if not helper.is_request_status_ok(info):
+        if info["status"] in [404]:
+            # Routing rule not found = OK
+            changed = False
+        elif info["status"] == 403:
+            helper.module.fail_json(
+                msg="Insufficient permissions to delete routing rule '{routing_rule_name}'.".format(
+                    routing_rule_name=helper.module.params["name"],
+                )
             )
-        )
-    else:
-        helper.module.fail_json(
-            msg="Failed to delete routing rule '{routing_rule_name}', http_status={http_status}, error_msg='{error_msg}'.".format(
-                routing_rule_name=helper.module.params["name"],
-                http_status=info["status"],
-                error_msg=info["msg"],
+        else:
+            helper.module.fail_json(
+                msg="Failed to delete routing rule '{routing_rule_name}', http_status={http_status}, error_msg='{error_msg}'.".format(
+                    routing_rule_name=helper.module.params["name"],
+                    http_status=info["status"],
+                    error_msg=info["msg"],
+                )
             )
-        )
 
     return content, changed
 
@@ -137,34 +133,33 @@ def update_routing_rule(helper, current_data):
         method="PUT",
         data=data,
     )
-    if info["status"] in [204]:
-        content.pop("fetch_url_retries", None)
-    elif info["status"] == 400:
-        helper.module.fail_json(
-            msg="A routing rule with the same name '{routing_rule_name}' already exists or required parameters missing.".format(
-                routing_rule_name=helper.module.params["name"],
+    if not helper.is_request_status_ok(info):
+        if info["status"] == 400:
+            helper.module.fail_json(
+                msg="A routing rule with the same name '{routing_rule_name}' already exists or required parameters missing.".format(
+                    routing_rule_name=helper.module.params["name"],
+                )
             )
-        )
-    elif info["status"] == 403:
-        helper.module.fail_json(
-            msg="Insufficient permissions to update routing rule '{routing_rule_name}'.".format(
-                routing_rule_name=helper.module.params["name"],
+        elif info["status"] == 403:
+            helper.module.fail_json(
+                msg="Insufficient permissions to update routing rule '{routing_rule_name}'.".format(
+                    routing_rule_name=helper.module.params["name"],
+                )
             )
-        )
-    elif info["status"] in [404]:
-        helper.module.fail_json(
-            msg="Routing rule '{routing_rule_name}' not found.".format(
-                routing_rule_name=helper.module.params["name"],
+        elif info["status"] in [404]:
+            helper.module.fail_json(
+                msg="Routing rule '{routing_rule_name}' not found.".format(
+                    routing_rule_name=helper.module.params["name"],
+                )
             )
-        )
-    else:
-        helper.module.fail_json(
-            msg="Failed to update routing rule '{routing_rule_name}', http_status={http_status}, error_msg='{error_msg}'.".format(
-                routing_rule_name=helper.module.params["name"],
-                http_status=info["status"],
-                error_msg=info["msg"],
+        else:
+            helper.module.fail_json(
+                msg="Failed to update routing rule '{routing_rule_name}', http_status={http_status}, error_msg='{error_msg}'.".format(
+                    routing_rule_name=helper.module.params["name"],
+                    http_status=info["status"],
+                    error_msg=info["msg"],
+                )
             )
-        )
 
     return content, changed
 

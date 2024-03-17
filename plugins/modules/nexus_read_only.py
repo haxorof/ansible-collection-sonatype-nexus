@@ -45,7 +45,7 @@ def update_read_only(helper):
         # System is now read-only / System is no longer read-only
         successful = True
     elif info["status"] == 403:
-        helper.module.fail_json(msg="Authentication required.")
+        helper.generic_permission_failure_msg()
     elif info["status"] in [404]:
         # No change to read-only state
         changed = False

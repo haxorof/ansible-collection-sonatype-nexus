@@ -45,11 +45,7 @@ def check_status(helper):
     elif info["status"] in [503]:
         helper.module.fail_json(msg="Unavailable to service requests.")
     else:
-        helper.module.fail_json(
-            msg="Failed to check status., http_status={status}.".format(
-                status=info["status"],
-            )
-        )
+        helper.generic_failure_msg("Failed to check status", info)
     return content
 
 

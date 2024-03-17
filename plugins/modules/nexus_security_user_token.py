@@ -27,31 +27,37 @@ from ansible_collections.haxorof.sonatype_nexus.plugins.module_utils.nexus impor
 )
 
 
+def get_user_token_info(helper):
+    endpoint = "user-tokens"
+    info, content = helper.request(
+        api_url=(helper.NEXUS_API_ENDPOINTS[endpoint]).format(
+            url=helper.module.params["url"],
+        ),
+        method="GET",
+    )
+    if info["status"] in [200]:
+        content = content["json"]
+    elif info["status"] == 403:
+        helper.generic_permission_failure_msg()
+    else:
+        helper.generic_failure_msg("Failed to get user token information", info)
+    return content
+
+
 def invalidate_user_tokens(helper):
     changed = True
     endpoint = "user-tokens"
     info, content = helper.request(
-        api_url=(
-            helper.NEXUS_API_ENDPOINTS[endpoint]
-        ).format(
+        api_url=(helper.NEXUS_API_ENDPOINTS[endpoint]).format(
             url=helper.module.params["url"],
         ),
         method="DELETE",
     )
 
-    if info["status"] in [200]:
-        content.pop("fetch_url_retries", None)
-    elif info["status"] == 403:
-        helper.module.fail_json(
-            msg="The user does not have permission to perform the operation."
-        )
-    else:
-        helper.module.fail_json(
-            msg="Failed to delete {user}., http_status={http_status}, error_msg='{error_msg}'.".format(
-                error_msg=info["msg"],
-                http_status=info["status"],
-            )
-        )
+    if info["status"] == 403:
+        helper.generic_permission_failure_msg()
+    elif not helper.is_request_status_ok(info):
+        helper.generic_failure_msg("Failed to invalidate user tokens", info)
 
     return content, changed
 
@@ -64,9 +70,7 @@ def update_user_token(helper):
     }
     endpoint = "user-tokens"
     info, content = helper.request(
-        api_url=(
-            helper.NEXUS_API_ENDPOINTS[endpoint]
-        ).format(
+        api_url=(helper.NEXUS_API_ENDPOINTS[endpoint]).format(
             url=helper.module.params["url"],
         ),
         method="PUT",
@@ -74,12 +78,9 @@ def update_user_token(helper):
     )
 
     if info["status"] in [200]:
-        content.pop("fetch_url_retries", None)
         content = data
     elif info["status"] == 403:
-        helper.module.fail_json(
-            msg="The user does not have permission to perform the operation."
-        )
+        helper.generic_permission_failure_msg()
     else:
         helper.module.fail_json(
             msg="Failed to update user token configuration, http_status={http_status}, error_msg='{error_msg}'.".format(
@@ -115,7 +116,15 @@ def main():
 
     content = {}
     changed = True
-    content, changed = update_user_token(helper)
+    existing_config = get_user_token_info(helper)
+    if (
+        existing_config
+        and existing_config["protectContent"] == helper.module.params["protect_content"]
+        and existing_config["enabled"] == helper.module.params["enabled"]
+    ):
+        changed = False
+    else:
+        content, changed = update_user_token(helper)
     if module.params["invalidate_tokens"] == True:
         content, changed = invalidate_user_tokens(helper)
     result["json"] = content

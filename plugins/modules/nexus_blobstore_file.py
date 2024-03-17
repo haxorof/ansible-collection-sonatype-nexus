@@ -45,23 +45,22 @@ def create_blobstore(helper):
         method="POST",
         data=data,
     )
-    if info["status"] == 204:
-        content.pop("fetch_url_retries", None)
-    elif info["status"] == 403:
-        helper.module.fail_json(
-            msg="Insufficient permissions to create blob store '{name}' of type '{type}'.".format(
-                name=helper.module.params["name"],
-                type=blobstore_type,
+    if info["status"] not in [204]:
+        if info["status"] == 403:
+            helper.module.fail_json(
+                msg="Insufficient permissions to create blob store '{name}' of type '{type}'.".format(
+                    name=helper.module.params["name"],
+                    type=blobstore_type,
+                )
             )
-        )
-    else:
-        helper.module.fail_json(
-            msg="Failed to create blob store '{name}', http_status={http_status}, error_msg='{error_msg}'.".format(
-                name=helper.module.params["name"],
-                http_status=info["status"],
-                error_msg=info["msg"],
+        else:
+            helper.module.fail_json(
+                msg="Failed to create blob store '{name}', http_status={http_status}, error_msg='{error_msg}'.".format(
+                    name=helper.module.params["name"],
+                    http_status=info["status"],
+                    error_msg=info["msg"],
+                )
             )
-        )
 
     return content, changed
 
@@ -83,31 +82,30 @@ def update_blobstore(helper, current_data):
         method="PUT",
         data=data,
     )
-    if info["status"] in [204]:
-        content.pop("fetch_url_retries", None)
-    elif info["status"] == 403:
-        helper.module.fail_json(
-            msg="Insufficient permissions to update blob store '{name}' of type '{type}'.".format(
-                name=helper.module.params["name"],
-                type=blobstore_type,
+    if info["status"] not in [204]:
+        if info["status"] == 403:
+            helper.module.fail_json(
+                msg="Insufficient permissions to update blob store '{name}' of type '{type}'.".format(
+                    name=helper.module.params["name"],
+                    type=blobstore_type,
+                )
             )
-        )
-    elif info["status"] == 404:
-        helper.module.fail_json(
-            msg="Blob store '{name}' of type '{type}' not found.".format(
-                name=helper.module.params["name"],
-                type=blobstore_type,
+        elif info["status"] == 404:
+            helper.module.fail_json(
+                msg="Blob store '{name}' of type '{type}' not found.".format(
+                    name=helper.module.params["name"],
+                    type=blobstore_type,
+                )
             )
-        )
-    else:
-        helper.module.fail_json(
-            msg="Failed to update blob store '{name}' of type '{type}', http_status={status}, error_msg='{error_msg}.".format(
-                name=helper.module.params["name"],
-                type=blobstore_type,
-                status=info["status"],
-                error_msg=info["msg"],
+        else:
+            helper.module.fail_json(
+                msg="Failed to update blob store '{name}' of type '{type}', http_status={status}, error_msg='{error_msg}.".format(
+                    name=helper.module.params["name"],
+                    type=blobstore_type,
+                    status=info["status"],
+                    error_msg=info["msg"],
+                )
             )
-        )
 
     return content, changed
 
