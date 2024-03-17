@@ -42,3 +42,11 @@ jobs:
       - name: Setup Nexus 3
         run: ./setup_nexus.sh
         working-directory: ./samples
+        env:
+          NEXUS_HOST: localhost
+
+      - name: Teardown Nexus 3
+        run: ./teardown_nexus.sh
+        working-directory: ./samples
+        env:
+          NEXUS_HOST: localhost
