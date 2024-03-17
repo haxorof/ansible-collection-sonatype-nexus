@@ -9,7 +9,7 @@
       url: http://nexus.localdomain:8081
       validate_certs: no
       username: admin
-      password: password
+      password: admin123
       state: present
       name: testrepo
   #     online: yes
@@ -58,6 +58,6 @@
       url: http://nexus.localdomain:8081
       validate_certs: no
       username: admin
-      password: password
+      password: admin123
       name: testrepo
       state: absent

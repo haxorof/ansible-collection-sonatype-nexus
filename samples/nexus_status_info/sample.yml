@@ -9,7 +9,7 @@
       url: http://nexus.localdomain:8081
       validate_certs: no
       username: admin
-      password: password
+      password: admin123
       check_type: readable
     register: _result
 
@@ -18,7 +18,7 @@
       url: http://nexus.localdomain:8081
       validate_certs: no
       username: admin
-      password: password
+      password: admin123
       check_type: writable
     register: _result
 
@@ -27,7 +27,7 @@
       url: http://nexus.localdomain:8081
       validate_certs: no
       username: admin
-      password: password
+      password: admin123
       check_type: system
     register: _result
 

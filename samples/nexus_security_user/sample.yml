@@ -9,7 +9,7 @@
       url: http://nexus.localdomain:8081
       validate_certs: no
       username: admin
-      password: password
+      password: admin123
     register: _result
 
   - name: Print _result
@@ -21,7 +21,7 @@
       url: http://nexus.localdomain:8081
       validate_certs: no
       username: admin
-      password: password
+      password: admin123
       source: default
     register: _result
 
@@ -34,9 +34,9 @@
       url: http://nexus.localdomain:8081
       validate_certs: no
       username: admin
-      password: password
+      password: admin123
       user_id: myadminuser
-      user_password: password
+      user_password: admin123
       first_name: My
       last_name: Admin
       email_address: myadmin@localhost
@@ -51,7 +51,7 @@
       url: http://nexus.localdomain:8081
       validate_certs: no
       username: admin
-      password: password
+      password: admin123
       user_id: myadmin
     register: _result
 
@@ -64,7 +64,7 @@
       url: http://nexus.localdomain:8081
       validate_certs: no
       username: admin
-      password: password
+      password: admin123
       user_id: myadminuser
       status: disabled
       state: present
@@ -74,6 +74,6 @@
       url: http://nexus.localdomain:8081
       validate_certs: no
       username: admin
-      password: password
+      password: admin123
       user_id: myadminuser
       state: absent

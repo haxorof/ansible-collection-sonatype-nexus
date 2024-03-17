@@ -10,7 +10,7 @@
       validate_certs: no
       name: default2
       username: admin
-      password: password
+      password: admin123
       state: present
     register: _result
 
@@ -24,7 +24,7 @@
       validate_certs: no
       name: default2
       username: admin
-      password: password
+      password: admin123
     register: _result
 
   - name: Print _result
@@ -37,7 +37,7 @@
       validate_certs: no
       name: default2
       username: admin
-      password: password
+      password: admin123
       state: absent
     register: _result
 

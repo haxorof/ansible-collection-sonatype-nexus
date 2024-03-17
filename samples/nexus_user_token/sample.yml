@@ -9,7 +9,7 @@
       url: http://nexus.localdomain:8081
       validate_certs: no
       username: admin
-      password: password
+      password: admin123
     register: _result
 
   - name: Print _result
@@ -21,7 +21,7 @@
       url: http://nexus.localdomain:8081
       validate_certs: no
       username: admin
-      password: password
+      password: admin123
       # Below not required but show default values
       protect_content: no
       enabled: yes
@@ -36,7 +36,7 @@
       url: http://nexus.localdomain:8081
       validate_certs: no
       username: admin
-      password: password
+      password: admin123
       invalidate_tokens: yes
 
   - name: Disable user token capablity
@@ -44,7 +44,7 @@
       url: http://nexus.localdomain:8081
       validate_certs: no
       username: admin
-      password: password
+      password: admin123
       enabled: no
     register: _result
 

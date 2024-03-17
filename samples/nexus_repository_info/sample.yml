@@ -9,7 +9,7 @@
       url: http://nexus.localdomain:8081
       validate_certs: no
       username: admin
-      password: password
+      password: admin123
     register: _result
 
   - name: Print _result
@@ -21,7 +21,7 @@
       url: http://nexus.localdomain:8081
       validate_certs: no
       username: admin
-      password: password
+      password: admin123
       type: proxy
       format: nuget
     register: _result
@@ -35,7 +35,7 @@
       url: http://nexus.localdomain:8081
       validate_certs: no
       username: admin
-      password: password
+      password: admin123
       type: proxy
       format: maven2
     register: _result
@@ -49,7 +49,7 @@
       url: http://nexus.localdomain:8081
       validate_certs: no
       username: admin
-      password: password
+      password: admin123
       name: maven-central
     register: _result
 

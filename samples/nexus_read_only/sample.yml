@@ -9,7 +9,7 @@
       url: http://nexus.localdomain:8081
       validate_certs: no
       username: admin
-      password: password
+      password: "{{ lookup('env', 'NEXUS_PASSWORD') | default('password') }}"
       status: freeze
 
   - name: Get read-only system status
@@ -17,14 +17,14 @@
       url: http://nexus.localdomain:8081
       validate_certs: no
       username: admin
-      password: password
+      password: admin123
 
   - name: Release read-only
     haxorof.sonatype_nexus.nexus_read_only:
       url: http://nexus.localdomain:8081
       validate_certs: no
       username: admin
-      password: password
+      password: admin123
       status: release
 
   - name: Forcibly release read-only
@@ -32,5 +32,5 @@
       url: http://nexus.localdomain:8081
       validate_certs: no
       username: admin
-      password: password
+      password: admin123
       status: force-release

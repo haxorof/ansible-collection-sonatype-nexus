@@ -9,7 +9,7 @@
       url: http://nexus.localdomain:8081
       validate_certs: no
       username: admin
-      password: password
+      password: admin123
     register: _result
 
   - name: Print _result
@@ -21,7 +21,7 @@
       url: http://nexus.localdomain:8081
       validate_certs: no
       username: admin
-      password: password
+      password: admin123
       user_id: anonymous
       realm_name: NexusAuthorizingRealm
       state: enabled
@@ -31,6 +31,6 @@
       url: http://nexus.localdomain:8081
       validate_certs: no
       username: admin
-      password: password
+      password: admin123
       user_id: anonymous
       state: disabled

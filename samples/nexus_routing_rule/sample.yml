@@ -9,7 +9,7 @@
       url: http://nexus.localdomain:8081
       validate_certs: no
       username: admin
-      password: password
+      password: admin123
       name: blockrule
       description: This is a blocking routing rule
       mode: BLOCK
@@ -23,7 +23,7 @@
       url: http://nexus.localdomain:8081
       validate_certs: no
       username: admin
-      password: password
+      password: admin123
       name: allowrule
       description: This is an allow routing rule
       mode: ALLOW
@@ -36,7 +36,7 @@
       url: http://nexus.localdomain:8081
       validate_certs: no
       username: admin
-      password: password
+      password: admin123
     register: _result
 
   - name: Print _result
@@ -48,7 +48,7 @@
       url: http://nexus.localdomain:8081
       validate_certs: no
       username: admin
-      password: password
+      password: admin123
       name: blockrule
     register: _result
 
@@ -61,7 +61,7 @@
       url: http://nexus.localdomain:8081
       validate_certs: no
       username: admin
-      password: password
+      password: admin123
       name: "{{ item }}"
       state: absent
     with_items:
