@@ -35,11 +35,9 @@ def get_user_token_info(helper):
         ),
         method="GET",
     )
-    if info["status"] in [200]:
-        content = content["json"]
-    elif info["status"] == 403:
+    if info["status"] == 403:
         helper.generic_permission_failure_msg()
-    else:
+    elif not helper.is_request_status_ok(info):
         helper.generic_failure_msg("Failed to get user token information", info)
     return content
 
