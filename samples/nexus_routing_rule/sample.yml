@@ -6,7 +6,7 @@
   tasks:
   - name: Create routing rule (block)
     haxorof.sonatype_nexus.nexus_routing_rule:
-      url: http://{{ nexus_host }}:8081
+      url: "{{ nexus_url }}"
       validate_certs: no
       username: admin
       password: admin123
@@ -17,10 +17,12 @@
         - "^/com/example/.*"
         - "^/org/example/.*"
       state: present
+    tags:
+      - molecule-idempotence-notest
 
   - name: Create routing rule (allow)
     haxorof.sonatype_nexus.nexus_routing_rule:
-      url: http://{{ nexus_host }}:8081
+      url: "{{ nexus_url }}"
       validate_certs: no
       username: admin
       password: admin123
@@ -30,10 +32,12 @@
       matchers:
         - "^/com/myorg/.*"
       state: present
+    tags:
+      - molecule-idempotence-notest
 
   - name: List routing rules
     haxorof.sonatype_nexus.nexus_routing_rule_info:
-      url: http://{{ nexus_host }}:8081
+      url: "{{ nexus_url }}"
       validate_certs: no
       username: admin
       password: admin123
@@ -45,7 +49,7 @@
 
   - name: Get routing rule blockrule
     haxorof.sonatype_nexus.nexus_routing_rule_info:
-      url: http://{{ nexus_host }}:8081
+      url: "{{ nexus_url }}"
       validate_certs: no
       username: admin
       password: admin123
@@ -58,7 +62,7 @@
 
   - name: Delete routing rules
     haxorof.sonatype_nexus.nexus_routing_rule:
-      url: http://{{ nexus_host }}:8081
+      url: "{{ nexus_url }}"
       validate_certs: no
       username: admin
       password: admin123
@@ -67,3 +71,5 @@
     with_items:
       - blockrule
       - allowrule
+    tags:
+      - molecule-idempotence-notest

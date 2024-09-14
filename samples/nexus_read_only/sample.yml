@@ -6,31 +6,37 @@
   tasks:
   - name: Enable read-only
     haxorof.sonatype_nexus.nexus_read_only:
-      url: http://{{ nexus_host }}:8081
+      url: "{{ nexus_url }}"
       validate_certs: no
       username: admin
-      password: "{{ lookup('env', 'NEXUS_PASSWORD') | default('password') }}"
+      password: admin123
       status: freeze
+    tags:
+      - molecule-idempotence-notest
 
   - name: Get read-only system status
     haxorof.sonatype_nexus.nexus_read_only_info:
-      url: http://{{ nexus_host }}:8081
+      url: "{{ nexus_url }}"
       validate_certs: no
       username: admin
       password: admin123
 
   - name: Release read-only
     haxorof.sonatype_nexus.nexus_read_only:
-      url: http://{{ nexus_host }}:8081
+      url: "{{ nexus_url }}"
       validate_certs: no
       username: admin
       password: admin123
       status: release
+    tags:
+      - molecule-idempotence-notest
 
   - name: Forcibly release read-only
     haxorof.sonatype_nexus.nexus_read_only:
-      url: http://{{ nexus_host }}:8081
+      url: "{{ nexus_url }}"
       validate_certs: no
       username: admin
       password: admin123
       status: force-release
+    tags:
+      - molecule-idempotence-notest

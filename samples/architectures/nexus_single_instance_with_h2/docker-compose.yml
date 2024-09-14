@@ -1,0 +1,28 @@
+---
+services:
+  caddy:
+    image: caddy:latest
+    ports:
+      - "80:80"
+      - "443:443"
+    volumes:
+      - caddy_data:/data
+      - caddy_config:/config
+      - ./Caddyfile:/etc/caddy/Caddyfile
+    depends_on:
+      - nexus
+
+  nexus:
+    image: sonatype/nexus3:latest
+    environment:
+      - NEXUS_SECURITY_RANDOMPASSWORD=false
+    volumes:
+      - nexus_data:/nexus-data
+
+volumes:
+  nexus_data:
+    driver: local
+  caddy_data:
+    driver: local
+  caddy_config:
+    driver: local

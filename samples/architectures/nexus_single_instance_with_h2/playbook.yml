@@ -1,0 +1,42 @@
+---
+- hosts: all
+  tasks:
+    - name: Ensure root directory exists
+      become: true
+      become_user: "{{ nexus_system_user }}"
+      ansible.builtin.file:
+        path: "{{ nexus_location }}"
+        state: directory
+
+    - name: Copy files
+      become: true
+      become_user: "{{ nexus_system_user }}"
+      ansible.builtin.copy:
+        src: "{{ item }}"
+        dest: "{{ nexus_location }}/"
+      loop:
+        - Caddyfile
+        - docker-compose.yml
+
+    - name: Pull images
+      become: true
+      become_user: "{{ nexus_system_user }}"
+      community.docker.docker_compose_v2_pull:
+        project_src: "{{ nexus_location }}"
+
+    - name: Bring up Sonatype Nexus 3
+      become: true
+      become_user: "{{ nexus_system_user }}"
+      community.docker.docker_compose_v2:
+        project_src: "{{ nexus_location }}"
+        state: present
+
+    - name: Wait for Sonatype Nexus 3 to become writable
+      haxorof.sonatype_nexus.nexus_status_info:
+        url: "{{ nexus_base_url }}"
+        validate_certs: no
+        username: "{{ nexus_admin_username }}"
+        password: "{{ nexus_admin_password }}"
+        check_type: writable
+      retries: 15
+      delegate_to: localhost

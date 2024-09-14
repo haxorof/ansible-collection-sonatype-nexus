@@ -1,0 +1,15 @@
+---
+- name: Prepare
+  hosts: nexus
+  gather_facts: true
+  vars:
+    docker_users:
+      - vagrant
+  roles:
+    - haxorof.docker_ce
+  tasks:
+    - name: Force all notified handlers to run at this point, not waiting for normal sync points
+      ansible.builtin.meta: flush_handlers
+
+    - name: Reset connection
+      ansible.builtin.meta: reset_connection

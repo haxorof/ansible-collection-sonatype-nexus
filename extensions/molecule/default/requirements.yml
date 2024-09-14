@@ -1,0 +1,6 @@
+---
+roles:
+  - name: haxorof.docker_ce
+
+collections:
+  - name: community.docker

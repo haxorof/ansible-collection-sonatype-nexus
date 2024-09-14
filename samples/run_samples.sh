@@ -23,7 +23,7 @@ NEXUS_HOST=${NEXUS_HOST:-"nexus.localdomain"}
 
 for SAMPLE in ${SAMPLES[@]}; do
     cd $SAMPLE
-    ansible-playbook -c local --extra-vars "nexus_host=$NEXUS_HOST" sample.yml
+    ansible-playbook -c local --extra-vars "nexus_url=http://$NEXUS_HOST:8081" sample.yml
     cd -
 done
 

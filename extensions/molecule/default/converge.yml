@@ -1,0 +1,42 @@
+---
+- ansible.builtin.import_playbook: ../../../samples/architectures/nexus_single_instance_with_h2/playbook.yml
+
+- ansible.builtin.import_playbook: ../../../samples/nexus_status_info/sample.yml
+  vars:
+    nexus_url: https://nexus.localdomain
+
+- ansible.builtin.import_playbook: ../../../samples/nexus_blobstore_file/sample.yml
+  vars:
+    nexus_url: https://nexus.localdomain
+
+- ansible.builtin.import_playbook: ../../../samples/nexus_read_only/sample.yml
+  vars:
+    nexus_url: https://nexus.localdomain
+
+- ansible.builtin.import_playbook: ../../../samples/nexus_routing_rule/sample.yml
+  vars:
+    nexus_url: https://nexus.localdomain
+
+- ansible.builtin.import_playbook: ../../../samples/nexus_security_anonymous/sample.yml
+  vars:
+    nexus_url: https://nexus.localdomain
+
+- ansible.builtin.import_playbook: ../../../samples/nexus_security_user/sample.yml
+  vars:
+    nexus_url: https://nexus.localdomain
+
+- ansible.builtin.import_playbook: ../../../samples/nexus_security_user_sources_info/sample.yml
+  vars:
+    nexus_url: https://nexus.localdomain
+
+- ansible.builtin.import_playbook: ../../../samples/nexus_repository_info/sample.yml
+  vars:
+    nexus_url: https://nexus.localdomain
+
+- ansible.builtin.import_playbook: ../../../samples/nexus_repository_docker_proxy/sample.yml
+  vars:
+    nexus_url: https://nexus.localdomain
+
+- ansible.builtin.import_playbook: ../../../samples/nexus_repository_maven_proxy/sample.yml
+  vars:
+    nexus_url: https://nexus.localdomain

@@ -6,7 +6,7 @@
   tasks:
   - name: Create Docker proxy repository
     haxorof.sonatype_nexus.nexus_repository_docker_proxy:
-      url: http://{{ nexus_host }}:8081
+      url: "{{ nexus_url }}"
       validate_certs: no
       username: admin
       password: admin123
@@ -61,12 +61,16 @@
   #       foreign_layer_url_whitelist: [
   #         "string"
   #       ]
+    tags:
+      - molecule-idempotence-notest
 
   - name: Delete Docker proxy repository
     haxorof.sonatype_nexus.nexus_repository_docker_proxy:
-      url: http://{{ nexus_host }}:8081
+      url: "{{ nexus_url }}"
       validate_certs: no
       username: admin
       password: admin123
       name: testrepo
       state: absent
+    tags:
+      - molecule-idempotence-notest

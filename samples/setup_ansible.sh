@@ -5,7 +5,7 @@ if [[ ! -d $SCRIPT_DIR/../.linuxenv ]]; then
 fi
 . $SCRIPT_DIR/../.linuxenv/bin/activate
 pip install -U pip
-pip install ansible-core
+pip install ansible-core ansible-dev-tools molecule-plugins[vagrant]
 pip install -r $SCRIPT_DIR/../requirements.txt
 
 COLLECTIONS_HAXOROF_DIR="$HOME/.ansible/collections/ansible_collections/haxorof"

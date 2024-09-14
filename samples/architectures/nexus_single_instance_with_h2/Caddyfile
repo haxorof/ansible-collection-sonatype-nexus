@@ -1,0 +1,4 @@
+nexus.localdomain {
+    tls internal
+    reverse_proxy nexus:8081
+}

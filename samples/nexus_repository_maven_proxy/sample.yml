@@ -6,7 +6,7 @@
   tasks:
   - name: Create Maven proxy repository
     haxorof.sonatype_nexus.nexus_repository_maven_proxy:
-      url: http://{{ nexus_host }}:8081
+      url: "{{ nexus_url }}"
       validate_certs: no
       username: admin
       password: admin123
@@ -52,12 +52,16 @@
   #       version_policy: MIXED
   #       layout_policy: STRICT
   #       content_disposition: ATTACHMENT
+    tags:
+      - molecule-idempotence-notest
 
   - name: Delete Maven proxy repository
     haxorof.sonatype_nexus.nexus_repository_maven_proxy:
-      url: http://{{ nexus_host }}:8081
+      url: "{{ nexus_url }}"
       validate_certs: no
       username: admin
       password: admin123
       name: testrepo
       state: absent
+    tags:
+      - molecule-idempotence-notest

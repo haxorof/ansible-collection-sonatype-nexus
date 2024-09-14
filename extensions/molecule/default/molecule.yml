@@ -1,0 +1,19 @@
+---
+dependency:
+  name: galaxy
+driver:
+  name: vagrant
+  provision: true
+  default_box: generic/alma9
+  parallel: no
+platforms:
+  - name: nexus
+    memory: 8092
+    cpus: 2
+    config_options:
+      synced_folder: False
+    interfaces:
+      - auto_config: true
+        network_name: private_network
+        type: static
+        ip: 192.168.56.56

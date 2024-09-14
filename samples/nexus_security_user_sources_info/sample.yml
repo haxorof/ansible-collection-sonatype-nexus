@@ -6,7 +6,7 @@
   tasks:
   - name: List user sources
     haxorof.sonatype_nexus.nexus_security_user_sources_info:
-      url: http://{{ nexus_host }}:8081
+      url: "{{ nexus_url }}"
       validate_certs: no
       username: admin
       password: admin123

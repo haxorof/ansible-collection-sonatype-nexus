@@ -1,0 +1,9 @@
+nexus_location: "{{ ansible_env['HOME'] }}/nexus"
+nexus_system_user: "{{ ansible_env['USER'] }}"
+nexus_host: nexus.localdomain
+nexus_port: 443
+nexus_base_url: https://{{ nexus_host }}:{{ nexus_port }}
+
+nexus_admin_username: admin
+nexus_admin_password: "{{ nexus_admin_default_password }}"
+nexus_admin_default_password: admin123
