@@ -2,14 +2,19 @@
 - name: Manage read-only
   hosts: localhost
   become: false
-  gather_facts: no
+  gather_facts: false
+
+  vars:
+    nexus_username: "admin"
+    nexus_password: "admin123"
+
   tasks:
   - name: Enable read-only
     haxorof.sonatype_nexus.nexus_read_only:
       url: "{{ nexus_url }}"
-      validate_certs: no
-      username: admin
-      password: admin123
+      validate_certs: false
+      username: "{{ nexus_username }}"
+      password: "{{ nexus_password }}"
       status: freeze
     tags:
       - molecule-idempotence-notest
@@ -17,16 +22,16 @@
   - name: Get read-only system status
     haxorof.sonatype_nexus.nexus_read_only_info:
       url: "{{ nexus_url }}"
-      validate_certs: no
-      username: admin
-      password: admin123
+      validate_certs: false
+      username: "{{ nexus_username }}"
+      password: "{{ nexus_password }}"
 
   - name: Release read-only
     haxorof.sonatype_nexus.nexus_read_only:
       url: "{{ nexus_url }}"
-      validate_certs: no
-      username: admin
-      password: admin123
+      validate_certs: false
+      username: "{{ nexus_username }}"
+      password: "{{ nexus_password }}"
       status: release
     tags:
       - molecule-idempotence-notest
@@ -34,9 +39,9 @@
   - name: Forcibly release read-only
     haxorof.sonatype_nexus.nexus_read_only:
       url: "{{ nexus_url }}"
-      validate_certs: no
-      username: admin
-      password: admin123
+      validate_certs: false
+      username: "{{ nexus_username }}"
+      password: "{{ nexus_password }}"
       status: force-release
     tags:
       - molecule-idempotence-notest

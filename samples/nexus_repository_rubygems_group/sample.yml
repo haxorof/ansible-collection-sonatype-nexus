@@ -1,0 +1,69 @@
+---
+- name: Manage RubyGems group repository
+  hosts: localhost
+  become: false
+  gather_facts: false
+
+  vars:
+    nexus_username: "admin"
+    nexus_password: "admin123"
+    rubygems_group_repo: "rubygems-group-repo-1"
+    rubygems_proxy_repo: "rubygems-proxy-repo-1"
+    blob_store: "default"
+    cleanup_policy: "my-policy"
+
+  pre_tasks:
+    - name: Create RubyGems proxy repository
+      haxorof.sonatype_nexus.nexus_repository_rubygems_proxy:
+        url: "{{ nexus_url }}"
+        validate_certs: false
+        username: "{{ nexus_username }}"
+        password: "{{ nexus_password }}"
+        state: present
+        name: "{{ rubygems_proxy_repo }}"
+        storage:
+          blob_store_name: "{{ blob_store }}"
+        proxy:
+          remote_url: "https://remote.rubygems.com"
+
+  tasks:
+    - name: Create RubyGems group repository
+      haxorof.sonatype_nexus.nexus_repository_rubygems_group:
+        url: "{{ nexus_url }}"
+        validate_certs: false
+        username: "{{ nexus_username }}"
+        password: "{{ nexus_password }}"
+        state: present
+        name: "{{ rubygems_group_repo }}"
+        storage:
+          blob_store_name: "{{ blob_store }}"
+          strict_content_type_validation: true
+        cleanup:
+          policy_names:
+            - "{{ cleanup_policy }}"
+        member_repos:
+          - "{{ rubygems_proxy_repo }}"
+
+    - name: Delete RubyGems group repository
+      haxorof.sonatype_nexus.nexus_repository_rubygems_group:
+        url: "{{ nexus_url }}"
+        validate_certs: false
+        username: "{{ nexus_username }}"
+        password: "{{ nexus_password }}"
+        state: absent
+        name: "{{ rubygems_group_repo }}"
+        storage:
+          blob_store_name: "{{ blob_store }}"
+        member_repos: []
+
+  post_tasks:
+    - name: Delete RubyGems proxy repository
+      haxorof.sonatype_nexus.nexus_repository_rubygems_proxy:
+        url: "{{ nexus_url }}"
+        validate_certs: false
+        username: "{{ nexus_username }}"
+        password: "{{ nexus_password }}"
+        state: absent
+        name: "{{ rubygems_proxy_repo }}"
+        storage:
+          blob_store_name: "{{ blob_store }}"

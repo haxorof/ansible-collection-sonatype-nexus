@@ -1,0 +1,36 @@
+---
+- name: Configure Nexus Email Settings
+  hosts: localhost
+  gather_facts: false
+
+  vars:
+    nexus_username: "admin"
+    nexus_password: "admin123"
+    nexus_email:
+      - email_server_enable: true
+        email_host: localhost
+        email_port: 8678
+        email_from: nexus@example.com
+        email_subject_prefix: [Nexus]
+
+  tasks:
+    - name: Configure Email Settings in Nexus
+      haxorof.sonatype_nexus.nexus_email:
+        url: "{{ nexus_url }}"
+        validate_certs: false
+        username: "{{ nexus_username }}"
+        password: "{{ nexus_password }}"
+        enabled: "{{ item.email_server_enable }}"
+        host: "{{ item.email_host }}"
+        port: "{{ item.email_port }}"
+        from_address: "{{ item.email_from }}"
+        subject_prefix: "{{ item.email_subject_prefix }}"
+      loop: "{{ nexus_email }}"
+
+    - name: Reset Email Settings in Nexus
+      haxorof.sonatype_nexus.nexus_email:
+        url: "{{ nexus_url }}"
+        validate_certs: false
+        username: "{{ nexus_username }}"
+        password: "{{ nexus_password }}"
+        state: absent

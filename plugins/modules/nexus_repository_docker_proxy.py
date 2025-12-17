@@ -31,7 +31,20 @@ from ansible_collections.haxorof.sonatype_nexus.plugins.module_utils.nexus impor
 def repository_filter(item, helper):
     return item["name"] == helper.module.params["name"]
 
+# def adjust_proxy_repository_data(existing_data):
+#     """
+#     Adjust the existing data for proxy repositories to align with expected input data.
+#     """
+#     # Remove writePolicy for proxy repositories if present.
+#     if "writePolicy" in existing_data.get("storage", {}):
+#         existing_data["storage"].pop("writePolicy")
+#     # Handle the discrepancy between routingRuleName and routingRule.
+#     if "routingRuleName" in existing_data:
+#         existing_data.update({"routingRule": existing_data.pop("routingRuleName")})
+#     return existing_data
+
 def main():
+    endpoint_path_to_use = "/docker/proxy"
     argument_spec = NexusHelper.nexus_argument_spec()
     argument_spec.update(
         docker=dict(
@@ -51,12 +64,12 @@ def main():
             options=dict(
                 index_type=dict(type="str", choices=["HUB", "REGISTRY", "CUSTOM"], default="REGISTRY"),
                 index_url=dict(type="str", required=False, no_log=False),
-                cache_foreign_layers=dict(type="bool", default=True),
+                cache_foreign_layers=dict(type="bool", default=False),
                 foreign_layer_url_whitelist=dict(type="list", elements="str", required=False, no_log=False, default=list()),
             ),
         ),
     )
-    argument_spec.update(NexusRepositoryHelper.common_proxy_argument_spec())
+    argument_spec.update(NexusRepositoryHelper.common_proxy_argument_spec(endpoint_path_to_use))
     module = AnsibleModule(
         argument_spec=argument_spec,
         supports_check_mode=True,
@@ -75,8 +88,9 @@ def main():
     changed, content = True, {}
     existing_data = NexusRepositoryHelper.list_filtered_repositories(helper, repository_filter)
     if module.params["state"] == "present":
-        endpoint_path = "/docker/proxy"
+        endpoint_path = endpoint_path_to_use
         additional_data = {
+ #           "storage": NexusHelper.camalize_param(helper, "storage"),
             "docker": NexusHelper.camalize_param(helper, "docker"),
             "dockerProxy": NexusHelper.camalize_param(helper, "docker_proxy"),
         }

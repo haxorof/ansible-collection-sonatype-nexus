@@ -1,0 +1,33 @@
+---
+- name: Manage Hosted NPM Repositories in Nexus
+  hosts: localhost
+  gather_facts: false
+
+  vars:
+    nexus_username: admin
+    nexus_password: admin123
+    nexus_repos_npm_hosted:
+      - name: npm-hosted
+        storage:
+          blob_store_name: default
+
+  tasks:
+    - name: Create hosted npm repository
+      haxorof.sonatype_nexus.nexus_repository_npm_hosted:
+        url: "{{ nexus_url }}"
+        validate_certs: false
+        username: "{{ nexus_username }}"
+        password: "{{ nexus_password }}"
+        state: present
+        name: "{{ item.name }}"
+        storage: "{{ item.storage }}"
+      with_items: "{{ nexus_repos_npm_hosted }}"
+
+    - name: Delete hosted npm repository
+      haxorof.sonatype_nexus.nexus_repository_npm_hosted:
+        url: "{{ nexus_url }}"
+        validate_certs: false
+        username: "{{ nexus_username }}"
+        password: "{{ nexus_password }}"
+        state: absent
+        name: npm-hosted

@@ -1,0 +1,50 @@
+---
+- name: Manage user tokens
+  hosts: localhost
+  become: false
+  gather_facts: false
+  tasks:
+    - name: Show current user token information
+      haxorof.sonatype_nexus.nexus_security_user_token_info:
+        url: "{{ nexus_url }}"
+        validate_certs: false
+        username: admin
+        password: admin123
+      register: _result
+
+    - name: Print _result
+      ansible.builtin.debug:
+        var: _result
+
+    - name: Enable user token capability
+      haxorof.sonatype_nexus.nexus_security_user_token:
+        url: "{{ nexus_url }}"
+        validate_certs: false
+        username: admin
+        password: admin123
+      register: _result
+
+    - name: Print _result
+      ansible.builtin.debug:
+        var: _result
+
+    - name: Invalidate all user tokens
+      haxorof.sonatype_nexus.nexus_security_user_token:
+        url: "{{ nexus_url }}"
+        validate_certs: false
+        username: admin
+        password: admin123
+        invalidate_tokens: true
+
+    - name: Disable user token capablity
+      haxorof.sonatype_nexus.nexus_security_user_token:
+        url: "{{ nexus_url }}"
+        validate_certs: false
+        username: admin
+        password: admin123
+        enabled: false
+      register: _result
+
+    - name: Print _result
+      ansible.builtin.debug:
+        var: _result

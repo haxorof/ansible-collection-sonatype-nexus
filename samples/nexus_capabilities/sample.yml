@@ -1,0 +1,54 @@
+---
+- name: Manage capabilities
+  hosts: localhost
+  become: false
+  gather_facts: false
+
+  vars:
+    nexus_username: admin
+    nexus_password: admin123
+    nexus_capabilities:
+      - type: "audit"
+        notes: "Automatically added on Mon May 12 14:32:48 GMT 2025"
+        enabled: true
+        properties: {}
+      - type: "OutreachManagementCapability"
+        notes: "Automatically added on Mon May 12 14:32:48 GMT 2025"
+        enabled: false
+        properties: {}
+
+  tasks:
+  - name: Create/Update Capabilities
+    haxorof.sonatype_nexus.nexus_capabilities:
+      url: "{{ nexus_url }}"
+      validate_certs: false
+      username: "{{ nexus_username }}"
+      password: "{{ nexus_password }}"
+      state: present
+      type: "{{ item.type }}"
+      notes: "{{ item.notes }}"
+      enabled: "{{ item.enabled }}"
+      properties: "{{ item.properties }}"
+    register: _result
+    delegate_to: 127.0.0.1
+    loop: "{{ nexus_capabilities }}"
+
+  - name: Print _result
+    ansible.builtin.debug:
+      var: _result
+
+  - name: Delete Capabilities
+    haxorof.sonatype_nexus.nexus_capabilities:
+      url: "{{ nexus_url }}"
+      validate_certs: false
+      username: "{{ nexus_username }}"
+      password: "{{ nexus_password }}"
+      state: absent
+      type: "{{ item.type }}"
+    register: _delete_result
+    delegate_to: 127.0.0.1
+    loop: "{{ nexus_capabilities }}"
+
+  - name: Print _delete_result
+    ansible.builtin.debug:
+      var: _delete_result

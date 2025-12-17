@@ -32,8 +32,11 @@ def repository_filter(item, helper):
     return item["name"] == helper.module.params["name"]
 
 def main():
+    endpoint_path_to_use = "/maven/proxy"
     argument_spec = NexusHelper.nexus_argument_spec()
     argument_spec.update(
+        format=dict(type="str", choices=["maven2"], required=False),
+        type=dict(type="str", choices=["proxy"], required=False),
         maven=dict(
             type='dict',
             apply_defaults=True,
@@ -44,7 +47,7 @@ def main():
             ),
         ),
     )
-    argument_spec.update(NexusRepositoryHelper.common_proxy_argument_spec())
+    argument_spec.update(NexusRepositoryHelper.common_proxy_argument_spec(endpoint_path_to_use))
     module = AnsibleModule(
         argument_spec=argument_spec,
         supports_check_mode=True,
@@ -63,7 +66,7 @@ def main():
     changed, content = True, {}
     existing_data = NexusRepositoryHelper.list_filtered_repositories(helper, repository_filter)
     if module.params["state"] == "present":
-        endpoint_path = "/maven/proxy"
+        endpoint_path = endpoint_path_to_use
         additional_data = {
             "maven": NexusHelper.camalize_param(helper, "maven"),
         }

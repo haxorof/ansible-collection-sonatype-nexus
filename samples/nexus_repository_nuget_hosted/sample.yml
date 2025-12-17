@@ -1,0 +1,33 @@
+---
+- name: Manage Hosted Nuget Repositories in Nexus
+  hosts: localhost
+  gather_facts: false
+
+  vars:
+    nexus_username: admin
+    nexus_password: admin123
+    nexus_repos_nuget_hosted:
+      - name: nuget-hosted-1
+        storage:
+          blob_store_name: default
+
+  tasks:
+    - name: Create hosted nuget repository
+      haxorof.sonatype_nexus.nexus_repository_nuget_hosted:
+        url: "{{ nexus_url }}"
+        validate_certs: false
+        username: "{{ nexus_username }}"
+        password: "{{ nexus_password }}"
+        state: present
+        name: "{{ item.name }}"
+        storage: "{{ item.storage }}"
+      with_items: "{{ nexus_repos_nuget_hosted }}"
+
+    - name: Delete hosted nuget repository
+      haxorof.sonatype_nexus.nexus_repository_nuget_hosted:
+        url: "{{ nexus_url }}"
+        validate_certs: false
+        username: "{{ nexus_username }}"
+        password: "{{ nexus_password }}"
+        state: absent
+        name: nuget-hosted-1

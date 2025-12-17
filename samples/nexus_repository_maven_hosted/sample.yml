@@ -1,0 +1,34 @@
+---
+- name: Manage Maven Hosted Repositories in Nexus
+  hosts: localhost
+  gather_facts: false
+
+  vars:
+    nexus_username: admin
+    nexus_password: admin123
+    nexus_repos_maven_hosted:
+      - name: maven-hosted
+        storage:
+          blob_store_name: default
+
+  tasks:
+    - name: Create hosted maven repository
+      haxorof.sonatype_nexus.nexus_repository_maven_hosted:
+        url: "{{ nexus_url }}"
+        validate_certs: false
+        username: "{{ nexus_username }}"
+        password: "{{ nexus_password }}"
+        state: present
+        name: "{{ item.name }}"
+        storage: "{{ item.storage }}"
+      with_items: "{{ nexus_repos_maven_hosted }}"
+
+    - name: Delete hosted maven repository
+      haxorof.sonatype_nexus.nexus_repository_maven_hosted:
+        url: "{{ nexus_url }}"
+        validate_certs: false
+        username: "{{ nexus_username }}"
+        password: "{{ nexus_password }}"
+        state: absent
+        name:  "{{ item.name }}"
+      with_items: "{{ nexus_repos_maven_hosted }}"

@@ -34,7 +34,7 @@
     - name: Wait for Sonatype Nexus 3 to become writable
       haxorof.sonatype_nexus.nexus_status_info:
         url: "{{ nexus_base_url }}"
-        validate_certs: no
+        validate_certs: false
         username: "{{ nexus_admin_username }}"
         password: "{{ nexus_admin_password }}"
         check_type: writable

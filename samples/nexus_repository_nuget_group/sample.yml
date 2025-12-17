@@ -1,0 +1,37 @@
+---
+- name: Manage Nuget group repository
+  hosts: localhost
+  gather_facts: false
+
+  vars:
+    nexus_username: admin
+    nexus_password: admin123
+    nexus_repos_nuget_group:
+      - name: nuget-group-1
+        storage:
+          blob_store_name: default
+          strict_content_type_validation: true
+        member_repos:
+          - nuget.org-proxy
+
+  tasks:
+    - name: Create nuget group repository
+      haxorof.sonatype_nexus.nexus_repository_nuget_group:
+        url: "{{ nexus_url }}"
+        validate_certs: false
+        username: "{{ nexus_username }}"
+        password: "{{ nexus_password }}"
+        state: present
+        name: "{{ item.name }}"
+        storage: "{{ item.storage }}"
+        member_repos: "{{ item.member_repos }}"
+      with_items: "{{ nexus_repos_nuget_group }}"
+ 
+    - name: Delete nuget group
+      haxorof.sonatype_nexus.nexus_repository_nuget_group:
+        url: "{{ nexus_url }}"
+        validate_certs: false
+        username: "{{ nexus_username }}"
+        password: "{{ nexus_password }}"
+        state: absent
+        name: nuget-group-1

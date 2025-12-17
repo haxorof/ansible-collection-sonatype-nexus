@@ -1,0 +1,51 @@
+---
+- name: Manage Nexus roles
+  hosts: localhost
+  become: false
+  gather_facts: false
+
+  vars:
+    nexus_username: "admin"
+    nexus_password: "admin123"
+    nexus_roles:
+      - id: view-anonymous
+        name: view-anonymous
+        description: "Role for access to anoymous repos"
+        privileges:
+          - nx-healthcheck-read
+          - nx-search-read
+        roles: []
+      - id: test-cd-server
+        name: test-cd-server
+        description: "Role for ci"
+        privileges:
+          - nx-apikey-all
+          - nx-repository-view-*-*-add
+        roles: []
+
+  tasks:
+    - name: Configure Nexus roles
+      haxorof.sonatype_nexus.nexus_roles:
+        url: "{{ nexus_url }}"
+        username: "{{ nexus_username }}"
+        password: "{{ nexus_password }}"
+        id: "{{ item.id }}"
+        name: "{{ item.name }}"
+        description: "{{ item.description }}"
+        privileges: "{{ item.privileges }}"
+        roles: "{{ item.roles }}"
+        validate_certs: false
+        use_proxy: false
+      loop: "{{ nexus_roles }}"
+
+    - name: Remove Nexus role
+      haxorof.sonatype_nexus.nexus_roles:
+        url: "{{ nexus_url }}"
+        username: "{{ nexus_username }}"
+        password: "{{ nexus_password }}"
+        id: "{{ item.id }}"
+        name: "{{ item.name }}"
+        state: absent
+        validate_certs: false
+        use_proxy: false
+      loop: "{{ nexus_roles }}"

@@ -5,6 +5,10 @@
 # MIT License (see COPYING or https://opensource.org/license/mit/)
 
 from __future__ import absolute_import, division, print_function
+from ansible.module_utils.basic import AnsibleModule
+from ansible_collections.haxorof.sonatype_nexus.plugins.module_utils.nexus import (
+    NexusHelper,
+)
 
 __metaclass__ = type
 
@@ -20,12 +24,6 @@ EXAMPLES = r"""
 
 RETURN = r"""
 """
-
-from ansible.module_utils.basic import AnsibleModule, env_fallback
-from ansible_collections.haxorof.sonatype_nexus.plugins.module_utils.nexus import (
-    NexusHelper,
-)
-
 
 def check_status(helper):
     endpoint = "status"
@@ -50,9 +48,9 @@ def check_status(helper):
 def main():
     argument_spec = NexusHelper.nexus_argument_spec()
     argument_spec.update(
-        check_type=dict(
-            type="str", choices=["writable", "readable", "system"], default="writable"
-        ),
+        check_type={
+            "type": "str", "choices": ["writable", "readable", "system"], "default": "writable"
+        },
     )
     module = AnsibleModule(
         argument_spec=argument_spec,
@@ -63,11 +61,11 @@ def main():
     helper = NexusHelper(module)
 
     # Seed the result dict in the object
-    result = dict(
-        changed=False,
-        messages=[],
-        json={},
-    )
+    result = {
+        "changed": False,
+        "messages": [],
+        "json": {},
+    }
 
     content = check_status(helper)
     result["json"] = content

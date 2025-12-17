@@ -35,6 +35,7 @@ def list_users(helper):
             + helper.generate_url_query(
                 {
                     "userId": "user_id",
+                    "source": "source"
                 }
             )
         ).format(
@@ -232,6 +233,7 @@ def main():
             default="active",
             choices=["active", "disabled"],  # , "locked", "changepassword"
         ),
+        source=dict(type="str", required=False, default="default", no_log=False),
         user_id=dict(type="str", required=True, no_log=False),
         user_password=dict(type="str", required=False, no_log=True),
     )

@@ -1,0 +1,56 @@
+---
+- name: Manage raw group repository in Nexus
+  hosts: localhost
+  gather_facts: false
+
+  vars:
+    nexus_username: admin
+    nexus_password: admin123
+
+  pre_tasks:
+    - name: Create Raw proxy repository
+      haxorof.sonatype_nexus.nexus_repository_raw_proxy:
+        url: "{{ nexus_url }}"
+        validate_certs: false
+        username: "{{ nexus_username }}"
+        password: "{{ nexus_password }}"
+        state: present
+        name: raw-proxy-repo-1
+        storage:
+          blob_store_name: default
+        proxy:
+          remote_url: "https://example.com/raw"
+
+  tasks:
+    - name: Create raw group repository
+      haxorof.sonatype_nexus.nexus_repository_raw_group:
+        url: "{{ nexus_url }}"
+        validate_certs: false
+        username: "{{ nexus_username }}"
+        password: "{{ nexus_password }}"
+        state: present
+        name: raw-public
+        storage:
+          blob_store_name: default
+          strict_content_type_validation: true
+        member_repos:
+          - raw-proxy-repo-1
+
+    - name: Delete raw group repository
+      haxorof.sonatype_nexus.nexus_repository_raw_group:
+        url: "{{ nexus_url }}"
+        validate_certs: false
+        username: "{{ nexus_username }}"
+        password: "{{ nexus_password }}"
+        state: absent
+        name: raw-public
+
+  post_tasks:
+    - name: Delete raw proxy repository
+      haxorof.sonatype_nexus.nexus_repository_raw_proxy:
+        url: "{{ nexus_url }}"
+        validate_certs: false
+        username: "{{ nexus_username }}"
+        password: "{{ nexus_password }}"
+        state: absent
+        name: raw-proxy-repo-1

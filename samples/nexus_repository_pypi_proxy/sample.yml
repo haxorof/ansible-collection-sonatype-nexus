@@ -1,0 +1,38 @@
+---
+- name: Manage pypi proxy repository
+  hosts: localhost
+  become: false
+  gather_facts: false
+
+  vars:
+    nexus_username: admin
+    nexus_password: admin123
+    nexus_repos_pypi_proxy:
+      - name: pypi-proxy-repo-1
+        storage:
+          blob_store_name: default
+        proxy:
+          remote_url: https://pypi.org/simple
+
+  tasks:
+    - name: Create proxy pypi repository
+      haxorof.sonatype_nexus.nexus_repository_pypi_proxy:
+        url: "{{ nexus_url }}"
+        validate_certs: false
+        username: "{{ nexus_username }}"
+        password: "{{ nexus_password }}"
+        state: present
+        name: "{{ item.name }}"
+        storage: "{{ item.storage }}"
+        proxy: "{{ item.proxy }}"
+      loop: "{{ nexus_repos_pypi_proxy }}"
+
+    - name: Delete pypi proxy repository
+      haxorof.sonatype_nexus.nexus_repository_pypi_proxy:
+        url: "{{ nexus_url }}"
+        validate_certs: false
+        username: "{{ nexus_username }}"
+        password: "{{ nexus_password }}"
+        state: absent
+        name: "{{ item.name }}"
+      loop: "{{ nexus_repos_pypi_proxy }}"

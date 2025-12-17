@@ -13,7 +13,6 @@ import time
 import os
 import stat
 import humps
-
 from os import close
 from tempfile import mkstemp
 from traceback import format_exc
@@ -32,27 +31,32 @@ class NexusHelper:
         # "assets": "{url}" + NEXUS_API_BASE_PATH + "/v1/assets",
         # "azureblobstore": "{url}" + NEXUS_API_BASE_PATH + "/v1/azureblobstore",
         "blobstores": "{url}" + NEXUS_API_BASE_PATH + "/v1/blobstores",
+        "capabilities": "{url}" + NEXUS_API_BASE_PATH + "/v1/capabilities",
         # "certificates": "{url}" + NEXUS_API_BASE_PATH + "/v1/ssl",
+        "cleanup-policies": "{url}" + NEXUS_API_BASE_PATH + "/internal/cleanup-policies",
         # "components": "{url}" + NEXUS_API_BASE_PATH + "/v1/components",
         # "content-selectors": "{url}" + NEXUS_API_BASE_PATH + "/v1/security/content-selectors",
-        # "email": "{url}" + NEXUS_API_BASE_PATH + "/v1/email",
+        "email": "{url}" + NEXUS_API_BASE_PATH + "/v1/email",
         # "formats": "{url}" + NEXUS_API_BASE_PATH + "/v1/formats",
+        "http": "{url}" + NEXUS_API_BASE_PATH + "/v1/http",
         # "iq": "{url}" + NEXUS_API_BASE_PATH + "/v1/iq",
-        # "ldap": "{url}" + NEXUS_API_BASE_PATH + "/v1/security/ldap",
+        "ldap": "{url}" + NEXUS_API_BASE_PATH + "/v1/security/ldap",
+        "license": "{url}" + NEXUS_API_BASE_PATH + "/v1/system/license",
         # "lifecycle": "{url}" + NEXUS_API_BASE_PATH + "/v1/lifecycle",
         # "privileges": "{url}" + NEXUS_API_BASE_PATH + "/v1/security/privileges",
         "read-only": "{url}" + NEXUS_API_BASE_PATH + "/v1/read-only",
         # "realms": "{url}" + NEXUS_API_BASE_PATH + "/v1/security/realms",
         "repositories": "{url}" + NEXUS_API_BASE_PATH + "/v1/repositories",
         "repository-settings": "{url}" + NEXUS_API_BASE_PATH + "/v1/repositorySettings",
-        # "roles": "{url}" + NEXUS_API_BASE_PATH + "/v1/security/roles",
+        "roles": "{url}" + NEXUS_API_BASE_PATH + "/v1/security/roles",
         "routing-rules": "{url}" + NEXUS_API_BASE_PATH + "/v1/routing-rules",
-        # "script": "{url}" + NEXUS_API_BASE_PATH + "/v1/script",
+        "script": "{url}" + NEXUS_API_BASE_PATH + "/v1/script",
         # "search": "{url}" + NEXUS_API_BASE_PATH + "/v1/search",
+        "secret-encryption": "{url}" + NEXUS_API_BASE_PATH + "/v1/secrets/encryption/re-encrypt",
         "status": "{url}" + NEXUS_API_BASE_PATH + "/v1/status",
         # "support": "{url}" + NEXUS_API_BASE_PATH + "/v1/support",
         # "system": "{url}" + NEXUS_API_BASE_PATH + "/v1/system",
-        # "tasks": "{url}" + NEXUS_API_BASE_PATH + "/v1/tasks",
+        "tasks": "{url}" + NEXUS_API_BASE_PATH + "/v1/tasks",
         "user-sources": "{url}" + NEXUS_API_BASE_PATH + "/v1/security/user-sources",
         "users": "{url}" + NEXUS_API_BASE_PATH + "/v1/security/users",
         "user-tokens": "{url}" + NEXUS_API_BASE_PATH + "/v1/security/user-tokens",
@@ -73,7 +77,6 @@ class NexusHelper:
                 no_log=False,
                 required=False,
                 default=None,
-                aliases=["user"],
                 fallback=(env_fallback, ["NEXUS_USERNAME"]),
             ),
             password=dict(
@@ -193,23 +196,46 @@ class NexusHelper:
         return "?" + query if len(query) > 0 else ""
 
     def is_json_data_equal(self, new_data, existing_data):
-        """ Compares JSON data and is considered equal if all keys and its values in new_data exists in existing_data.
+        # Handle case where both are dicts
+        if isinstance(new_data, dict) and isinstance(existing_data, dict):
+            # Case: 'password' only in new_data
+            if 'password' not in existing_data and 'password' in new_data:
+                return False
+            # Case: 'password' in both and masked in existing_data
+            if 'password' in new_data and 'password' in existing_data:
+                new_data = new_data.copy()
+                existing_data = existing_data.copy()
+                new_data.pop('password', None)
+                existing_data.pop('password', None)
+            # Compare keys
+            if set(new_data.keys()) != set(existing_data.keys()):
+                return False
+            # Recursively compare values
+            return all(self.is_json_data_equal(new_data[k], existing_data[k]) for k in new_data)
+        # Handle case where both are lists
+        if isinstance(new_data, list) and isinstance(existing_data, list):
+            # Normalize and sort lists for comparison
+            new_normalized = sorted([str(item).strip() for item in new_data])
+            existing_normalized = sorted([str(item).strip() for item in existing_data])
+            return new_normalized == existing_normalized
+        # Fallback to direct comparison
+        return new_data == existing_data
 
-        Args:
-            new_data (_type_): new data.
-            existing_data (_type_): existing data.
-
-        Returns:
-            _type_: Returns true if all keys and its values in new_data exists in existing_data.
-        """
-        return all(
-            existing_data[k] == v for k, v in new_data.items() if k in existing_data
-        )
+    def clean_dict_list(self,d):
+        if isinstance(d, dict):
+            cleaned = {}
+            for k, v in d.items():
+                cleaned_value = self.clean_dict_list(v)
+                if cleaned_value not in ("", [], {}, None):
+                    cleaned[k] = cleaned_value
+            return cleaned
+        if isinstance(d, list):
+            return [self.clean_dict_list(i) for i in d if i not in ("", [], {}, None)]
+        return d
 
     def camalize_param(helper, param_name):
         ret_value = None if helper.module.params[param_name] is None else humps.camelize(helper.module.params[param_name])
         return ret_value
-
 
 class NexusRepositoryHelper:
     def storage_argument_spec():
@@ -221,7 +247,27 @@ class NexusRepositoryHelper:
                 strict_content_type_validation=dict(type="bool", default=True),
             ),
         )
-
+    def storage_argument_spec_hosted():
+        return dict(
+            type='dict',
+            # apply_defaults=True,
+            options=dict(
+                blob_store_name=dict(type="str", required=False),
+                strict_content_type_validation=dict(type="bool", default=False),
+                write_policy=dict(type="str", choices=["ALLOW", "ALLOW_ONCE", "DENY"], default="ALLOW"),
+                latest_policy=dict(type="bool", default=False), # New parameter
+            ),
+        )
+    def storage_argument_spec_common():
+        return dict(
+            type='dict',
+            # apply_defaults=True,
+            options=dict(
+                blob_store_name=dict(type="str", required=False),
+                strict_content_type_validation=dict(type="bool", default=False),
+                write_policy=dict(type="str", choices=["ALLOW", "ALLOW_ONCE", "DENY"], default="ALLOW"),
+            ),
+        )
     def cleanup_policy_argument_spec():
         return  dict(
             type='dict',
@@ -277,10 +323,10 @@ class NexusRepositoryHelper:
                     options=dict(
                         type=dict(type="str", no_log=False, required=False),
                         username=dict(type="str", no_log=False, required=False),
-                        password=dict(type="str", no_log=False, required=False),
+                        password=dict(type="str", no_log=True, required=False),
                         ntlmHost=dict(type="str", no_log=False, required=False),
                         ntlmDomain=dict(type="str", no_log=False, required=False),
-                        preemptive=dict(type="bool", default=True),
+                        preemptive=dict(type="bool", default=False),
                     ),
                 ),
             ),
@@ -296,18 +342,39 @@ class NexusRepositoryHelper:
             ),
         )
 
-    def common_proxy_argument_spec():
+    def common_proxy_argument_spec(endpoint_path_to_use):
+        # Format with both write_policy + latest_policy
+        hosted_with_latest = [
+            "/docker/hosted"
+        ]
+        # Format with write_policy
+        hosted_with_common = [
+            "/maven/hosted",
+            "/npm/hosted",
+            "/raw/hosted",
+            "/helm/hosted",
+            "/nuget/hosted",
+            "/pypi/hosted",
+            "/rubygems/hosted"
+        ]
+        if any(path in endpoint_path_to_use for path in hosted_with_latest):
+            storage_spec = NexusRepositoryHelper.storage_argument_spec_hosted()
+        elif any(path in endpoint_path_to_use for path in hosted_with_common):
+            storage_spec = NexusRepositoryHelper.storage_argument_spec_common()
+        else:
+            storage_spec = NexusRepositoryHelper.storage_argument_spec()
+
         return dict(
             state=dict(type="str", choices=["present", "absent"], default="present"),
             name=dict(type="str", no_log=False, required=True),
             online=dict(type="bool", default=True),
-            storage=NexusRepositoryHelper.storage_argument_spec(),
             cleanup=NexusRepositoryHelper.cleanup_policy_argument_spec(),
             proxy=NexusRepositoryHelper.proxy_argument_spec(),
             negative_cache=NexusRepositoryHelper.negative_cache_argument_spec(),
             http_client=NexusRepositoryHelper.http_client_argument_spec(),
             routing_rule=dict(type="str", no_log=False, required=False),
             replication=NexusRepositoryHelper.replication_argument_spec(),
+            storage=storage_spec,
         )
 
     def list_repositories(helper):
@@ -376,6 +443,7 @@ class NexusRepositoryHelper:
         return content, changed
 
     def update_repository(helper, endpoint_path, additional_data, existing_data):
+        endpoint = "repositories"
         data = {
             "name": helper.module.params["name"],
             "online": helper.module.params["online"],
@@ -386,23 +454,72 @@ class NexusRepositoryHelper:
             "httpClient": NexusHelper.camalize_param(helper, "http_client"),
             "routingRule": helper.module.params["routing_rule"],
         }
-
         data.update(additional_data)
-        # Does not exist for proxy repos but is still returned from API for proxy repos.
-        existing_data["storage"].pop("writePolicy")
-        # Compensate because return data from API having key routingRuleName while input JSON have routingRule.
-        existing_data.update({"routingRule": existing_data.pop("routingRuleName")})
-        # helper.module.fail_json(
-        #     msg="{data} ==== {existing_data} #### {equal}".format(
-        #         data=data,
-        #         existing_data=existing_data,
-        #         equal=helper.is_json_data_equal(data, existing_data)
-        #     )
-        # )
-        if helper.is_json_data_equal(data, existing_data):
+
+
+        if "hosted" in endpoint_path:
+            # Clean up unwanted fields that should not be updated or are part of Nexus's default config
+            existing_data.pop("format", None)
+            existing_data.pop("type", None)
+            existing_data.pop("url", None)
+            data.pop("httpClient", None)
+            data.pop("negativeCache", None)
+            if "/docker/hosted" in endpoint_path:
+                if isinstance(existing_data, dict) and isinstance(existing_data.get("storage"), dict):
+                    existing_data["storage"].setdefault("latestPolicy", False)
+            if "/nuget/hosted" not in endpoint_path:
+                existing_data.pop("component", None)
+
+        if "proxy" in endpoint_path:
+            # Clean up unwanted fields that should not be updated or are part of Nexus's default config
+            existing_data["storage"].pop("writePolicy", None)
+            existing_data.pop("format", None)
+            existing_data.pop("type", None)
+            existing_data.pop("url", None)
+            existing_data.update({"routingRule": existing_data.pop("routingRuleName", None)})
+            if (
+                isinstance(data, dict)
+                and isinstance(data.get("httpClient"), dict)
+                and isinstance(data["httpClient"].get("authentication"), dict)
+            ):
+                data["httpClient"]["authentication"].pop("preemptive", None)
+
+        if "group" in endpoint_path:
+            # Clean up unwanted fields that should not be updated or are part of Nexus's default config
+            existing_data.pop("format", None)
+            existing_data.pop("type", None)
+            existing_data.pop("url", None)
+            # existing_data.pop("online", None)
+            data.pop("httpClient", None)
+            data.pop("negativeCache", None)
+            if "/raw/group" in endpoint_path:
+                existing_data["storage"].pop("writePolicy", None)
+
+        # Ensure data is a dictionary and contains the password
+        password = None
+        if (
+            isinstance(data, dict) and
+            isinstance(data.get("httpClient"), dict) and
+            isinstance(data["httpClient"].get("authentication"), dict)
+        ):
+            password = data["httpClient"]["authentication"].get("password")
+            if password:
+                # Ensure existing_data has the correct nested structure
+                if not isinstance(existing_data.get("httpClient"), dict):
+                    existing_data["httpClient"] = {}
+                if not isinstance(existing_data["httpClient"].get("authentication"), dict):
+                    existing_data["httpClient"]["authentication"] = {}
+
+                existing_data["httpClient"]["authentication"]["password"] = password
+
+        normalized_data = helper.clean_dict_list(data)
+        normalized_exisiting_data = helper.clean_dict_list(existing_data)
+
+        changed = not helper.is_json_data_equal(normalized_data, normalized_exisiting_data)
+
+        if changed is False and password is None:
             return existing_data, False
 
-        endpoint = "repositories"
         info, content = helper.request(
             api_url=(helper.NEXUS_API_ENDPOINTS[endpoint] + "{path}/{repository}").format(
                 url=helper.module.params["url"],
@@ -430,8 +547,7 @@ class NexusRepositoryHelper:
                     )
                 )
 
-        return content, True
-
+        return content, changed
 
     def delete_repository(helper):
         changed = True

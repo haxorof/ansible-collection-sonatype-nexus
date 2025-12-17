@@ -73,7 +73,15 @@ def update_blobstore(helper, current_data):
         "softQuota": NexusHelper.camalize_param(helper, "soft_quota"),
         "path": helper.module.params["name"] if helper.module.params["path"] == None or helper.module.params["path"] == "" else helper.module.params["path"],
     }
-    changed = not helper.is_json_data_equal(data, current_data)
+
+    normalized_data = helper.clean_dict_list(data)
+    normalized_current_data = helper.clean_dict_list(current_data)
+
+    changed = not helper.is_json_data_equal(normalized_data, normalized_current_data[0])
+
+    if changed is False:
+        return current_data, False
+
     info, content = helper.request(
         api_url=(helper.NEXUS_API_ENDPOINTS[endpoint] + "/" + blobstore_type + "/{name}").format(
             url=helper.module.params["url"],

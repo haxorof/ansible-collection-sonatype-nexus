@@ -1,0 +1,31 @@
+---
+- name: Manage P2 proxy Repositories in Nexus
+  hosts: localhost
+  gather_facts: false
+
+  vars:
+    nexus_username: admin
+    nexus_password: admin123
+
+  tasks:
+    - name: Create P2 proxy repository
+      haxorof.sonatype_nexus.nexus_repository_p2_proxy:
+        url: "{{ nexus_url }}"
+        validate_certs: false
+        username: "{{ nexus_username }}"
+        password: "{{ nexus_password }}"
+        state: present
+        name: "p2-proxy-repo-1"
+        storage:
+          blob_store_name: default
+        proxy:
+          remote_url: "https://remote.repository.com"
+
+    - name: Delete P2 proxy repository
+      haxorof.sonatype_nexus.nexus_repository_p2_proxy:
+        url: "{{ nexus_url }}"
+        validate_certs: false
+        username: "{{ nexus_username }}"
+        password: "{{ nexus_password }}"
+        state: absent
+        name: "p2-proxy-repo-1"

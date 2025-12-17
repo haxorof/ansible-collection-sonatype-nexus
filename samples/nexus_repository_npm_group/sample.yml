@@ -1,0 +1,58 @@
+---
+- name: Manage NPM Group Repositories in Nexus
+  hosts: localhost
+  gather_facts: false
+
+  vars:
+    nexus_username: admin
+    nexus_password: admin123
+
+  pre_tasks:
+    - name: Create NPM proxy repository
+      haxorof.sonatype_nexus.nexus_repository_npm_proxy:
+        url: "{{ nexus_url }}"
+        validate_certs: false
+        username: "{{ nexus_username }}"
+        password: "{{ nexus_password }}"
+        state: present
+        name: npm-proxy-repo-1
+        storage:
+          blob_store_name: default
+        proxy:
+          remote_url: https://registry.npmjs.org
+        http_client:
+          auto_block: true
+
+  tasks:
+    - name: Create npm group repository
+      haxorof.sonatype_nexus.nexus_repository_npm_group:
+        url: "{{ nexus_url }}"
+        validate_certs: false
+        username: "{{ nexus_username }}"
+        password: "{{ nexus_password }}"
+        state: present
+        name: npm-public
+        storage:
+          blob_store_name: default
+          strict_content_type_validation: true
+        member_repos:
+          - npm-proxy-repo-1
+
+    - name: Delete npm group
+      haxorof.sonatype_nexus.nexus_repository_npm_group:
+        url: "{{ nexus_url }}"
+        validate_certs: false
+        username: "{{ nexus_username }}"
+        password: "{{ nexus_password }}"
+        state: absent
+        name: npm-public
+
+  post_tasks:
+    - name: Delete NPM proxy repository
+      haxorof.sonatype_nexus.nexus_repository_npm_proxy:
+        url: "{{ nexus_url }}"
+        validate_certs: false
+        username: "{{ nexus_username }}"
+        password: "{{ nexus_password }}"
+        state: absent
+        name: npm-proxy-repo-1

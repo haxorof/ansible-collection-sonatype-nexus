@@ -65,6 +65,8 @@ def update_user_token(helper):
     data = {
         "enabled": helper.module.params["enabled"],
         "protectContent": helper.module.params["protect_content"],
+        "expirationEnabled": helper.module.params.get("expiration_enabled", False),
+        "expirationDays": helper.module.params.get("expiration_days", 30),
     }
     endpoint = "user-tokens"
     info, content = helper.request(
@@ -96,6 +98,8 @@ def main():
         enabled=dict(type="bool", default=True),
         protect_content=dict(type="bool", default=False),
         invalidate_tokens=dict(type="bool", default=False),
+        expiration_enabled=dict(type="bool", default=False),
+        expiration_days=dict(type="int", default=30),
     )
     module = AnsibleModule(
         argument_spec=argument_spec,
@@ -119,6 +123,7 @@ def main():
         existing_config
         and existing_config["protectContent"] == helper.module.params["protect_content"]
         and existing_config["enabled"] == helper.module.params["enabled"]
+        and existing_config["expirationEnabled"] == helper.module.params["expiration_enabled"]
     ):
         changed = False
     else:
