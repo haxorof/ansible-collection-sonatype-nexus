@@ -6,8 +6,14 @@
 
 from __future__ import absolute_import, division, print_function
 
+# pylint: disable-next=invalid-name
 __metaclass__ = type
 
+from ansible.module_utils.basic import AnsibleModule
+from ansible_collections.haxorof.sonatype_nexus.plugins.module_utils.nexus import (
+    NexusHelper,
+    NexusBlobstoreHelper,
+)
 
 DOCUMENTATION = r"""
 ---
@@ -21,12 +27,6 @@ EXAMPLES = r"""
 RETURN = r"""
 """
 
-from ansible.module_utils.basic import AnsibleModule, env_fallback
-from ansible_collections.haxorof.sonatype_nexus.plugins.module_utils.nexus import (
-    NexusHelper,
-    NexusBlobstoreHelper,
-)
-
 
 def create_blobstore(helper):
     endpoint = "blobstores"
@@ -35,7 +35,12 @@ def create_blobstore(helper):
     data = {
         "softQuota": NexusHelper.camalize_param(helper, "soft_quota"),
         "name": helper.module.params["name"],
-        "path": helper.module.params["name"] if helper.module.params["path"] == None or helper.module.params["path"] == "" else helper.module.params["path"],
+        "path": (
+            helper.module.params["name"]
+            if helper.module.params["path"] is None
+            or helper.module.params["path"] == ""
+            else helper.module.params["path"]
+        ),
     }
 
     info, content = helper.request(
@@ -48,18 +53,13 @@ def create_blobstore(helper):
     if info["status"] not in [204]:
         if info["status"] == 403:
             helper.module.fail_json(
-                msg="Insufficient permissions to create blob store '{name}' of type '{type}'.".format(
-                    name=helper.module.params["name"],
-                    type=blobstore_type,
-                )
+                msg=f"Insufficient permissions to create blob store \
+                    '{helper.module.params['name']}' of type '{blobstore_type}'."
             )
         else:
             helper.module.fail_json(
-                msg="Failed to create blob store '{name}', http_status={http_status}, error_msg='{error_msg}'.".format(
-                    name=helper.module.params["name"],
-                    http_status=info["status"],
-                    error_msg=info["msg"],
-                )
+                msg=f"Failed to create blob store '{helper.module.params['name']}', \
+                    http_status={info['status']}, error_msg='{info['msg']}'."
             )
 
     return content, changed
@@ -71,7 +71,12 @@ def update_blobstore(helper, current_data):
     endpoint = "blobstores"
     data = {
         "softQuota": NexusHelper.camalize_param(helper, "soft_quota"),
-        "path": helper.module.params["name"] if helper.module.params["path"] == None or helper.module.params["path"] == "" else helper.module.params["path"],
+        "path": (
+            helper.module.params["name"]
+            if helper.module.params["path"] is None
+            or helper.module.params["path"] == ""
+            else helper.module.params["path"]
+        ),
     }
 
     normalized_data = helper.clean_dict_list(data)
@@ -83,7 +88,9 @@ def update_blobstore(helper, current_data):
         return current_data, False
 
     info, content = helper.request(
-        api_url=(helper.NEXUS_API_ENDPOINTS[endpoint] + "/" + blobstore_type + "/{name}").format(
+        api_url=(
+            helper.NEXUS_API_ENDPOINTS[endpoint] + "/" + blobstore_type + "/{name}"
+        ).format(
             url=helper.module.params["url"],
             name=helper.module.params["name"],
         ),
@@ -93,26 +100,17 @@ def update_blobstore(helper, current_data):
     if info["status"] not in [204]:
         if info["status"] == 403:
             helper.module.fail_json(
-                msg="Insufficient permissions to update blob store '{name}' of type '{type}'.".format(
-                    name=helper.module.params["name"],
-                    type=blobstore_type,
-                )
+                msg=f"Insufficient permissions to update blob store '{helper.module.params['name']}' \
+                    of type '{blobstore_type}'."
             )
         elif info["status"] == 404:
             helper.module.fail_json(
-                msg="Blob store '{name}' of type '{type}' not found.".format(
-                    name=helper.module.params["name"],
-                    type=blobstore_type,
-                )
+                msg=f"Blob store '{helper.module.params['name']}' of type '{blobstore_type}' not found."
             )
         else:
             helper.module.fail_json(
-                msg="Failed to update blob store '{name}' of type '{type}', http_status={status}, error_msg='{error_msg}.".format(
-                    name=helper.module.params["name"],
-                    type=blobstore_type,
-                    status=info["status"],
-                    error_msg=info["msg"],
-                )
+                msg=f"Failed to update blob store '{helper.module.params['name']}' of type '{blobstore_type}', \
+                    http_status={info['status']}, error_msg='{info['msg']}."
             )
 
     return content, changed
@@ -121,7 +119,7 @@ def update_blobstore(helper, current_data):
 def main():
     argument_spec = NexusHelper.nexus_argument_spec()
     argument_spec.update(
-        path=dict(type="str", required=False, no_log=False),
+        path={"type": "str", "required": False, "no_log": False},
     )
     argument_spec.update(NexusBlobstoreHelper.common_argument_spec())
     module = AnsibleModule(
@@ -133,18 +131,18 @@ def main():
     helper = NexusHelper(module)
 
     # Seed the result dict in the object
-    result = dict(
-        changed=False,
-        name=module.params["name"],
-        state=module.params["state"],
-        messages=[],
-        json={},
-    )
+    result = {
+        "changed": False,
+        "name": module.params["name"],  # type: ignore
+        "state": module.params["state"],  # type: ignore
+        "messages": [],
+        "json": {},
+    }
 
     content = {}
     changed = True
     existing_blobstore = NexusBlobstoreHelper.get_blobstore(helper, "file")
-    if module.params["state"] == "present":
+    if module.params["state"] == "present":  # type: ignore
         if existing_blobstore:
             content, changed = update_blobstore(helper, existing_blobstore)
         else:

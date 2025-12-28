@@ -6,8 +6,13 @@
 
 from __future__ import absolute_import, division, print_function
 
+# pylint: disable-next=invalid-name
 __metaclass__ = type
 
+from ansible.module_utils.basic import AnsibleModule
+from ansible_collections.haxorof.sonatype_nexus.plugins.module_utils.nexus import (
+    NexusHelper,
+)
 
 DOCUMENTATION = r"""
 ---
@@ -21,10 +26,6 @@ EXAMPLES = r"""
 RETURN = r"""
 """
 
-from ansible.module_utils.basic import AnsibleModule, env_fallback
-from ansible_collections.haxorof.sonatype_nexus.plugins.module_utils.nexus import (
-    NexusHelper,
-)
 
 def read_only_status(helper):
     endpoint = "read-only"
@@ -35,6 +36,12 @@ def read_only_status(helper):
         method="GET",
     )
 
+    if info["status"] == 403:
+        helper.generic_permission_failure_msg()
+    elif info["status"] != 200:
+        helper.module.fail_json(
+            msg=f"Failed to fetch read only info, http_status={info['status']}."
+        )
     return content, False
 
 
@@ -48,14 +55,8 @@ def main():
 
     helper = NexusHelper(module)
 
-    # Seed the result dict in the object
-    result = dict(
-        changed=False,
-        messages=[],
-        json={},
-    )
-
     content, changed = read_only_status(helper)
+    result = NexusHelper.generate_result_struct()
     result["json"] = content
     result["changed"] = changed
 

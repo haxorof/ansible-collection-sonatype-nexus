@@ -6,8 +6,13 @@
 
 from __future__ import absolute_import, division, print_function
 
+# pylint: disable-next=invalid-name
 __metaclass__ = type
 
+from ansible.module_utils.basic import AnsibleModule
+from ansible_collections.haxorof.sonatype_nexus.plugins.module_utils.nexus import (
+    NexusHelper,
+)
 
 DOCUMENTATION = r"""
 ---
@@ -20,11 +25,6 @@ EXAMPLES = r"""
 
 RETURN = r"""
 """
-
-from ansible.module_utils.basic import AnsibleModule, env_fallback
-from ansible_collections.haxorof.sonatype_nexus.plugins.module_utils.nexus import (
-    NexusHelper,
-)
 
 
 def list_user_sources(helper):
@@ -41,9 +41,7 @@ def list_user_sources(helper):
         helper.generic_permission_failure_msg()
     else:
         helper.module.fail_json(
-            msg="Failed to fetch user sources., http_status={status}.".format(
-                status=info["status"],
-            )
+            msg=f"Failed to fetch user sources., http_status={info['status']}."
         )
     return content
 
@@ -58,14 +56,8 @@ def main():
 
     helper = NexusHelper(module)
 
-    # Seed the result dict in the object
-    result = dict(
-        changed=False,
-        messages=[],
-        json={},
-    )
-
     content = list_user_sources(helper)
+    result = NexusHelper.generate_result_struct()
     result["json"] = content
     result["changed"] = False
 

@@ -6,9 +6,14 @@
 
 from __future__ import absolute_import, division, print_function
 
+# pylint: disable-next=invalid-name
 __metaclass__ = type
 
-import humps
+from ansible.module_utils.basic import AnsibleModule
+from ansible_collections.haxorof.sonatype_nexus.plugins.module_utils.nexus import (
+    NexusHelper,
+    NexusRepositoryHelper,
+)
 
 DOCUMENTATION = r"""
 """
@@ -19,33 +24,34 @@ EXAMPLES = r"""
 RETURN = r"""
 """
 
-from ansible.module_utils.basic import AnsibleModule, env_fallback
-from ansible_collections.haxorof.sonatype_nexus.plugins.module_utils.nexus import NexusHelper, NexusRepositoryHelper
 
 def repository_filter(item, helper):
     return item["name"] == helper.module.params["name"]
+
 
 def main():
     endpoint_path_to_use = "/rubygems/hosted"
     argument_spec = NexusHelper.nexus_argument_spec()
     argument_spec.update(
-        format=dict(type="str", choices=["rubygems"], required=False),
-        type=dict(type="str", choices=["hosted"], required=False),
-        rubygems=dict(
-            type="dict",
-            apply_defaults=True,
-            default={},
-            options=dict(
-                component=dict(
-                    type="dict",
-                    apply_defaults=True,
-                    default={},
-                    options=dict(
-                        proprietary_components=dict(type="bool", default=False)
-                    )
-                )
-            )
-        )
+        {
+            "format": {"type": "str", "choices": ["rubygems"], "required": False},
+            "type": {"type": "str", "choices": ["hosted"], "required": False},
+            "rubygems": {
+                "type": "dict",
+                "apply_defaults": True,
+                "default": {},
+                "options": {
+                    "component": {
+                        "type": "dict",
+                        "apply_defaults": True,
+                        "default": {},
+                        "options": {
+                            "proprietary_components": {"type": "bool", "default": False}
+                        },
+                    }
+                },
+            },
+        }
     )
     argument_spec.update(
         NexusRepositoryHelper.common_proxy_argument_spec(endpoint_path_to_use)
@@ -58,24 +64,15 @@ def main():
     )
 
     helper = NexusHelper(module)
-    result = dict(
-        changed=False,
-        messages=[],
-        json={},
-    )
 
     existing_data = NexusRepositoryHelper.list_filtered_repositories(
         helper, repository_filter
     )
 
-    rubygems_params = module.params.get("rubygems") or {}
-    storage_data = NexusHelper.camalize_param(helper, "storage") or {}
-    additional_data = {
-        "storage": storage_data,
-        "component": rubygems_params.get("component"),
-    }
+    storage_data = NexusHelper.camalize_param(helper, "storage", {})
+    additional_data = {"storage": storage_data}
 
-    if module.params["state"] == "present":
+    if module.params["state"] == "present":  # type: ignore
         if existing_data:
             content, changed = NexusRepositoryHelper.update_repository(
                 helper,
@@ -95,9 +92,11 @@ def main():
         else:
             content, changed = ({}, False)
 
+    result = NexusHelper.generate_result_struct()
     result["json"] = content
     result["changed"] = changed
     module.exit_json(**result)
+
 
 if __name__ == "__main__":
     main()

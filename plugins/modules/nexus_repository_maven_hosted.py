@@ -6,9 +6,14 @@
 
 from __future__ import absolute_import, division, print_function
 
+# pylint: disable-next=invalid-name
 __metaclass__ = type
 
-import humps
+from ansible.module_utils.basic import AnsibleModule
+from ansible_collections.haxorof.sonatype_nexus.plugins.module_utils.nexus import (
+    NexusHelper,
+    NexusRepositoryHelper,
+)
 
 DOCUMENTATION = r"""
 ---
@@ -22,32 +27,44 @@ EXAMPLES = r"""
 RETURN = r"""
 """
 
-from ansible.module_utils.basic import AnsibleModule, env_fallback
-from ansible_collections.haxorof.sonatype_nexus.plugins.module_utils.nexus import (
-    NexusHelper,
-    NexusRepositoryHelper,
-)
 
 def repository_filter(item, helper):
     return item["name"] == helper.module.params["name"]
+
 
 def main():
     endpoint_path_to_use = "/maven/hosted"
     argument_spec = NexusHelper.nexus_argument_spec()
     argument_spec.update(
-        format=dict(type="str", choices=["maven2"], required=False),
-        type=dict(type="str", choices=["hosted"], required=False),
-        maven=dict(
-            type='dict',
-            apply_defaults=True,
-            options=dict(
-                version_policy=dict(type="str", choices=["RELEASE", "SNAPSHOT", "MIXED"], default="RELEASE"),
-                layout_policy=dict(type="str", choices=["STRICT", "PERMISSIVE"], default="STRICT"),
-                content_disposition=dict(type="str", choices=["INLINE", "ATTACHMENT"], default="INLINE"),
-            ),
-        ),
+        {
+            "format": {"type": "str", "choices": ["maven2"], "required": False},
+            "type": {"type": "str", "choices": ["hosted"], "required": False},
+            "maven": {
+                "type": "dict",
+                "apply_defaults": True,
+                "options": {
+                    "version_policy": {
+                        "type": "str",
+                        "choices": ["RELEASE", "SNAPSHOT", "MIXED"],
+                        "default": "RELEASE",
+                    },
+                    "layout_policy": {
+                        "type": "str",
+                        "choices": ["STRICT", "PERMISSIVE"],
+                        "default": "STRICT",
+                    },
+                    "content_disposition": {
+                        "type": "str",
+                        "choices": ["INLINE", "ATTACHMENT"],
+                        "default": "INLINE",
+                    },
+                },
+            },
+        }
     )
-    argument_spec.update(NexusRepositoryHelper.common_proxy_argument_spec(endpoint_path_to_use))
+    argument_spec.update(
+        NexusRepositoryHelper.common_proxy_argument_spec(endpoint_path_to_use)
+    )
     module = AnsibleModule(
         argument_spec=argument_spec,
         supports_check_mode=True,
@@ -56,29 +73,29 @@ def main():
 
     helper = NexusHelper(module)
 
-    # Seed the result dict in the object
-    result = dict(
-        changed=False,
-        messages=[],
-        json={},
-    )
-
     changed, content = True, {}
-    existing_data = NexusRepositoryHelper.list_filtered_repositories(helper, repository_filter)
-    if module.params["state"] == "present":
+    existing_data = NexusRepositoryHelper.list_filtered_repositories(
+        helper, repository_filter
+    )
+    if module.params["state"] == "present":  # type: ignore
         endpoint_path = endpoint_path_to_use
         additional_data = {
             "maven": NexusHelper.camalize_param(helper, "maven"),
         }
         if len(existing_data) > 0:
-            content, changed = NexusRepositoryHelper.update_repository(helper, endpoint_path, additional_data, existing_data[0])
+            content, changed = NexusRepositoryHelper.update_repository(
+                helper, endpoint_path, additional_data, existing_data[0]
+            )
         else:
-            content, changed = NexusRepositoryHelper.create_repository(helper, endpoint_path, additional_data)
+            content, changed = NexusRepositoryHelper.create_repository(
+                helper, endpoint_path, additional_data
+            )
     else:
         if len(existing_data) > 0:
             content, changed = NexusRepositoryHelper.delete_repository(helper)
         else:
             changed = False
+    result = NexusHelper.generate_result_struct()
     result["json"] = content
     result["changed"] = changed
 

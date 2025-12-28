@@ -15,5 +15,6 @@ docker rm nexus
 docker volume rm nexus
 docker run -d -p 8081:8081 --name nexus -v nexus:/nexus-data -e INSTALL4J_ADD_VM_PARAMS="-Dnexus.scripts.allowCreation=true -Djava.util.prefs.userRoot=/nexus-data/javaprefs" -e NEXUS_SECURITY_RANDOMPASSWORD=false ${IMAGE}
 if [[ "$?" == "0" ]]; then
-    timeout 120 bash -c 'while [[ "$(curl -s -o /dev/null -w ''%{http_code}'' http://$NEXUS_HOST:8081/service/rest/v1/status/writable)" != "200" ]]; do sleep 5; done' || false
+    echo "-> Starting Nexus and waiting for it to complete within 1 minutes..."
+    timeout 60 bash -c 'while [[ "$(curl -s -o /dev/null -w ''%{http_code}'' http://$NEXUS_HOST:8081/service/rest/v1/status/writable)" != "200" ]]; do sleep 5; done' || false
 fi

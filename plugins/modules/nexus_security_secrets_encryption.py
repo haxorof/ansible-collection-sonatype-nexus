@@ -6,8 +6,13 @@
 
 from __future__ import absolute_import, division, print_function
 
+# pylint: disable-next=invalid-name
 __metaclass__ = type
 
+from ansible.module_utils.basic import AnsibleModule
+from ansible_collections.haxorof.sonatype_nexus.plugins.module_utils.nexus import (
+    NexusHelper,
+)
 
 DOCUMENTATION = r"""
 ---
@@ -27,11 +32,6 @@ EXAMPLES = r"""
 
 RETURN = r"""
 """
-
-from ansible.module_utils.basic import AnsibleModule
-from ansible_collections.haxorof.sonatype_nexus.plugins.module_utils.nexus import (
-    NexusHelper,
-)
 
 
 def reencrypt_secrets(helper):
@@ -55,10 +55,7 @@ def reencrypt_secrets(helper):
         helper.generic_permission_failure_msg()
     else:
         helper.module.fail_json(
-            msg="Failed to re-encrypt secrets, http_status={http_status}, error_msg='{error_msg}'.".format(
-                error_msg=info["msg"],
-                http_status=info["status"],
-            )
+            msg=f"Failed to re-encrypt secrets, http_status={info['status']}, error_msg='{info['msg']}'."
         )
 
     return content, changed
@@ -67,8 +64,8 @@ def reencrypt_secrets(helper):
 def main():
     argument_spec = NexusHelper.nexus_argument_spec()
     argument_spec.update(
-        secret_key_id=dict(type="str", required=True),
-        notify_email=dict(type="str", required=False),
+        secret_key_id={"type": "str", "required": True},
+        notify_email={"type": "str", "required": False},
     )
     module = AnsibleModule(
         argument_spec=argument_spec,
@@ -78,14 +75,8 @@ def main():
 
     helper = NexusHelper(module)
 
-    # Seed the result dict in the object
-    result = dict(
-        changed=False,
-        messages=[],
-        json={},
-    )
-
     content, changed = reencrypt_secrets(helper)
+    result = NexusHelper.generate_result_struct()
     result["json"] = content
     result["changed"] = changed
 

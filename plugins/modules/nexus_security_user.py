@@ -6,8 +6,13 @@
 
 from __future__ import absolute_import, division, print_function
 
+# pylint: disable-next=invalid-name
 __metaclass__ = type
 
+from ansible.module_utils.basic import AnsibleModule
+from ansible_collections.haxorof.sonatype_nexus.plugins.module_utils.nexus import (
+    NexusHelper,
+)
 
 DOCUMENTATION = r"""
 ---
@@ -21,23 +26,13 @@ EXAMPLES = r"""
 RETURN = r"""
 """
 
-from ansible.module_utils.basic import AnsibleModule, env_fallback
-from ansible_collections.haxorof.sonatype_nexus.plugins.module_utils.nexus import (
-    NexusHelper,
-)
-
 
 def list_users(helper):
     endpoint = "users"
     info, content = helper.request(
         api_url=(
             helper.NEXUS_API_ENDPOINTS[endpoint]
-            + helper.generate_url_query(
-                {
-                    "userId": "user_id",
-                    "source": "source"
-                }
-            )
+            + helper.generate_url_query({"userId": "user_id", "source": "source"})
         ).format(
             url=helper.module.params["url"],
         ),
@@ -49,9 +44,7 @@ def list_users(helper):
         helper.generic_permission_failure_msg()
     else:
         helper.module.fail_json(
-            msg="Failed to fetch users., http_status={status}.".format(
-                status=info["status"],
-            )
+            msg=f"Failed to fetch users., http_status={info['status']}."
         )
 
     return content
@@ -81,11 +74,8 @@ def create_user(helper):
         helper.generic_permission_failure_msg()
     elif not helper.is_request_status_ok(info):
         helper.module.fail_json(
-            msg="Failed to create user {user}, http_status={http_status}, error_msg='{error_msg}'.".format(
-                error_msg=info["msg"],
-                http_status=info["status"],
-                user=helper.module.params["user_id"],
-            )
+            msg=f"Failed to create user {helper.module.params['user_id']}, \
+                http_status={info['status']}, error_msg='{info['msg']}'."
         )
 
     return content, changed
@@ -109,11 +99,8 @@ def delete_user(helper):
         helper.generic_permission_failure_msg()
     elif not helper.is_request_status_ok(info):
         helper.module.fail_json(
-            msg="Failed to delete {user}., http_status={http_status}, error_msg='{error_msg}'.".format(
-                error_msg=info["msg"],
-                http_status=info["status"],
-                user=helper.module.params["user_id"],
-            )
+            msg=f"Failed to delete {helper.module.params['user_id']}., \
+                http_status={info['status']}, error_msg='{info['msg']}'."
         )
 
     return content, changed
@@ -206,11 +193,8 @@ def update_user(helper, existing_user):
         helper.generic_permission_failure_msg()
     else:
         helper.module.fail_json(
-            msg="Failed to update user {user}., http_status={http_status}, error_msg='{error_msg}'.".format(
-                error_msg=info["msg"],
-                http_status=info["status"],
-                user=helper.module.params["user_id"],
-            )
+            msg=f"Failed to update user {helper.module.params['user_id']}., \
+                http_status={info['status']}, error_msg='{info['msg']}'."
         )
 
     return content, changed
@@ -219,23 +203,32 @@ def update_user(helper, existing_user):
 def main():
     argument_spec = NexusHelper.nexus_argument_spec()
     argument_spec.update(
-        email_address=dict(type="str", required=False, no_log=False),
-        first_name=dict(type="str", required=False, no_log=False),
-        last_name=dict(type="str", required=False, no_log=False),
-        roles=dict(
-            type="list", elements="str", required=False, no_log=False, default=list()
-        ),
-        state=dict(type="str", choices=["present", "absent"], default="present"),
-        status=dict(
-            type="str",
-            required=False,
-            no_log=False,
-            default="active",
-            choices=["active", "disabled"],  # , "locked", "changepassword"
-        ),
-        source=dict(type="str", required=False, default="default", no_log=False),
-        user_id=dict(type="str", required=True, no_log=False),
-        user_password=dict(type="str", required=False, no_log=True),
+        email_address={"type": "str", "required": False, "no_log": False},
+        first_name={"type": "str", "required": False, "no_log": False},
+        last_name={"type": "str", "required": False, "no_log": False},
+        roles={
+            "type": "list",
+            "elements": "str",
+            "required": False,
+            "no_log": False,
+            "default": [],
+        },
+        state={"type": "str", "choices": ["present", "absent"], "default": "present"},
+        status={
+            "type": "str",
+            "required": False,
+            "no_log": False,
+            "default": "active",
+            "choices": ["active", "disabled"],  # , "locked", "changepassword"
+        },
+        source={
+            "type": "str",
+            "required": False,
+            "default": "default",
+            "no_log": False,
+        },
+        user_id={"type": "str", "required": True, "no_log": False},
+        user_password={"type": "str", "required": False, "no_log": True},
     )
     module = AnsibleModule(
         argument_spec=argument_spec,
@@ -245,26 +238,20 @@ def main():
 
     helper = NexusHelper(module)
 
-    # Seed the result dict in the object
-    result = dict(
-        changed=False,
-        messages=[],
-        json={},
-    )
-
     content = {}
     changed = True
     existing_user = list_users(helper)
     if len(existing_user) > 0:
-        if module.params["state"] == "present":
+        if module.params["state"] == "present":  # type: ignore
             content, changed = update_user(helper, existing_user[0])
         else:
             content, changed = delete_user(helper)
     else:
-        if module.params["state"] == "present":
+        if module.params["state"] == "present":  # type: ignore
             content, changed = create_user(helper)
         else:
             changed = False
+    result = NexusHelper.generate_result_struct()
     result["json"] = content
     result["changed"] = changed
 

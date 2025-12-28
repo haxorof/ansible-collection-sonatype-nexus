@@ -6,10 +6,13 @@
 
 from __future__ import absolute_import, division, print_function
 
+# pylint: disable-next=invalid-name
 __metaclass__ = type
 
 from ansible.module_utils.basic import AnsibleModule
-from ansible_collections.haxorof.sonatype_nexus.plugins.module_utils.nexus import NexusHelper
+from ansible_collections.haxorof.sonatype_nexus.plugins.module_utils.nexus import (
+    NexusHelper,
+)
 
 DOCUMENTATION = r"""
 ---
@@ -23,10 +26,11 @@ EXAMPLES = r"""
 RETURN = r"""
 """
 
+
 def get_cleanup_policy(helper):
     endpoint = "cleanup-policies"
     info, content = helper.request(
-        api_url=(helper.NEXUS_API_ENDPOINTS[endpoint]+ "/{name}").format(
+        api_url=(helper.NEXUS_API_ENDPOINTS[endpoint] + "/{name}").format(
             url=helper.module.params["url"],
             name=helper.module.params["name"],
         ),
@@ -35,6 +39,7 @@ def get_cleanup_policy(helper):
     policy_exists = info["status"] in [200]
 
     return policy_exists, content
+
 
 def create_cleanup_policy(helper):
     changed = True
@@ -50,17 +55,23 @@ def create_cleanup_policy(helper):
 
     # Append criteria based on format
     if _format in ["maven2", "npm"]:
-        data.update({
-            "criteriaReleaseType": helper.module.params["criteria_release_type"],
-            "criteriaAssetRegex": helper.module.params["criteria_asset_regex"],
-        })
+        data.update(
+            {
+                "criteriaReleaseType": helper.module.params["criteria_release_type"],
+                "criteriaAssetRegex": helper.module.params["criteria_asset_regex"],
+            }
+        )
     elif _format != "*":
-        data.update({
-            "criteriaAssetRegex": helper.module.params["criteria_asset_regex"],
-        })
+        data.update(
+            {
+                "criteriaAssetRegex": helper.module.params["criteria_asset_regex"],
+            }
+        )
 
     info, content = helper.request(
-        api_url=helper.NEXUS_API_ENDPOINTS[endpoint].format(url=helper.module.params["url"]),
+        api_url=helper.NEXUS_API_ENDPOINTS[endpoint].format(
+            url=helper.module.params["url"]
+        ),
         method="POST",
         data=data,
     )
@@ -81,6 +92,7 @@ def create_cleanup_policy(helper):
 
     return content, changed
 
+
 def update_cleanup_policy(helper, existing_data):
     changed = True
     endpoint = "cleanup-policies"
@@ -95,14 +107,18 @@ def update_cleanup_policy(helper, existing_data):
 
     # Append criteria based on format
     if _format in ["maven2", "npm"]:
-        data.update({
-            "criteriaReleaseType": helper.module.params["criteria_release_type"],
-            "criteriaAssetRegex": helper.module.params["criteria_asset_regex"],
-        })
+        data.update(
+            {
+                "criteriaReleaseType": helper.module.params["criteria_release_type"],
+                "criteriaAssetRegex": helper.module.params["criteria_asset_regex"],
+            }
+        )
     elif _format != "*":
-        data.update({
-            "criteriaAssetRegex": helper.module.params["criteria_asset_regex"],
-        })
+        data.update(
+            {
+                "criteriaAssetRegex": helper.module.params["criteria_asset_regex"],
+            }
+        )
 
     existing_data.pop("inUseCount", None)
     normalized_data = helper.clean_dict_list(data)
@@ -113,7 +129,7 @@ def update_cleanup_policy(helper, existing_data):
         return existing_data, False
 
     info, content = helper.request(
-        api_url=(helper.NEXUS_API_ENDPOINTS[endpoint]+ "/{name}").format(
+        api_url=(helper.NEXUS_API_ENDPOINTS[endpoint] + "/{name}").format(
             url=helper.module.params["url"],
             name=helper.module.params["name"],
         ),
@@ -123,9 +139,7 @@ def update_cleanup_policy(helper, existing_data):
 
     if not helper.is_request_status_ok(info):
         if info["status"] == 400:
-            helper.module.fail_json(
-                msg="Required parameters missing."
-            )
+            helper.module.fail_json(msg="Required parameters missing.")
         elif info["status"] == 403:
             helper.module.fail_json(
                 msg=f"Insufficient permissions to update cleanup policy '{helper.module.params['name']}'."
@@ -137,12 +151,13 @@ def update_cleanup_policy(helper, existing_data):
 
     return content, changed
 
+
 def delete_cleanup_policy(helper):
     changed = True
     endpoint = "cleanup-policies"
 
     info, content = helper.request(
-        api_url=(helper.NEXUS_API_ENDPOINTS[endpoint]+ "/{name}").format(
+        api_url=(helper.NEXUS_API_ENDPOINTS[endpoint] + "/{name}").format(
             url=helper.module.params["url"],
             name=helper.module.params["name"],
         ),
@@ -161,17 +176,18 @@ def delete_cleanup_policy(helper):
 
     return content, changed
 
+
 def main():
     argument_spec = NexusHelper.nexus_argument_spec()
     argument_spec.update(
         notes={"type": "str", "required": False},
         criteria_last_blob_updated={"type": "int", "required": False},
         criteria_last_downloaded={"type": "int", "required": False},
-        criteria_release_type={"type" :"str", "required": False},
+        criteria_release_type={"type": "str", "required": False},
         criteria_asset_regex={"type": "str", "required": False},
         retain={"type": "int", "required": False},
         name={"type": "str", "required": True},
-        format={"type": "str","required": False},
+        format={"type": "str", "required": False},
         state={"type": "str", "choices": ["present", "absent"], "default": "present"},
     )
 
@@ -185,8 +201,8 @@ def main():
 
     result = {
         "changed": False,
-        "name": module.params["name"],
-        "state": module.params["state"],
+        "name": module.params["name"],  # type: ignore
+        "state": module.params["state"],  # type: ignore
         "messages": [],
         "json": {},
     }
@@ -195,7 +211,7 @@ def main():
     changed = True
     policy_exists, existing_policy = get_cleanup_policy(helper)
 
-    if module.params["state"] == "present":
+    if module.params["state"] == "present":  # type: ignore
         if policy_exists is True:
             content, changed = update_cleanup_policy(helper, existing_policy)
         else:
@@ -210,6 +226,7 @@ def main():
     result["changed"] = changed
 
     module.exit_json(**result)
+
 
 if __name__ == "__main__":
     main()

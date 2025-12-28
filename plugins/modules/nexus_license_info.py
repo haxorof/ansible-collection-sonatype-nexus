@@ -6,10 +6,13 @@
 
 from __future__ import absolute_import, division, print_function
 
+# pylint: disable-next=invalid-name
 __metaclass__ = type
 
 from ansible.module_utils.basic import AnsibleModule
-from ansible_collections.haxorof.sonatype_nexus.plugins.module_utils.nexus import NexusHelper
+from ansible_collections.haxorof.sonatype_nexus.plugins.module_utils.nexus import (
+    NexusHelper,
+)
 
 DOCUMENTATION = r"""
 ---
@@ -23,26 +26,28 @@ EXAMPLES = r"""
 RETURN = r"""
 """
 
+
 def get_license(helper):
     endpoint = "license"
     info, content = helper.request(
-        api_url=helper.NEXUS_API_ENDPOINTS[endpoint].format(url=helper.module.params["url"]),
+        api_url=helper.NEXUS_API_ENDPOINTS[endpoint].format(
+            url=helper.module.params["url"]
+        ),
         method="GET",
     )
 
     if info["status"] in [200]:
-        content = content    # pylint: disable=self-assigning-variable
+        content = content  # pylint: disable=self-assigning-variable
     elif info["status"] in [402]:
         content = {}
     elif info["status"] == 403:
-        helper.module.fail_json(
-           msg="Insufficient permissions to get license."
-        )
+        helper.module.fail_json(msg="Insufficient permissions to get license.")
     else:
         helper.module.fail_json(
             msg=f"Failed to get license, http_status={info['status']}, error_msg='{info['msg']}'."
         )
     return content
+
 
 def main():
     argument_spec = NexusHelper.nexus_argument_spec()
@@ -64,6 +69,7 @@ def main():
     result["changed"] = False
 
     module.exit_json(**result)
+
 
 if __name__ == "__main__":
     main()

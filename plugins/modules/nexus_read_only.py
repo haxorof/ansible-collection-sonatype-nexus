@@ -6,8 +6,13 @@
 
 from __future__ import absolute_import, division, print_function
 
+# pylint: disable-next=invalid-name
 __metaclass__ = type
 
+from ansible.module_utils.basic import AnsibleModule
+from ansible_collections.haxorof.sonatype_nexus.plugins.module_utils.nexus import (
+    NexusHelper,
+)
 
 DOCUMENTATION = r"""
 ---
@@ -21,10 +26,6 @@ EXAMPLES = r"""
 RETURN = r"""
 """
 
-from ansible.module_utils.basic import AnsibleModule, env_fallback
-from ansible_collections.haxorof.sonatype_nexus.plugins.module_utils.nexus import (
-    NexusHelper,
-)
 
 def update_read_only(helper):
     endpoint = "read-only"
@@ -55,7 +56,11 @@ def update_read_only(helper):
 def main():
     argument_spec = NexusHelper.nexus_argument_spec()
     argument_spec.update(
-        status=dict(type="str", choices=["freeze", "release", "force-release"], default="freeze"),
+        status={
+            "type": "str",
+            "choices": ["freeze", "release", "force-release"],
+            "default": "freeze",
+        },
     )
     module = AnsibleModule(
         argument_spec=argument_spec,
@@ -65,18 +70,11 @@ def main():
 
     helper = NexusHelper(module)
 
-    # Seed the result dict in the object
-    result = dict(
-        changed=False,
-        status=module.params["status"],
-        messages=[],
-        json={},
-    )
-
     content = {}
     changed = True
     if not module.check_mode:
         content, changed = update_read_only(helper)
+    result = NexusHelper.generate_result_struct({"status": module.params["status"]})  # type: ignore
     result["json"] = content
     result["changed"] = changed
 

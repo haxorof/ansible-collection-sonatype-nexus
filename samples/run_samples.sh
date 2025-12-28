@@ -7,9 +7,13 @@ VENV_PATH=${VENV_PATH:-$SCRIPT_DIR/../.linuxenv}
 function run_test() {
     _in_path=$1
     cd $_in_path > /dev/null
+    echo ""
+    echo "#############"
     echo "# BEGIN ##### $(pwd)"
     ansible-playbook -c local --extra-vars "nexus_url=http://$NEXUS_HOST:8081" sample.yml
-    echo "# END ##### $(pwd)"
+    echo "# END ####### $(pwd)"
+    echo "#############"
+    echo ""
     cd - > /dev/null
 }
 

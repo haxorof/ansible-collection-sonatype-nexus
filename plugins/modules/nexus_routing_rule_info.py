@@ -6,8 +6,13 @@
 
 from __future__ import absolute_import, division, print_function
 
+# pylint: disable-next=invalid-name
 __metaclass__ = type
 
+from ansible.module_utils.basic import AnsibleModule
+from ansible_collections.haxorof.sonatype_nexus.plugins.module_utils.nexus import (
+    NexusHelper,
+)
 
 DOCUMENTATION = r"""
 ---
@@ -20,11 +25,6 @@ EXAMPLES = r"""
 
 RETURN = r"""
 """
-
-from ansible.module_utils.basic import AnsibleModule, env_fallback
-from ansible_collections.haxorof.sonatype_nexus.plugins.module_utils.nexus import (
-    NexusHelper,
-)
 
 
 def get_routing_rule(helper):
@@ -42,18 +42,14 @@ def get_routing_rule(helper):
         content = []
     elif info["status"] == 403:
         helper.module.fail_json(
-            msg="Insufficient permissions to read routing rule '{routing_rule_name}'.".format(
-                routing_rule_name=helper.module.params["name"],
-            )
+            msg=f"Insufficient permissions to read routing rule '{helper.module.params['name']}'."
         )
     else:
         helper.module.fail_json(
-            msg="Failed to read routing rule '{routing_rule_name}', http_status={status}.".format(
-                routing_rule_name=helper.module.params["name"],
-                status=info["status"],
-            )
+            msg=f"Failed to read routing rule '{helper.module.params['name']}', http_status={info['status']}."
         )
     return content
+
 
 def list_routing_rule(helper):
     endpoint = "routing-rules"
@@ -69,23 +65,19 @@ def list_routing_rule(helper):
         content.pop("fetch_url_retries", None)
     elif info["status"] == 403:
         helper.module.fail_json(
-            msg="Insufficient permissions to read routing rule '{routing_rule_name}'.".format(
-                routing_rule_name=helper.module.params["name"],
-            )
+            msg=f"Insufficient permissions to read routing rule '{helper.module.params['name']}'."
         )
     elif info["status"] not in [200, 404]:
         helper.module.fail_json(
-            msg="Failed to read routing rule '{routing_rule_name}', http_status={status}.".format(
-                routing_rule_name=helper.module.params["name"],
-                status=info["status"],
-            )
+            msg=f"Failed to read routing rule '{helper.module.params['name']}', http_status={info['status']}."
         )
     return content
+
 
 def main():
     argument_spec = NexusHelper.nexus_argument_spec()
     argument_spec.update(
-        name=dict(type="str", required=False, no_log=False),
+        name={"type": "str", "required": False, "no_log": False},
     )
     module = AnsibleModule(
         argument_spec=argument_spec,
@@ -95,18 +87,12 @@ def main():
 
     helper = NexusHelper(module)
 
-    # Seed the result dict in the object
-    result = dict(
-        changed=False,
-        messages=[],
-        json={},
-    )
-
     content = {}
-    if module.params["name"] == None:
+    if module.params["name"] is None:  # type: ignore
         content = list_routing_rule(helper)
     else:
         content = get_routing_rule(helper)
+    result = NexusHelper.generate_result_struct()
     result["json"] = content
     result["changed"] = False
 

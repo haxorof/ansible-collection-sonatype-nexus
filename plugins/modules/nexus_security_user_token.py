@@ -6,8 +6,13 @@
 
 from __future__ import absolute_import, division, print_function
 
+# pylint: disable-next=invalid-name
 __metaclass__ = type
 
+from ansible.module_utils.basic import AnsibleModule
+from ansible_collections.haxorof.sonatype_nexus.plugins.module_utils.nexus import (
+    NexusHelper,
+)
 
 DOCUMENTATION = r"""
 ---
@@ -20,11 +25,6 @@ EXAMPLES = r"""
 
 RETURN = r"""
 """
-
-from ansible.module_utils.basic import AnsibleModule, env_fallback
-from ansible_collections.haxorof.sonatype_nexus.plugins.module_utils.nexus import (
-    NexusHelper,
-)
 
 
 def get_user_token_info(helper):
@@ -83,10 +83,7 @@ def update_user_token(helper):
         helper.generic_permission_failure_msg()
     else:
         helper.module.fail_json(
-            msg="Failed to update user token configuration, http_status={http_status}, error_msg='{error_msg}'.".format(
-                error_msg=info["msg"],
-                http_status=info["status"],
-            )
+            msg=f"Failed to update user token configuration, http_status={info['status']}, error_msg='{info['msg']}'."
         )
 
     return content, changed
@@ -95,11 +92,11 @@ def update_user_token(helper):
 def main():
     argument_spec = NexusHelper.nexus_argument_spec()
     argument_spec.update(
-        enabled=dict(type="bool", default=True),
-        protect_content=dict(type="bool", default=False),
-        invalidate_tokens=dict(type="bool", default=False),
-        expiration_enabled=dict(type="bool", default=False),
-        expiration_days=dict(type="int", default=30),
+        enabled={"type": "bool", "default": True},
+        protect_content={"type": "bool", "default": False},
+        invalidate_tokens={"type": "bool", "default": False},
+        expiration_enabled={"type": "bool", "default": False},
+        expiration_days={"type": "int", "default": 30},
     )
     module = AnsibleModule(
         argument_spec=argument_spec,
@@ -109,27 +106,21 @@ def main():
 
     helper = NexusHelper(module)
 
-    # Seed the result dict in the object
-    result = dict(
-        changed=False,
-        messages=[],
-        json={},
-    )
-
     content = {}
     changed = True
     existing_config = get_user_token_info(helper)
     if (
         existing_config
-        and existing_config["protectContent"] == helper.module.params["protect_content"]
-        and existing_config["enabled"] == helper.module.params["enabled"]
-        and existing_config["expirationEnabled"] == helper.module.params["expiration_enabled"]
+        and existing_config["protectContent"] == helper.module.params["protect_content"]  # type: ignore
+        and existing_config["enabled"] == helper.module.params["enabled"]  # type: ignore
+        and existing_config["expirationEnabled"] == helper.module.params["expiration_enabled"]  # type: ignore
     ):
         changed = False
     else:
         content, changed = update_user_token(helper)
-    if module.params["invalidate_tokens"] == True:
+    if module.params["invalidate_tokens"]:  # type: ignore
         content, changed = invalidate_user_tokens(helper)
+    result = NexusHelper.generate_result_struct()
     result["json"] = content
     result["changed"] = changed
 

@@ -6,7 +6,13 @@
 
 from __future__ import absolute_import, division, print_function
 
+# pylint: disable-next=invalid-name
 __metaclass__ = type
+
+from ansible.module_utils.basic import AnsibleModule
+from ansible_collections.haxorof.sonatype_nexus.plugins.module_utils.nexus import (
+    NexusHelper,
+)
 
 DOCUMENTATION = r"""
 ---
@@ -17,14 +23,11 @@ EXAMPLES = r"""
 """
 RETURN = r"""
 """
-from ansible.module_utils.basic import AnsibleModule, env_fallback
-from ansible_collections.haxorof.sonatype_nexus.plugins.module_utils.nexus import NexusHelper
+
 
 def run_script(helper):
     endpoint = "script"
-    headers = {
-        "Content-Type": "application/json"
-    }
+    headers = {"Content-Type": "application/json"}
     info, content = helper.request(
         api_url=(helper.NEXUS_API_ENDPOINTS[endpoint] + "/{name}/run").format(
             url=helper.module.params["url"],
@@ -32,26 +35,26 @@ def run_script(helper):
         ),
         method="POST",
         headers=headers,
-        data=helper.module.params["body"]
+        data=helper.module.params["body"],
     )
+    changed = False
     if info["status"] in [200, 204]:
-        return content, True
+        changed = True
     elif info["status"] == 403:
         helper.generic_permission_failure_msg()
     else:
         helper.module.fail_json(
-            msg="Failed to run script {name}, http_status={status}, error_msg='{error_msg}'.".format(
-                name=helper.module.params["name"],
-                status=info["status"],
-                error_msg=info["msg"],
-            )
+            msg=f"Failed to run script {helper.module.params['name']}, \
+                http_status={info['status']}, error_msg='{info['msg']}'."
         )
+    return content, changed
+
 
 def main():
     argument_spec = NexusHelper.nexus_argument_spec()
     argument_spec.update(
-        name=dict(type="str", required=True, no_log=False),
-        body=dict(type="str", required=False, no_log=False),
+        name={"type": "str", "required": True, "no_log": False},
+        body={"type": "str", "required": False, "no_log": False},
     )
     module = AnsibleModule(
         argument_spec=argument_spec,
@@ -61,19 +64,14 @@ def main():
 
     helper = NexusHelper(module)
 
-    # Seed the result dictionary
-    result = dict(
-        changed=False,
-        messages=[],
-        json={},
-    )
-
     content, changed = run_script(helper)
 
+    result = NexusHelper.generate_result_struct()
     result["json"] = content
     result["changed"] = changed
 
     module.exit_json(**result)
+
 
 if __name__ == "__main__":
     main()

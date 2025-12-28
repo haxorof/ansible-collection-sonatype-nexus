@@ -6,7 +6,13 @@
 
 from __future__ import absolute_import, division, print_function
 
+# pylint: disable-next=invalid-name
 __metaclass__ = type
+
+from ansible.module_utils.basic import AnsibleModule
+from ansible_collections.haxorof.sonatype_nexus.plugins.module_utils.nexus import (
+    NexusHelper,
+)
 
 DOCUMENTATION = r"""
 ---
@@ -31,37 +37,31 @@ EXAMPLES = r"""
 RETURN = r"""
 """
 
-from ansible.module_utils.basic import AnsibleModule, env_fallback
-from ansible_collections.haxorof.sonatype_nexus.plugins.module_utils.nexus import (
-    NexusHelper,
-)
 
 def list_role(helper, role_id):
     """Fetch a role's details from Nexus, ensuring source=default is included."""
     endpoint = "roles"
     info, content = helper.request(
         api_url=(helper.NEXUS_API_ENDPOINTS[endpoint] + "/{id}?source=default").format(
-            url=helper.module.params["url"],
-            id=role_id
+            url=helper.module.params["url"], id=role_id
         ),
         method="GET",
     )
 
     if info["status"] == 200:
         return content.get("json", content)
-    elif info["status"] == 403:
+
+    if info["status"] == 403:
         helper.generic_permission_failure_msg()
     elif info["status"] == 404:
         return None  # Role does not exist
     else:
         helper.module.fail_json(
-            msg="Failed to fetch role {role_id}, http_status={status}.".format(
-                role_id=role_id,
-                status=info["status"],
-            )
+            msg=f"Failed to fetch role {role_id}, http_status={info['status']}."
         )
 
     return None
+
 
 def create_role(helper):
     """Create a new role in Nexus."""
@@ -86,14 +86,12 @@ def create_role(helper):
         helper.generic_permission_failure_msg()
     elif not helper.is_request_status_ok(info):
         helper.module.fail_json(
-            msg="Failed to create role {role}, http_status={http_status}, error_msg='{error_msg}'.".format(
-                error_msg=info["msg"],
-                http_status=info["status"],
-                role=helper.module.params["id"],
-            )
+            msg=f"Failed to create role {helper.module.params['id']}, \
+                http_status={info['status']}, error_msg='{info['msg']}'."
         )
 
     return content, changed
+
 
 def delete_role(helper):
     """Delete an existing role from Nexus."""
@@ -114,11 +112,8 @@ def delete_role(helper):
         helper.generic_permission_failure_msg()
     elif not helper.is_request_status_ok(info):
         helper.module.fail_json(
-            msg="Failed to delete role {role}, http_status={http_status}, error_msg='{error_msg}'.".format(
-                error_msg=info["msg"],
-                http_status=info["status"],
-                role=helper.module.params["id"],
-            )
+            msg=f"Failed to delete role {helper.module.params['id']}, \
+                http_status={info['status']}, error_msg='{info['msg']}'."
         )
 
     return content, changed
@@ -167,11 +162,8 @@ def update_role(helper, existing_role):
         helper.generic_permission_failure_msg()
     else:
         helper.module.fail_json(
-            msg="Failed to update role {role}, http_status={http_status}, error_msg='{error_msg}'.".format(
-                error_msg=info["msg"],
-                http_status=info["status"],
-                role=helper.module.params["id"],
-            )
+            msg=f"Failed to update role {helper.module.params['id']}, \
+                http_status={info['status']}, error_msg='{info['msg']}'."
         )
 
     return content, changed
@@ -181,16 +173,24 @@ def main():
     """Main function for the Ansible module."""
     argument_spec = NexusHelper.nexus_argument_spec()
     argument_spec.update(
-        id=dict(type="str", required=True, no_log=False),
-        name=dict(type="str", required=True, no_log=False),
-        description=dict(type="str", required=False, no_log=False),
-        privileges=dict(
-            type="list", elements="str", required=False, no_log=False, default=list()
-        ),
-        roles=dict(
-            type="list", elements="str", required=False, no_log=False, default=list()
-        ),
-        state=dict(type="str", choices=["present", "absent"], default="present"),
+        id={"type": "str", "required": True, "no_log": False},
+        name={"type": "str", "required": True, "no_log": False},
+        description={"type": "str", "required": False, "no_log": False},
+        privileges={
+            "type": "list",
+            "elements": "str",
+            "required": False,
+            "no_log": False,
+            "default": [],
+        },
+        roles={
+            "type": "list",
+            "elements": "str",
+            "required": False,
+            "no_log": False,
+            "default": [],
+        },
+        state={"type": "str", "choices": ["present", "absent"], "default": "present"},
     )
 
     module = AnsibleModule(
@@ -201,34 +201,26 @@ def main():
 
     helper = NexusHelper(module)
 
-    # Seed the result dict in the object
-    result = dict(
-        changed=False,
-        messages=[],
-        json={},
-    )
-
     content = {}
     changed = False
-    role_id = module.params["id"]
+    role_id = module.params["id"]  # type: ignore
 
     existing_role = list_role(helper, role_id)
 
     if existing_role is not None:
-        if module.params["state"] == "present":
+        if module.params["state"] == "present":  # type: ignore
             content, changed = update_role(helper, existing_role)
         else:
             content, changed = delete_role(helper)
     else:
-        if module.params["state"] == "present":
+        if module.params["state"] == "present":  # type: ignore
             content, changed = create_role(helper)
         else:
             module.fail_json(
-                msg="Role {role_id} does not exist and cannot be deleted.".format(
-                    role_id=role_id,
-                )
+                msg=f"Role {role_id} does not exist and cannot be deleted."
             )
 
+    result = NexusHelper.generate_result_struct()
     result["json"] = content
     result["changed"] = changed
     module.exit_json(**result)

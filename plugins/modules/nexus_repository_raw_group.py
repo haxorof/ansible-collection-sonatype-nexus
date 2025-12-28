@@ -6,9 +6,14 @@
 
 from __future__ import absolute_import, division, print_function
 
+# pylint: disable-next=invalid-name
 __metaclass__ = type
 
-import humps
+from ansible.module_utils.basic import AnsibleModule
+from ansible_collections.haxorof.sonatype_nexus.plugins.module_utils.nexus import (
+    NexusHelper,
+    NexusRepositoryHelper,
+)
 
 DOCUMENTATION = r"""
 ---
@@ -22,29 +27,33 @@ EXAMPLES = r"""
 RETURN = r"""
 """
 
-from ansible.module_utils.basic import AnsibleModule, env_fallback
-from ansible_collections.haxorof.sonatype_nexus.plugins.module_utils.nexus import (
-    NexusHelper,
-    NexusRepositoryHelper,
-)
 
 def repository_filter(item, helper):
     return item["name"] == helper.module.params["name"]
+
 
 def main():
     endpoint_path_to_use = "/raw/group"
     argument_spec = NexusHelper.nexus_argument_spec()
     argument_spec.update(
-        member_repos=dict(type="list", elements="str", required=False),
-        raw=dict(
-            type='dict',
-            apply_defaults=True,
-            options=dict(
-                content_disposition=dict(type="str", choices=["ATTACHMENT", "INLINE"], default="INLINE"),
-            ),
-        ),
+        {
+            "member_repos": {"type": "list", "elements": "str", "required": False},
+            "raw": {
+                "type": "dict",
+                "apply_defaults": True,
+                "options": {
+                    "content_disposition": {
+                        "type": "str",
+                        "choices": ["ATTACHMENT", "INLINE"],
+                        "default": "INLINE",
+                    },
+                },
+            },
+        }
     )
-    argument_spec.update(NexusRepositoryHelper.common_proxy_argument_spec(endpoint_path_to_use))
+    argument_spec.update(
+        NexusRepositoryHelper.common_proxy_argument_spec(endpoint_path_to_use)
+    )
     module = AnsibleModule(
         argument_spec=argument_spec,
         supports_check_mode=True,
@@ -53,32 +62,32 @@ def main():
 
     helper = NexusHelper(module)
 
-    # Seed the result dict in the object
-    result = dict(
-        changed=False,
-        messages=[],
-        json={},
-    )
-
     changed, content = True, {}
-    existing_data = NexusRepositoryHelper.list_filtered_repositories(helper, repository_filter)
-    if module.params["state"] == "present":
+    existing_data = NexusRepositoryHelper.list_filtered_repositories(
+        helper, repository_filter
+    )
+    if module.params["state"] == "present":  # type: ignore
         endpoint_path = endpoint_path_to_use
         additional_data = {
             "raw": NexusHelper.camalize_param(helper, "raw"),
             "group": {
-                "memberNames": module.params["member_repos"],
+                "memberNames": module.params["member_repos"],  # type: ignore
             },
         }
         if len(existing_data) > 0:
-            content, changed = NexusRepositoryHelper.update_repository(helper, endpoint_path, additional_data, existing_data[0])
+            content, changed = NexusRepositoryHelper.update_repository(
+                helper, endpoint_path, additional_data, existing_data[0]
+            )
         else:
-            content, changed = NexusRepositoryHelper.create_repository(helper, endpoint_path, additional_data)
+            content, changed = NexusRepositoryHelper.create_repository(
+                helper, endpoint_path, additional_data
+            )
     else:
         if len(existing_data) > 0:
             content, changed = NexusRepositoryHelper.delete_repository(helper)
         else:
             changed = False
+    result = NexusHelper.generate_result_struct()
     result["json"] = content
     result["changed"] = changed
 

@@ -1,14 +1,19 @@
 #!/usr/bin/python
-# -*- coding: utf-8 -*- 
+# -*- coding: utf-8 -*-
 
 # Copyright: Contributors to the haxorof.sonatype_nexus project
 # MIT License (see COPYING or https://opensource.org/license/mit/)
 
 from __future__ import absolute_import, division, print_function
 
+# pylint: disable-next=invalid-name
 __metaclass__ = type
 
-import humps
+from ansible.module_utils.basic import AnsibleModule
+from ansible_collections.haxorof.sonatype_nexus.plugins.module_utils.nexus import (
+    NexusHelper,
+    NexusRepositoryHelper,
+)
 
 DOCUMENTATION = r"""
 ---
@@ -22,69 +27,75 @@ EXAMPLES = r"""
 RETURN = r"""
 """
 
-from ansible.module_utils.basic import AnsibleModule, env_fallback
-from ansible_collections.haxorof.sonatype_nexus.plugins.module_utils.nexus import (
-    NexusHelper,
-    NexusRepositoryHelper,
-)
 
 def repository_filter(item, helper):
     return item["name"] == helper.module.params["name"]
+
 
 def main():
     endpoint_path_to_use = "/npm/hosted"
 
     argument_spec = NexusHelper.nexus_argument_spec()
     argument_spec.update(
-        format=dict(type="str", choices=["npm"], required=False),
-        type=dict(type="str", choices=["hosted"], required=False),
-        docker=dict(
-            type='dict',
-            apply_defaults=True,
-            options=dict(
-                v1_enabled=dict(type="bool", default=False),
-                force_basic_auth=dict(type="bool", default=False),  # Adding forceBasicAuth here
-                http_port=dict(type="int", default=8082),  # Adding httpPort
-                https_port=dict(type="int", default=8083),  # Adding httpsPort
-                subdomain=dict(type="str", default="docker-a"),  # Adding subdomain
-            ), 
-        ),
-        component=dict( 
-            type='dict', 
-            options=dict( 
-                proprietary_components=dict(type="bool", default=False),
-            ), 
-        ),
+        {
+            "format": {"type": "str", "choices": ["npm"], "required": False},
+            "type": {"type": "str", "choices": ["hosted"], "required": False},
+            "docker": {
+                "type": "dict",
+                "apply_defaults": True,
+                "options": {
+                    "v1_enabled": {"type": "bool", "default": False},
+                    "force_basic_auth": {
+                        "type": "bool",
+                        "default": False,
+                    },  # Adding forceBasicAuth here
+                    "http_port": {"type": "int", "default": 8082},  # Adding httpPort
+                    "https_port": {"type": "int", "default": 8083},  # Adding httpsPort
+                    "subdomain": {
+                        "type": "str",
+                        "default": "docker-a",
+                    },  # Adding subdomain
+                },
+            },
+            "component": {
+                "type": "dict",
+                "options": {
+                    "proprietary_components": {"type": "bool", "default": False},
+                },
+            },
+        }
     )
-    argument_spec.update(NexusRepositoryHelper.common_proxy_argument_spec(endpoint_path_to_use))
+    argument_spec.update(
+        NexusRepositoryHelper.common_proxy_argument_spec(endpoint_path_to_use)
+    )
     module = AnsibleModule(
         argument_spec=argument_spec,
         supports_check_mode=True,
         required_together=[("username", "password")],
     )
     helper = NexusHelper(module)
-    # Seed the result dict in the object
-    result = dict(
-        changed=False,
-        messages=[],
-        json={},
-    )
 
     changed, content = True, {}
-    existing_data = NexusRepositoryHelper.list_filtered_repositories(helper, repository_filter)
-    if module.params["state"] == "present":
+    existing_data = NexusRepositoryHelper.list_filtered_repositories(
+        helper, repository_filter
+    )
+    if module.params["state"] == "present":  # type: ignore
         endpoint_path = endpoint_path_to_use
-        additional_data = {
-        }
+        additional_data = {}
         if len(existing_data) > 0:
-            content, changed = NexusRepositoryHelper.update_repository(helper, endpoint_path, additional_data, existing_data[0])
+            content, changed = NexusRepositoryHelper.update_repository(
+                helper, endpoint_path, additional_data, existing_data[0]
+            )
         else:
-            content, changed = NexusRepositoryHelper.create_repository(helper, endpoint_path, additional_data)
+            content, changed = NexusRepositoryHelper.create_repository(
+                helper, endpoint_path, additional_data
+            )
     else:
         if len(existing_data) > 0:
             content, changed = NexusRepositoryHelper.delete_repository(helper)
         else:
             changed = False
+    result = NexusHelper.generate_result_struct()
     result["json"] = content
     result["changed"] = changed
 

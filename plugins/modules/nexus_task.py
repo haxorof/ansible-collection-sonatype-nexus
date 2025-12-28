@@ -6,10 +6,13 @@
 
 from __future__ import absolute_import, division, print_function
 
+# pylint: disable-next=invalid-name
 __metaclass__ = type
 
 from ansible.module_utils.basic import AnsibleModule
-from ansible_collections.haxorof.sonatype_nexus.plugins.module_utils.nexus import NexusHelper
+from ansible_collections.haxorof.sonatype_nexus.plugins.module_utils.nexus import (
+    NexusHelper,
+)
 
 DOCUMENTATION = r"""
 ---
@@ -22,6 +25,7 @@ EXAMPLES = r"""
 
 RETURN = r"""
 """
+
 
 def get_tasks_list(helper):
     endpoint = "tasks"
@@ -36,7 +40,6 @@ def get_tasks_list(helper):
         method="GET",
     )
 
-
     # Try to extract the list of tasks from the response
     task_list = []
     if isinstance(content, list):
@@ -45,7 +48,9 @@ def get_tasks_list(helper):
         # Try common keys that might contain the task list
         task_list = content.get("items") or content.get("tasks") or []
     else:
-        helper.module.fail_json(msg="Unexpected response format: expected a list or dict containing tasks.")
+        helper.module.fail_json(
+            msg="Unexpected response format: expected a list or dict containing tasks."
+        )
     existing_task = None
     for task in task_list:
         if task.get("name") == helper.module.params["name"]:
@@ -54,6 +59,7 @@ def get_tasks_list(helper):
             task_id = task.get("id")
             break
     return task_exists, existing_task, task_id
+
 
 def create_task(helper):
     endpoint = "tasks"
@@ -69,29 +75,28 @@ def create_task(helper):
             "timeZoneOffset": helper.module.params["frequency"]["time_zone_offset"],
             "recurringDays": helper.module.params["frequency"]["recurring_days"],
             "cronExpression": helper.module.params["frequency"]["cron_expression"],
-            },
+        },
         "properties": NexusHelper.camalize_param(helper, "properties"),
     }
     info, content = helper.request(
-        api_url=helper.NEXUS_API_ENDPOINTS[endpoint].format(url=helper.module.params["url"]),
+        api_url=helper.NEXUS_API_ENDPOINTS[endpoint].format(
+            url=helper.module.params["url"]
+        ),
         method="POST",
         data=data,
     )
     if not helper.is_request_status_ok(info):
         if info["status"] == 400:
-            helper.module.fail_json(
-                msg=f"Bad request, error_msg='{info['body']}'."
-            )
+            helper.module.fail_json(msg=f"Bad request, error_msg='{info['body']}'.")
         elif info["status"] == 403:
-            helper.module.fail_json(
-                msg="Insufficient permissions to create task."
-            )
+            helper.module.fail_json(msg="Insufficient permissions to create task.")
         else:
             helper.module.fail_json(
                 msg=f"Failed to create task , http_status={info['status']}, error_msg='{info['msg']}'."
             )
 
     return content, True
+
 
 def update_task(helper, task_id, existing_data):
     endpoint = "tasks"
@@ -107,11 +112,11 @@ def update_task(helper, task_id, existing_data):
             "timeZoneOffset": helper.module.params["frequency"]["time_zone_offset"],
             "recurringDays": helper.module.params["frequency"]["recurring_days"],
             "cronExpression": helper.module.params["frequency"]["cron_expression"],
-            },
+        },
         "properties": NexusHelper.camalize_param(helper, "properties"),
     }
 
-    if existing_data['name'] == data['name']:
+    if existing_data["name"] == data["name"]:
         changed = False
     else:
         changed = True
@@ -126,13 +131,9 @@ def update_task(helper, task_id, existing_data):
     )
     if not helper.is_request_status_ok(info):
         if info["status"] == 400:
-            helper.module.fail_json(
-                msg=f"Bad request, error_msg='{info['body']}'."
-            )
+            helper.module.fail_json(msg=f"Bad request, error_msg='{info['body']}'.")
         elif info["status"] == 403:
-            helper.module.fail_json(
-                msg="Insufficient permissions to update tasks."
-            )
+            helper.module.fail_json(msg="Insufficient permissions to update tasks.")
         else:
             helper.module.fail_json(
                 msg=f"Failed to update tasks, http_status={info['status']}, error_msg='{info['msg']}'."
@@ -140,7 +141,8 @@ def update_task(helper, task_id, existing_data):
 
     return content, changed
 
-def delete_task(helper, task_id ):
+
+def delete_task(helper, task_id):
     endpoint = "tasks"
 
     info, content = helper.request(
@@ -148,14 +150,12 @@ def delete_task(helper, task_id ):
             url=helper.module.params["url"],
             task_id=task_id,
         ),
-        method="DELETE"
+        method="DELETE",
     )
 
     if not helper.is_request_status_ok(info):
         if info["status"] == 403:
-            helper.module.fail_json(
-                msg="Insufficient permissions to delete task."
-            )
+            helper.module.fail_json(msg="Insufficient permissions to delete task.")
         else:
             helper.module.fail_json(
                 msg=f"Failed to delete task, http_status={info['status']}, error_msg='{info['msg']}'."
@@ -163,9 +163,22 @@ def delete_task(helper, task_id ):
 
     return content, True
 
+
 def main():
     frequency_options = {
-        "schedule": {"type": "str", "choices": ["manual", "once", "hourly", "daily", "weekly", "monthly", "cron"], "required": True},
+        "schedule": {
+            "type": "str",
+            "choices": [
+                "manual",
+                "once",
+                "hourly",
+                "daily",
+                "weekly",
+                "monthly",
+                "cron",
+            ],
+            "required": True,
+        },
         "start_date": {"type": "int", "default": None},
         "time_zone_offset": {"type": "str", "default": ""},
         "recurring_days": {"type": "list", "default": []},
@@ -178,10 +191,14 @@ def main():
         name={"type": "str", "required": True},
         enabled={"type": "bool", "required": False, "default": True},
         alert_email={"type": "str", "required": False, "default": ""},
-        notification_condition={"type": "str", "required": False, "choices": ["FAILURE", "SUCCESS_FAILURE"], "default": "FAILURE"},
-        frequency={"type": "dict", "required": True,  "options": frequency_options},
+        notification_condition={
+            "type": "str",
+            "required": False,
+            "choices": ["FAILURE", "SUCCESS_FAILURE"],
+            "default": "FAILURE",
+        },
+        frequency={"type": "dict", "required": True, "options": frequency_options},
         properties={"type": "dict", "required": False, "default": {}},
-
     )
     module = AnsibleModule(
         argument_spec=argument_spec,
@@ -191,18 +208,11 @@ def main():
 
     helper = NexusHelper(module)
 
-    # Seed the result dict in the object
-    result = {
-        "changed": False,
-        "state": module.params["state"],
-        "messages": [],
-        "json": {},
-    }
     content = {}
     changed = True
     task_exists, existing_task, task_id = get_tasks_list(helper)
 
-    if module.params["state"] == "present":
+    if module.params["state"] == "present":  # type: ignore
         if task_exists is True:
             content, changed = update_task(helper, task_id, existing_task)
         else:
@@ -213,10 +223,12 @@ def main():
         else:
             changed = False
 
+    result = NexusHelper.generate_result_struct({"state": module.params["state"]})  # type: ignore
     result["json"] = content
     result["changed"] = changed
 
     module.exit_json(**result)
+
 
 if __name__ == "__main__":
     main()

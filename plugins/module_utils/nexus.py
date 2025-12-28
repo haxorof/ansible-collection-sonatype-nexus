@@ -6,16 +6,12 @@
 
 from __future__ import absolute_import, division, print_function
 
+# pylint: disable-next=invalid-name
 __metaclass__ = type
 
 import json
 import time
-import os
-import stat
 import humps
-from os import close
-from tempfile import mkstemp
-from traceback import format_exc
 
 from ansible.module_utils._text import to_text
 from ansible.module_utils.basic import env_fallback
@@ -23,44 +19,79 @@ from ansible.module_utils.urls import fetch_url, basic_auth_header
 
 
 class NexusHelper:
+    """General Nexus Helper Class"""
+
     NEXUS_API_URL = "http://localhost:8081"
     NEXUS_API_BASE_PATH = "/service/rest"
 
     NEXUS_API_ENDPOINTS = {
         "anonymous": "{url}" + NEXUS_API_BASE_PATH + "/v1/security/anonymous",
-        # "assets": "{url}" + NEXUS_API_BASE_PATH + "/v1/assets",
-        # "azureblobstore": "{url}" + NEXUS_API_BASE_PATH + "/v1/azureblobstore",
         "blobstores": "{url}" + NEXUS_API_BASE_PATH + "/v1/blobstores",
         "capabilities": "{url}" + NEXUS_API_BASE_PATH + "/v1/capabilities",
-        # "certificates": "{url}" + NEXUS_API_BASE_PATH + "/v1/ssl",
         "cleanup-policies": "{url}" + NEXUS_API_BASE_PATH + "/internal/cleanup-policies",
-        # "components": "{url}" + NEXUS_API_BASE_PATH + "/v1/components",
-        # "content-selectors": "{url}" + NEXUS_API_BASE_PATH + "/v1/security/content-selectors",
         "email": "{url}" + NEXUS_API_BASE_PATH + "/v1/email",
-        # "formats": "{url}" + NEXUS_API_BASE_PATH + "/v1/formats",
         "http": "{url}" + NEXUS_API_BASE_PATH + "/v1/http",
-        # "iq": "{url}" + NEXUS_API_BASE_PATH + "/v1/iq",
         "ldap": "{url}" + NEXUS_API_BASE_PATH + "/v1/security/ldap",
         "license": "{url}" + NEXUS_API_BASE_PATH + "/v1/system/license",
-        # "lifecycle": "{url}" + NEXUS_API_BASE_PATH + "/v1/lifecycle",
-        # "privileges": "{url}" + NEXUS_API_BASE_PATH + "/v1/security/privileges",
         "read-only": "{url}" + NEXUS_API_BASE_PATH + "/v1/read-only",
-        # "realms": "{url}" + NEXUS_API_BASE_PATH + "/v1/security/realms",
         "repositories": "{url}" + NEXUS_API_BASE_PATH + "/v1/repositories",
         "repository-settings": "{url}" + NEXUS_API_BASE_PATH + "/v1/repositorySettings",
         "roles": "{url}" + NEXUS_API_BASE_PATH + "/v1/security/roles",
         "routing-rules": "{url}" + NEXUS_API_BASE_PATH + "/v1/routing-rules",
         "script": "{url}" + NEXUS_API_BASE_PATH + "/v1/script",
-        # "search": "{url}" + NEXUS_API_BASE_PATH + "/v1/search",
         "secret-encryption": "{url}" + NEXUS_API_BASE_PATH + "/v1/secrets/encryption/re-encrypt",
         "status": "{url}" + NEXUS_API_BASE_PATH + "/v1/status",
-        # "support": "{url}" + NEXUS_API_BASE_PATH + "/v1/support",
-        # "system": "{url}" + NEXUS_API_BASE_PATH + "/v1/system",
         "tasks": "{url}" + NEXUS_API_BASE_PATH + "/v1/tasks",
         "user-sources": "{url}" + NEXUS_API_BASE_PATH + "/v1/security/user-sources",
         "users": "{url}" + NEXUS_API_BASE_PATH + "/v1/security/users",
         "user-tokens": "{url}" + NEXUS_API_BASE_PATH + "/v1/security/user-tokens",
     }
+
+    @staticmethod
+    def camalize_param(helper, param_name, ret_default=None):
+        ret_value = (
+            ret_default
+            if helper.module.params[param_name] is None
+            else humps.camelize(helper.module.params[param_name])
+        )
+        return ret_value
+
+    @staticmethod
+    def generate_result_struct(additions=None):
+        result = {
+            "changed": False,
+            "messages": [],
+            "json": {},
+        }
+        if additions:
+            result.update(additions)
+        return result
+
+    @staticmethod
+    def nexus_argument_spec():
+        """Common module arguments"""
+        return {
+            "url": {"type": "str", "no_log": False, "required": False},
+            "username": {
+                "type": "str",
+                "no_log": False,
+                "required": False,
+                "default": None,
+                "fallback": (env_fallback, ["NEXUS_USERNAME"]),
+            },
+            "password": {
+                "type": "str",
+                "no_log": True,
+                "required": False,
+                "default": None,
+                "fallback": (env_fallback, ["NEXUS_PASSWORD"]),
+            },
+            "validate_certs": {"type": "bool", "default": True},
+            "use_proxy": {"type": "bool", "default": True},
+            "return_content": {"type": "bool", "default": True},
+            "sleep": {"type": "int", "default": 5},
+            "retries": {"type": "int", "default": 3},
+        }
 
     def __init__(self, module):
         self.module = module
@@ -69,30 +100,6 @@ class NexusHelper:
         if self.module.params["url"] is None:
             self.module.params["url"] = self.NEXUS_API_URL
 
-    def nexus_argument_spec():
-        return dict(
-            url=dict(type="str", no_log=False, required=False),
-            username=dict(
-                type="str",
-                no_log=False,
-                required=False,
-                default=None,
-                fallback=(env_fallback, ["NEXUS_USERNAME"]),
-            ),
-            password=dict(
-                type="str",
-                no_log=True,
-                required=False,
-                default=None,
-                fallback=(env_fallback, ["NEXUS_PASSWORD"]),
-            ),
-            validate_certs=dict(type="bool", default=True),
-            use_proxy=dict(type="bool", default=True),
-            return_content=dict(type="bool", default=True),
-            sleep=dict(type="int", default=5),
-            retries=dict(type="int", default=3),
-        )
-
     def generic_permission_failure_msg(self):
         self.module.fail_json(
             msg="The user does not have permission to perform the operation."
@@ -100,11 +107,11 @@ class NexusHelper:
 
     def generic_failure_msg(self, message, request_info):
         self.module.fail_json(
-            msg=message + ", http_status={http_status}, error_msg={error_msg}, body={body}.".format(
-                http_status=request_info["status"],
-                error_msg=request_info["msg"],
-                body=request_info["body"],
-            )
+            msg=message
+            + f", \
+                http_status={request_info['status']}, \
+                error_msg={request_info['msg']}, \
+                body={request_info['body']}."
         )
 
     def request(self, api_url, method, data=None, headers=None):
@@ -120,7 +127,7 @@ class NexusHelper:
 
         if isinstance(data, dict):
             data = self.module.jsonify(data)
-            if not ("Content-type" in headers):
+            if "Content-type" not in headers:
                 headers.update(
                     {
                         "Content-type": "application/json",
@@ -154,23 +161,19 @@ class NexusHelper:
                         content = js
                     else:
                         content["json"] = js
-                except ValueError as e:
+                except ValueError:
                     content["content"] = body
 
         if not self.is_request_status_ok(info):
             content["fetch_url_retries"] = retries
 
         if info["status"] == 401:
-            self.module.fail_json(
-                msg="Authentication required."
-            )
+            self.module.fail_json(msg="Authentication required.")
         elif info["status"] in [503]:
-            self.module.fail_json(
-                msg="Unavailable to service requests."
-            )
+            self.module.fail_json(msg="Unavailable to service requests.")
 
         # For debugging
-        # if info["status"] not in [200]:
+        # if info['status'] not in [200]:
         #     self.module.fail_json(msg="{info} # {content}".format(info=info, content=content))
         return info, content
 
@@ -181,17 +184,16 @@ class NexusHelper:
         """Generates a complete URL query including question mark.
 
         Args:
-            params (dict): A dictionary with query parameter key and what module parameter to map it with
+            params (dict): A dictionary with query parameter key and what module parameter
+                to map it with
 
         Returns:
             string: Returns a query as a string including question mark in front.
         """
         query_params = []
         for k, v in params.items():
-            if self.module.params[v] != None:
-                query_params.append(
-                    "{key}={value}".format(key=k, value=self.module.params[v])
-                )
+            if self.module.params[v] is not None:
+                query_params.append(f"{k}={self.module.params[v]}")
         query = "&".join(query_params)
         return "?" + query if len(query) > 0 else ""
 
@@ -199,19 +201,21 @@ class NexusHelper:
         # Handle case where both are dicts
         if isinstance(new_data, dict) and isinstance(existing_data, dict):
             # Case: 'password' only in new_data
-            if 'password' not in existing_data and 'password' in new_data:
+            if "password" not in existing_data and "password" in new_data:
                 return False
             # Case: 'password' in both and masked in existing_data
-            if 'password' in new_data and 'password' in existing_data:
+            if "password" in new_data and "password" in existing_data:
                 new_data = new_data.copy()
                 existing_data = existing_data.copy()
-                new_data.pop('password', None)
-                existing_data.pop('password', None)
+                new_data.pop("password", None)
+                existing_data.pop("password", None)
             # Compare keys
             if set(new_data.keys()) != set(existing_data.keys()):
                 return False
             # Recursively compare values
-            return all(self.is_json_data_equal(new_data[k], existing_data[k]) for k in new_data)
+            return all(
+                self.is_json_data_equal(new_data[k], existing_data[k]) for k in new_data
+            )
         # Handle case where both are lists
         if isinstance(new_data, list) and isinstance(existing_data, list):
             # Normalize and sort lists for comparison
@@ -221,7 +225,7 @@ class NexusHelper:
         # Fallback to direct comparison
         return new_data == existing_data
 
-    def clean_dict_list(self,d):
+    def clean_dict_list(self, d):
         if isinstance(d, dict):
             cleaned = {}
             for k, v in d.items():
@@ -233,120 +237,144 @@ class NexusHelper:
             return [self.clean_dict_list(i) for i in d if i not in ("", [], {}, None)]
         return d
 
-    def camalize_param(helper, param_name):
-        ret_value = None if helper.module.params[param_name] is None else humps.camelize(helper.module.params[param_name])
-        return ret_value
 
 class NexusRepositoryHelper:
+
+    @staticmethod
     def storage_argument_spec():
-        return dict(
-            type='dict',
-            # apply_defaults=True,
-            options=dict(
-                blob_store_name=dict(type="str", no_log=False, required=False), # Required for create
-                strict_content_type_validation=dict(type="bool", default=True),
-            ),
-        )
+        return {
+            "type": "dict",
+            "options": {
+                "blob_store_name": {
+                    "type": "str",
+                    "no_log": False,
+                    "required": False,
+                },  # Required for create
+                "strict_content_type_validation": {"type": "bool", "default": True},
+            },
+        }
+
+    @staticmethod
     def storage_argument_spec_hosted():
-        return dict(
-            type='dict',
-            # apply_defaults=True,
-            options=dict(
-                blob_store_name=dict(type="str", required=False),
-                strict_content_type_validation=dict(type="bool", default=False),
-                write_policy=dict(type="str", choices=["ALLOW", "ALLOW_ONCE", "DENY"], default="ALLOW"),
-                latest_policy=dict(type="bool", default=False), # New parameter
-            ),
-        )
+        storage_arg_spec_hosted = NexusRepositoryHelper.storage_argument_spec_common()
+        storage_arg_spec_hosted["options"]["latest_policy"] = {
+            "type": "bool",
+            "default": False,
+        }
+        return storage_arg_spec_hosted
+
+    @staticmethod
     def storage_argument_spec_common():
-        return dict(
-            type='dict',
-            # apply_defaults=True,
-            options=dict(
-                blob_store_name=dict(type="str", required=False),
-                strict_content_type_validation=dict(type="bool", default=False),
-                write_policy=dict(type="str", choices=["ALLOW", "ALLOW_ONCE", "DENY"], default="ALLOW"),
-            ),
-        )
+        return {
+            "type": "dict",
+            "options": {
+                "blob_store_name": {"type": "str", "required": False},
+                "strict_content_type_validation": {"type": "bool", "default": False},
+                "write_policy": {
+                    "type": "str",
+                    "choices": ["ALLOW", "ALLOW_ONCE", "DENY"],
+                    "default": "ALLOW",
+                },
+            },
+        }
+
+    @staticmethod
     def cleanup_policy_argument_spec():
-        return  dict(
-            type='dict',
-            # apply_defaults=True,
-            options=dict(
-                policy_names=dict(type="list", elements="str", required=False, no_log=False, default=list()),
-            ),
-        )
+        return {
+            "type": "dict",
+            "options": {
+                "policy_names": {
+                    "type": "list",
+                    "elements": "str",
+                    "required": False,
+                    "no_log": False,
+                    "default": [],
+                },
+            },
+        }
 
+    @staticmethod
     def proxy_argument_spec():
-        return dict(
-            type='dict',
-            # apply_defaults=True,
-            options=dict(
-                remote_url=dict(type="str", no_log=False, required=False), # Required for create/update
-                content_max_age=dict(type="int", default=1440),
-                metadata_max_age=dict(type="int", default=1440),
-            ),
-        )
+        return {
+            "type": "dict",
+            "options": {
+                "remote_url": {
+                    "type": "str",
+                    "no_log": False,
+                    "required": False,
+                },  # Required for create/update
+                "content_max_age": {"type": "int", "default": 1440},
+                "metadata_max_age": {"type": "int", "default": 1440},
+            },
+        }
 
+    @staticmethod
     def negative_cache_argument_spec():
-        return dict(
-            type='dict',
-            apply_defaults=True,
-            options=dict(
-                enabled=dict(type="bool", default=True),
-                time_to_live=dict(type="int", default=1440),
-            ),
-        )
+        return {
+            "type": "dict",
+            "apply_defaults": True,
+            "options": {
+                "enabled": {"type": "bool", "default": True},
+                "time_to_live": {"type": "int", "default": 1440},
+            },
+        }
 
+    @staticmethod
     def http_client_argument_spec():
-        return dict(
-            type='dict',
-            apply_defaults=True,
-            options=dict(
-                blocked=dict(type="bool", default=False),
-                auto_block=dict(type="bool", default=True),
-                connection=dict(
-                    type='dict',
-                    apply_defaults=True,
-                    options=dict(
-                        retries=dict(type="int"),
-                        user_agent_suffix=dict(type="str", no_log=False, required=False),
-                        timeout=dict(type="int"),
-                        enable_circular_redirects=dict(type="bool", default=False),
-                        enable_cookies=dict(type="bool", default=False),
-                        use_trust_store=dict(type="bool", default=False),
-                    ),
-                ),
-                authentication=dict(
-                    type='dict',
-                    # apply_defaults=True,
-                    options=dict(
-                        type=dict(type="str", no_log=False, required=False),
-                        username=dict(type="str", no_log=False, required=False),
-                        password=dict(type="str", no_log=True, required=False),
-                        ntlmHost=dict(type="str", no_log=False, required=False),
-                        ntlmDomain=dict(type="str", no_log=False, required=False),
-                        preemptive=dict(type="bool", default=False),
-                    ),
-                ),
-            ),
-        )
+        return {
+            "type": "dict",
+            "apply_defaults": True,
+            "options": {
+                "blocked": {"type": "bool", "default": False},
+                "auto_block": {"type": "bool", "default": True},
+                "connection": {
+                    "type": "dict",
+                    "apply_defaults": True,
+                    "options": {
+                        "retries": {"type": "int"},
+                        "user_agent_suffix": {
+                            "type": "str",
+                            "no_log": False,
+                            "required": False,
+                        },
+                        "timeout": {"type": "int"},
+                        "enable_circular_redirects": {"type": "bool", "default": False},
+                        "enable_cookies": {"type": "bool", "default": False},
+                        "use_trust_store": {"type": "bool", "default": False},
+                    },
+                },
+                "authentication": {
+                    "type": "dict",
+                    "options": {
+                        "type": {"type": "str", "no_log": False, "required": False},
+                        "username": {"type": "str", "no_log": False, "required": False},
+                        "password": {"type": "str", "no_log": True, "required": False},
+                        "ntlmHost": {"type": "str", "no_log": False, "required": False},
+                        "ntlmDomain": {
+                            "type": "str",
+                            "no_log": False,
+                            "required": False,
+                        },
+                        "preemptive": {"type": "bool", "default": False},
+                    },
+                },
+            },
+        }
 
+    @staticmethod
     def replication_argument_spec():
-        return dict(
-            type='dict',
-            # apply_defaults=True,
-            options=dict(
-                preemptive_pull_enabled=dict(type="bool", default=False),
-                asset_path_regex=dict(type="str", no_log=False, required=False),
-            ),
-        )
+        return {
+            "type": "dict",
+            "options": {
+                "preemptive_pull_enabled": {"type": "bool", "default": False},
+                "asset_path_regex": {"type": "str", "no_log": False, "required": False},
+            },
+        }
 
+    @staticmethod
     def common_proxy_argument_spec(endpoint_path_to_use):
         # Format with both write_policy + latest_policy
-        hosted_with_latest = [
-            "/docker/hosted"
-        ]
+        hosted_with_latest = ["/docker/hosted"]
         # Format with write_policy
         hosted_with_common = [
             "/maven/hosted",
@@ -355,7 +383,7 @@ class NexusRepositoryHelper:
             "/helm/hosted",
             "/nuget/hosted",
             "/pypi/hosted",
-            "/rubygems/hosted"
+            "/rubygems/hosted",
         ]
         if any(path in endpoint_path_to_use for path in hosted_with_latest):
             storage_spec = NexusRepositoryHelper.storage_argument_spec_hosted()
@@ -364,19 +392,24 @@ class NexusRepositoryHelper:
         else:
             storage_spec = NexusRepositoryHelper.storage_argument_spec()
 
-        return dict(
-            state=dict(type="str", choices=["present", "absent"], default="present"),
-            name=dict(type="str", no_log=False, required=True),
-            online=dict(type="bool", default=True),
-            cleanup=NexusRepositoryHelper.cleanup_policy_argument_spec(),
-            proxy=NexusRepositoryHelper.proxy_argument_spec(),
-            negative_cache=NexusRepositoryHelper.negative_cache_argument_spec(),
-            http_client=NexusRepositoryHelper.http_client_argument_spec(),
-            routing_rule=dict(type="str", no_log=False, required=False),
-            replication=NexusRepositoryHelper.replication_argument_spec(),
-            storage=storage_spec,
-        )
+        return {
+            "state": {
+                "type": "str",
+                "choices": ["present", "absent"],
+                "default": "present",
+            },
+            "name": {"type": "str", "no_log": False, "required": True},
+            "online": {"type": "bool", "default": True},
+            "cleanup": NexusRepositoryHelper.cleanup_policy_argument_spec(),
+            "proxy": NexusRepositoryHelper.proxy_argument_spec(),
+            "negative_cache": NexusRepositoryHelper.negative_cache_argument_spec(),
+            "http_client": NexusRepositoryHelper.http_client_argument_spec(),
+            "routing_rule": {"type": "str", "no_log": False, "required": False},
+            "replication": NexusRepositoryHelper.replication_argument_spec(),
+            "storage": storage_spec,
+        }
 
+    @staticmethod
     def list_repositories(helper):
         endpoint = "repository-settings"
         info, content = helper.request(
@@ -391,11 +424,13 @@ class NexusRepositoryHelper:
             helper.generic_failure_msg("Failed to list repositories", info)
         return content
 
+    @staticmethod
     def list_filtered_repositories(helper, repository_filter):
         content = NexusRepositoryHelper.list_repositories(helper)
         content = list(filter(lambda item: repository_filter(item, helper), content))
         return content
 
+    @staticmethod
     def create_repository(helper, endpoint_path, additional_data):
         changed = True
         data = {
@@ -425,23 +460,18 @@ class NexusRepositoryHelper:
 
         if info["status"] not in [201]:
             if info["status"] == 401:
-                helper.module.fail_json(
-                    msg="Authentication required."
-                )
+                helper.module.fail_json(msg="Authentication required.")
             elif info["status"] == 403:
                 helper.generic_permission_failure_msg()
             else:
                 helper.module.fail_json(
-                    msg="Failed to create repository {repository}, http_status={http_status}, error_msg='{error_msg}, body={body}'.".format(
-                        body=info["body"],
-                        error_msg=info["msg"],
-                        http_status=info["status"],
-                        repository=helper.module.params["name"],
-                    )
+                    msg=f"Failed to create repository {helper.module.params['name']}, \
+                        http_status={info['status']}, error_msg='{info['msg']}, body={info['body']}'."
                 )
 
         return content, changed
 
+    @staticmethod
     def update_repository(helper, endpoint_path, additional_data, existing_data):
         endpoint = "repositories"
         data = {
@@ -456,7 +486,6 @@ class NexusRepositoryHelper:
         }
         data.update(additional_data)
 
-
         if "hosted" in endpoint_path:
             # Clean up unwanted fields that should not be updated or are part of Nexus's default config
             existing_data.pop("format", None)
@@ -465,7 +494,9 @@ class NexusRepositoryHelper:
             data.pop("httpClient", None)
             data.pop("negativeCache", None)
             if "/docker/hosted" in endpoint_path:
-                if isinstance(existing_data, dict) and isinstance(existing_data.get("storage"), dict):
+                if isinstance(existing_data, dict) and isinstance(
+                    existing_data.get("storage"), dict
+                ):
                     existing_data["storage"].setdefault("latestPolicy", False)
             if "/nuget/hosted" not in endpoint_path:
                 existing_data.pop("component", None)
@@ -476,7 +507,9 @@ class NexusRepositoryHelper:
             existing_data.pop("format", None)
             existing_data.pop("type", None)
             existing_data.pop("url", None)
-            existing_data.update({"routingRule": existing_data.pop("routingRuleName", None)})
+            existing_data.update(
+                {"routingRule": existing_data.pop("routingRuleName", None)}
+            )
             if (
                 isinstance(data, dict)
                 and isinstance(data.get("httpClient"), dict)
@@ -498,16 +531,18 @@ class NexusRepositoryHelper:
         # Ensure data is a dictionary and contains the password
         password = None
         if (
-            isinstance(data, dict) and
-            isinstance(data.get("httpClient"), dict) and
-            isinstance(data["httpClient"].get("authentication"), dict)
+            isinstance(data, dict)
+            and isinstance(data.get("httpClient"), dict)
+            and isinstance(data["httpClient"].get("authentication"), dict)
         ):
             password = data["httpClient"]["authentication"].get("password")
             if password:
                 # Ensure existing_data has the correct nested structure
                 if not isinstance(existing_data.get("httpClient"), dict):
                     existing_data["httpClient"] = {}
-                if not isinstance(existing_data["httpClient"].get("authentication"), dict):
+                if not isinstance(
+                    existing_data["httpClient"].get("authentication"), dict
+                ):
                     existing_data["httpClient"]["authentication"] = {}
 
                 existing_data["httpClient"]["authentication"]["password"] = password
@@ -515,13 +550,17 @@ class NexusRepositoryHelper:
         normalized_data = helper.clean_dict_list(data)
         normalized_exisiting_data = helper.clean_dict_list(existing_data)
 
-        changed = not helper.is_json_data_equal(normalized_data, normalized_exisiting_data)
+        changed = not helper.is_json_data_equal(
+            normalized_data, normalized_exisiting_data
+        )
 
-        if changed is False and password is None:
+        if not changed and password is None:
             return existing_data, False
 
         info, content = helper.request(
-            api_url=(helper.NEXUS_API_ENDPOINTS[endpoint] + "{path}/{repository}").format(
+            api_url=(
+                helper.NEXUS_API_ENDPOINTS[endpoint] + "{path}/{repository}"
+            ).format(
                 url=helper.module.params["url"],
                 path=endpoint_path,
                 repository=helper.module.params["name"],
@@ -532,23 +571,18 @@ class NexusRepositoryHelper:
 
         if info["status"] not in [204]:
             if info["status"] == 401:
-                helper.module.fail_json(
-                    msg="Authentication required."
-                )
+                helper.module.fail_json(msg="Authentication required.")
             elif info["status"] == 403:
                 helper.generic_permission_failure_msg()
             else:
                 helper.module.fail_json(
-                    msg="Failed to update repository {repository}, http_status={http_status}, error_msg='{error_msg}, body={body}'.".format(
-                        body=info["body"],
-                        error_msg=info["msg"],
-                        http_status=info["status"],
-                        repository=helper.module.params["name"],
-                    )
+                    msg=f"Failed to update repository {helper.module.params['name']}, \
+                        http_status={info['status']}, error_msg='{info['msg']}, body={info['body']}'."
                 )
 
         return content, changed
 
+    @staticmethod
     def delete_repository(helper):
         changed = True
         endpoint = "repositories"
@@ -565,47 +599,56 @@ class NexusRepositoryHelper:
                 content.pop("fetch_url_retries", None)
                 changed = False
             elif info["status"] == 401:
-                helper.module.fail_json(
-                    msg="Authentication required."
-                )
+                helper.module.fail_json(msg="Authentication required.")
             elif info["status"] == 403:
                 helper.module.fail_json(
                     msg="The user does not have permission to perform the operation."
                 )
             else:
                 helper.module.fail_json(
-                    msg="Failed to delete {repository}., http_status={http_status}, error_msg='{error_msg}'.".format(
-                        error_msg=info["msg"],
-                        http_status=info["status"],
-                        repository=helper.module.params["name"],
-                    )
+                    msg=f"Failed to delete {helper.module.params['name']}., \
+                        http_status={info['status']}, error_msg='{info['msg']}'."
                 )
 
         return content, changed
 
+
 class NexusBlobstoreHelper:
 
+    @staticmethod
     def common_argument_spec():
-        return dict(
-            state=dict(type="str", choices=["present", "absent"], default="present"),
-            name=dict(type="str", no_log=False, required=True),
-            soft_quota=NexusBlobstoreHelper.soft_quota_argument_spec(),
-        )
+        return {
+            "state": {
+                "type": "str",
+                "choices": ["present", "absent"],
+                "default": "present",
+            },
+            "name": {"type": "str", "no_log": False, "required": True},
+            "soft_quota": NexusBlobstoreHelper.soft_quota_argument_spec(),
+        }
 
+    @staticmethod
     def soft_quota_argument_spec():
-        return dict(
-            type='dict',
-            apply_defaults=False,
-            options=dict(
-                type=dict(type="str", choices=["spaceRemainingQuota", "spaceUsedQuota "], default="spaceRemainingQuota"),
-                limit=dict(type="int", default=0),
-            ),
-        )
+        return {
+            "type": "dict",
+            "apply_defaults": False,
+            "options": {
+                "type": {
+                    "type": "str",
+                    "choices": ["spaceRemainingQuota", "spaceUsedQuota "],
+                    "default": "spaceRemainingQuota",
+                },
+                "limit": {"type": "int", "default": 0},
+            },
+        }
 
+    @staticmethod
     def get_blobstore(helper, blobstore_type):
         endpoint = "blobstores"
         info, content = helper.request(
-            api_url=(helper.NEXUS_API_ENDPOINTS[endpoint] + "/" + blobstore_type + "/{name}").format(
+            api_url=(
+                helper.NEXUS_API_ENDPOINTS[endpoint] + "/" + blobstore_type + "/{name}"
+            ).format(
                 url=helper.module.params["url"],
                 name=helper.module.params["name"],
             ),
@@ -617,22 +660,17 @@ class NexusBlobstoreHelper:
             content = []
         elif info["status"] == 403:
             helper.module.fail_json(
-                msg="Insufficient permissions to read configuration for blob store '{name}' of type '{type}'.".format(
-                    name=helper.module.params["name"],
-                    type=blobstore_type,
-                )
+                msg=f"Insufficient permissions to read configuration for blob store '{helper.module.params['name']}' \
+                    of type '{blobstore_type}'."
             )
         else:
             helper.module.fail_json(
-                msg="Failed to read configration for blob store '{name}' of type '{type}', http_status={status}, error_msg='{error_msg}.".format(
-                    name=helper.module.params["name"],
-                    type=blobstore_type,
-                    status=info["status"],
-                    error_msg=info["msg"],
-                )
+                msg=f"Failed to read configration for blob store '{helper.module.params['name']}' \
+                    of type '{blobstore_type}', http_status={info['status']}, error_msg='{info['msg']}."
             )
         return content
 
+    @staticmethod
     def delete_blobstore(helper):
         changed = True
         endpoint = "blobstores"
@@ -648,17 +686,12 @@ class NexusBlobstoreHelper:
                 changed = False
             elif info["status"] == 403:
                 helper.module.fail_json(
-                    msg="Insufficient permissions to delete blob store '{name}'.".format(
-                        name=helper.module.params["name"],
-                    )
+                    msg=f"Insufficient permissions to delete blob store '{helper.module.params['name']}'."
                 )
             else:
                 helper.module.fail_json(
-                    msg="Failed to delete blob store '{name}', http_status={status}, error_msg='{error_msg}.".format(
-                        name=helper.module.params["name"],
-                        status=info["status"],
-                        error_msg=info["msg"],
-                    )
+                    msg=f"Failed to delete blob store '{helper.module.params['name']}', \
+                        http_status={info['status']}, error_msg='{info['msg']}."
                 )
 
         return content, changed

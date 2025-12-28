@@ -6,6 +6,7 @@
 
 from __future__ import absolute_import, division, print_function
 
+# pylint: disable-next=invalid-name
 __metaclass__ = type
 
 from ansible.module_utils.basic import AnsibleModule
@@ -25,6 +26,7 @@ EXAMPLES = r"""
 RETURN = r"""
 """
 
+
 def get_http_system_setting(helper):
     endpoint = "http"
     info, content = helper.request(
@@ -33,15 +35,11 @@ def get_http_system_setting(helper):
         ),
         method="GET",
     )
-    if info["status"] in [200]:
-        content = content
-    elif info["status"] == 403:
+    if info["status"] == 403:
         helper.generic_permission_failure_msg()
-    else:
+    elif info["status"] != 200:
         helper.module.fail_json(
-            msg="Failed to fetch HTTP system setting, http_status={status}.".format(
-                status=info["status"],
-            )
+            msg=f"Failed to fetch HTTP system setting, http_status={info['status']}."
         )
     return content
 

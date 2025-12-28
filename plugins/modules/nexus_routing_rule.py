@@ -6,8 +6,13 @@
 
 from __future__ import absolute_import, division, print_function
 
+# pylint: disable-next=invalid-name
 __metaclass__ = type
 
+from ansible.module_utils.basic import AnsibleModule
+from ansible_collections.haxorof.sonatype_nexus.plugins.module_utils.nexus import (
+    NexusHelper,
+)
 
 DOCUMENTATION = r"""
 ---
@@ -20,11 +25,6 @@ EXAMPLES = r"""
 
 RETURN = r"""
 """
-
-from ansible.module_utils.basic import AnsibleModule, env_fallback
-from ansible_collections.haxorof.sonatype_nexus.plugins.module_utils.nexus import (
-    NexusHelper,
-)
 
 
 def routing_rule_exists(helper):
@@ -60,23 +60,17 @@ def create_routing_rule(helper):
     if not helper.is_request_status_ok(info):
         if info["status"] == 400:
             helper.module.fail_json(
-                msg="A routing rule with the same name '{routing_rule_name}' already exists or required parameters missing.".format(
-                    routing_rule_name=helper.module.params["name"],
-                )
+                msg=f"A routing rule with the same name '{helper.module.params['name']}' \
+                    already exists or required parameters missing."
             )
         elif info["status"] == 403:
             helper.module.fail_json(
-                msg="Insufficient permissions to create routing rule '{routing_rule_name}'.".format(
-                    routing_rule_name=helper.module.params["name"],
-                )
+                msg=f"Insufficient permissions to create routing rule '{helper.module.params['name']}'."
             )
         else:
             helper.module.fail_json(
-                msg="Failed to create routing rule '{routing_rule_name}', http_status={http_status}, error_msg='{error_msg}'.".format(
-                    routing_rule_name=helper.module.params["name"],
-                    http_status=info["status"],
-                    error_msg=info["msg"],
-                )
+                msg=f"Failed to create routing rule '{helper.module.params['name']}', \
+                    http_status={info['status']}, error_msg='{info['msg']}'."
             )
 
     return content, changed
@@ -99,17 +93,12 @@ def delete_routing_rule(helper):
             changed = False
         elif info["status"] == 403:
             helper.module.fail_json(
-                msg="Insufficient permissions to delete routing rule '{routing_rule_name}'.".format(
-                    routing_rule_name=helper.module.params["name"],
-                )
+                msg=f"Insufficient permissions to delete routing rule '{helper.module.params['name']}'."
             )
         else:
             helper.module.fail_json(
-                msg="Failed to delete routing rule '{routing_rule_name}', http_status={http_status}, error_msg='{error_msg}'.".format(
-                    routing_rule_name=helper.module.params["name"],
-                    http_status=info["status"],
-                    error_msg=info["msg"],
-                )
+                msg=f"Failed to delete routing rule '{helper.module.params['name']}', \
+                    http_status={info['status']}, error_msg='{info['msg']}'."
             )
 
     return content, changed
@@ -136,29 +125,21 @@ def update_routing_rule(helper, current_data):
     if not helper.is_request_status_ok(info):
         if info["status"] == 400:
             helper.module.fail_json(
-                msg="A routing rule with the same name '{routing_rule_name}' already exists or required parameters missing.".format(
-                    routing_rule_name=helper.module.params["name"],
-                )
+                msg=f"A routing rule with the same name '{helper.module.params['name']}' \
+                    already exists or required parameters missing."
             )
         elif info["status"] == 403:
             helper.module.fail_json(
-                msg="Insufficient permissions to update routing rule '{routing_rule_name}'.".format(
-                    routing_rule_name=helper.module.params["name"],
-                )
+                msg=f"Insufficient permissions to update routing rule '{helper.module.params['name']}'."
             )
         elif info["status"] in [404]:
             helper.module.fail_json(
-                msg="Routing rule '{routing_rule_name}' not found.".format(
-                    routing_rule_name=helper.module.params["name"],
-                )
+                msg=f"Routing rule '{helper.module.params['name']}' not found."
             )
         else:
             helper.module.fail_json(
-                msg="Failed to update routing rule '{routing_rule_name}', http_status={http_status}, error_msg='{error_msg}'.".format(
-                    routing_rule_name=helper.module.params["name"],
-                    http_status=info["status"],
-                    error_msg=info["msg"],
-                )
+                msg=f"Failed to update routing rule '{helper.module.params['name']}', \
+                    http_status={info['status']}, error_msg='{info['msg']}'."
             )
 
     return content, changed
@@ -167,19 +148,23 @@ def update_routing_rule(helper, current_data):
 def main():
     argument_spec = NexusHelper.nexus_argument_spec()
     argument_spec.update(
-        name=dict(type="str", required=True, no_log=False),
-        description=dict(type="str", required=False, no_log=False),
-        mode=dict(
-            type="str",
-            required=False,
-            no_log=False,
-            default="BLOCK",
-            choices=["ALLOW", "BLOCK"],
-        ),
-        matchers=dict(
-            type="list", elements="str", required=False, no_log=False, default=list()
-        ),
-        state=dict(type="str", choices=["present", "absent"], default="present"),
+        name={"type": "str", "required": True, "no_log": False},
+        description={"type": "str", "required": False, "no_log": False},
+        mode={
+            "type": "str",
+            "required": False,
+            "no_log": False,
+            "default": "BLOCK",
+            "choices": ["ALLOW", "BLOCK"],
+        },
+        matchers={
+            "type": "list",
+            "elements": "str",
+            "required": False,
+            "no_log": False,
+            "default": [],
+        },
+        state={"type": "str", "choices": ["present", "absent"], "default": "present"},
     )
     module = AnsibleModule(
         argument_spec=argument_spec,
@@ -189,28 +174,25 @@ def main():
 
     helper = NexusHelper(module)
 
-    # Seed the result dict in the object
-    result = dict(
-        changed=False,
-        name=module.params["name"],
-        state=module.params["state"],
-        messages=[],
-        json={},
-    )
-
     content = {}
     changed = True
     rule_exists, existing_rule = routing_rule_exists(helper)
-    if module.params["state"] == "present":
-        if rule_exists == True:
+    if module.params["state"] == "present":  # type: ignore
+        if rule_exists:
             content, changed = update_routing_rule(helper, existing_rule)
         else:
             content, changed = create_routing_rule(helper)
     else:
-        if rule_exists == True:
+        if rule_exists:
             content, changed = delete_routing_rule(helper)
         else:
             changed = False
+    result = NexusHelper.generate_result_struct(
+        {
+            "name": module.params["name"],  # type: ignore
+            "state": module.params["state"],  # type: ignore
+        }
+    )
     result["json"] = content
     result["changed"] = changed
 

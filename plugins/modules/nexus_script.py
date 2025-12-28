@@ -6,7 +6,13 @@
 
 from __future__ import absolute_import, division, print_function
 
+# pylint: disable-next=invalid-name
 __metaclass__ = type
+
+from ansible.module_utils.basic import AnsibleModule
+from ansible_collections.haxorof.sonatype_nexus.plugins.module_utils.nexus import (
+    NexusHelper,
+)
 
 DOCUMENTATION = r"""
 ---
@@ -17,13 +23,14 @@ EXAMPLES = r"""
 """
 RETURN = r"""
 """
-from ansible.module_utils.basic import AnsibleModule, env_fallback
-from ansible_collections.haxorof.sonatype_nexus.plugins.module_utils.nexus import NexusHelper
+
 
 def list_scripts(helper):
     endpoint = "script"
     info, content = helper.request(
-        api_url=helper.NEXUS_API_ENDPOINTS[endpoint].format(url=helper.module.params["url"]),
+        api_url=helper.NEXUS_API_ENDPOINTS[endpoint].format(
+            url=helper.module.params["url"]
+        ),
         method="GET",
     )
     if info["status"] in [200]:
@@ -32,9 +39,10 @@ def list_scripts(helper):
         helper.generic_permission_failure_msg()
     else:
         helper.module.fail_json(
-            msg="Failed to fetch scripts, http_status={status}.".format(status=info["status"])
+            msg=f"Failed to fetch scripts, http_status={info['status']}."
         )
     return content
+
 
 def create_script(helper):
     changed = True
@@ -45,7 +53,9 @@ def create_script(helper):
     }
     endpoint = "script"
     info, content = helper.request(
-        api_url=helper.NEXUS_API_ENDPOINTS[endpoint].format(url=helper.module.params["url"]),
+        api_url=helper.NEXUS_API_ENDPOINTS[endpoint].format(
+            url=helper.module.params["url"]
+        ),
         method="POST",
         data=data,
     )
@@ -54,14 +64,12 @@ def create_script(helper):
         helper.generic_permission_failure_msg()
     elif not helper.is_request_status_ok(info):
         helper.module.fail_json(
-            msg="Failed to create script {name}, http_status={http_status}, error_msg='{error_msg}'.".format(
-                error_msg=info["msg"],
-                http_status=info["status"],
-                name=helper.module.params["name"],
-            )
+            msg=f"Failed to create script {helper.module.params['name']}, \
+                http_status={info['status']}, error_msg='{info['msg']}'."
         )
 
     return content, changed
+
 
 def delete_script(helper):
     changed = True
@@ -81,14 +89,12 @@ def delete_script(helper):
         helper.generic_permission_failure_msg()
     elif not helper.is_request_status_ok(info):
         helper.module.fail_json(
-            msg="Failed to delete script {name}, http_status={http_status}, error_msg='{error_msg}'.".format(
-                error_msg=info["msg"],
-                http_status=info["status"],
-                name=helper.module.params["name"],
-            )
+            msg=f"Failed to delete script {helper.module.params['name']}, \
+                http_status={info['status']}, error_msg='{info['msg']}'."
         )
 
     return content, changed
+
 
 def update_script(helper, existing_script):
     changed = True
@@ -116,14 +122,12 @@ def update_script(helper, existing_script):
         helper.generic_permission_failure_msg()
     else:
         helper.module.fail_json(
-            msg="Failed to update script {name}, http_status={http_status}, error_msg='{error_msg}'.".format(
-                error_msg=info["msg"],
-                http_status=info["status"],
-                name=helper.module.params["name"],
-            )
+            msg=f"Failed to update script {helper.module.params['name']}, \
+                http_status={info['status']}, error_msg='{info['msg']}'."
         )
 
     return content, changed
+
 
 def manage_script(helper):
     method = helper.module.params["method"]
@@ -135,7 +139,14 @@ def manage_script(helper):
         changed = False
     elif method == "POST":
         existing_scripts = list_scripts(helper)
-        existing_script = next((script for script in existing_scripts if script["name"] == helper.module.params["name"]), None)
+        existing_script = next(
+            (
+                script
+                for script in existing_scripts
+                if script["name"] == helper.module.params["name"]
+            ),
+            None,
+        )
         if existing_script:
             content, changed = update_script(helper, existing_script)
         else:
@@ -144,22 +155,34 @@ def manage_script(helper):
         content, changed = delete_script(helper)
     elif method == "PUT":
         existing_scripts = list_scripts(helper)
-        existing_script = next((script for script in existing_scripts if script["name"] == helper.module.params["name"]), None)
+        existing_script = next(
+            (
+                script
+                for script in existing_scripts
+                if script["name"] == helper.module.params["name"]
+            ),
+            None,
+        )
         if existing_script:
             content, changed = update_script(helper, existing_script)
         else:
             content, changed = create_script(helper)
     else:
-        helper.module.fail_json(msg="Unsupported method: {method}".format(method=method))
+        helper.module.fail_json(msg=f"Unsupported method: {method}")
 
     return content, changed
+
 
 def main():
     argument_spec = NexusHelper.nexus_argument_spec()
     argument_spec.update(
-        name=dict(type="str", required=True, no_log=False),
-        content=dict(type="str", required=False, no_log=False),
-        method=dict(type="str", choices=["GET", "POST", "PUT", "DELETE"], required=True),
+        name={"type": "str", "required": True, "no_log": False},
+        content={"type": "str", "required": False, "no_log": False},
+        method={
+            "type": "str",
+            "choices": ["GET", "POST", "PUT", "DELETE"],
+            "required": True,
+        },
     )
     module = AnsibleModule(
         argument_spec=argument_spec,
@@ -169,19 +192,14 @@ def main():
 
     helper = NexusHelper(module)
 
-    # Seed the result dictionary
-    result = dict(
-        changed=False,
-        messages=[],
-        json={},
-    )
-
     content, changed = manage_script(helper)
 
+    result = NexusHelper.generate_result_struct()
     result["json"] = content
     result["changed"] = changed
 
     module.exit_json(**result)
+
 
 if __name__ == "__main__":
     main()

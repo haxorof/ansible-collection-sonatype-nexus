@@ -6,11 +6,14 @@
 
 from __future__ import absolute_import, division, print_function
 
+# pylint: disable-next=invalid-name
 __metaclass__ = type
 
-from ansible.module_utils.basic import AnsibleModule
-from ansible_collections.haxorof.sonatype_nexus.plugins.module_utils.nexus import NexusHelper
 import copy
+from ansible.module_utils.basic import AnsibleModule
+from ansible_collections.haxorof.sonatype_nexus.plugins.module_utils.nexus import (
+    NexusHelper,
+)
 
 DOCUMENTATION = r"""
 ---
@@ -23,6 +26,7 @@ EXAMPLES = r"""
 
 RETURN = r"""
 """
+
 
 def remove_disabled_proxies_data(config):
     keys_to_remove = []
@@ -37,10 +41,13 @@ def remove_disabled_proxies_data(config):
         del config[key]
     return config
 
+
 def get_http_setting(helper):
     endpoint = "http"
     info, content = helper.request(
-        api_url=helper.NEXUS_API_ENDPOINTS[endpoint].format(url=helper.module.params["url"]),
+        api_url=helper.NEXUS_API_ENDPOINTS[endpoint].format(
+            url=helper.module.params["url"]
+        ),
         method="GET",
     )
 
@@ -55,6 +62,7 @@ def get_http_setting(helper):
             )
 
     return content
+
 
 def update_http_setting(helper, existing_data):
     endpoint = "http"
@@ -73,8 +81,12 @@ def update_http_setting(helper, existing_data):
                 "enabled": helper.module.params["http_proxy"]["auth_info"]["enabled"],
                 "username": helper.module.params["http_proxy"]["auth_info"]["username"],
                 "password": helper.module.params["http_proxy"]["auth_info"]["password"],
-                "ntlmHost": helper.module.params["http_proxy"]["auth_info"]["ntlm_host"],
-                "ntlmDomain": helper.module.params["http_proxy"]["auth_info"]["ntlm_domain"],
+                "ntlmHost": helper.module.params["http_proxy"]["auth_info"][
+                    "ntlm_host"
+                ],
+                "ntlmDomain": helper.module.params["http_proxy"]["auth_info"][
+                    "ntlm_domain"
+                ],
             },
         },
         "httpsProxy": {
@@ -83,10 +95,18 @@ def update_http_setting(helper, existing_data):
             "port": helper.module.params["https_proxy"]["port"],
             "authInfo": {
                 "enabled": helper.module.params["https_proxy"]["auth_info"]["enabled"],
-                "username": helper.module.params["https_proxy"]["auth_info"]["username"],
-                "password": helper.module.params["https_proxy"]["auth_info"]["password"],
-                "ntlmHost": helper.module.params["https_proxy"]["auth_info"]["ntlm_host"],
-                "ntlmDomain": helper.module.params["https_proxy"]["auth_info"]["ntlm_domain"],
+                "username": helper.module.params["https_proxy"]["auth_info"][
+                    "username"
+                ],
+                "password": helper.module.params["https_proxy"]["auth_info"][
+                    "password"
+                ],
+                "ntlmHost": helper.module.params["https_proxy"]["auth_info"][
+                    "ntlm_host"
+                ],
+                "ntlmDomain": helper.module.params["https_proxy"]["auth_info"][
+                    "ntlm_domain"
+                ],
             },
         },
     }
@@ -100,20 +120,24 @@ def update_http_setting(helper, existing_data):
 
     changed = not helper.is_json_data_equal(normalized_data, normalized_current_data)
 
-    if changed is False and (password_http_proxy is None or password_http_proxy == "")  and (password_https_proxy is None or password_https_proxy == ""):
+    if (
+        changed is False
+        and (password_http_proxy is None or password_http_proxy == "")
+        and (password_https_proxy is None or password_https_proxy == "")
+    ):
         return existing_data, False
 
     info, content = helper.request(
-        api_url=helper.NEXUS_API_ENDPOINTS[endpoint].format(url=helper.module.params["url"]),
+        api_url=helper.NEXUS_API_ENDPOINTS[endpoint].format(
+            url=helper.module.params["url"]
+        ),
         method="PUT",
         data=data,
     )
 
     if not helper.is_request_status_ok(info):
         if info["status"] == 400:
-            helper.module.fail_json(
-                msg="Required parameters missing."
-            )
+            helper.module.fail_json(msg="Required parameters missing.")
         elif info["status"] == 403:
             helper.module.fail_json(
                 msg="Insufficient permissions to update http settings."
@@ -125,12 +149,15 @@ def update_http_setting(helper, existing_data):
 
     return content, changed
 
+
 def delete_http_setting(helper):
     endpoint = "http"
     changed = True
 
     info, content = helper.request(
-        api_url=helper.NEXUS_API_ENDPOINTS[endpoint].format(url=helper.module.params["url"]),
+        api_url=helper.NEXUS_API_ENDPOINTS[endpoint].format(
+            url=helper.module.params["url"]
+        ),
         method="DELETE",
     )
 
@@ -145,6 +172,7 @@ def delete_http_setting(helper):
             )
 
     return content, changed
+
 
 def main():
     # pylint: disable=too-many-locals
@@ -171,8 +199,8 @@ def main():
         timeout={"type": "int", "required": False, "default": 20},
         connection_retries={"type": "int", "required": False, "default": 2},
         non_proxy_hosts={"type": "list", "required": False, "default": []},
-        http_proxy = {"type": "dict", "default": {}, "options": proxy_options},
-        https_proxy = {"type": "dict", "default": {}, "options": proxy_options},
+        http_proxy={"type": "dict", "default": {}, "options": proxy_options},
+        https_proxy={"type": "dict", "default": {}, "options": proxy_options},
         state={"type": "str", "choices": ["present", "absent"], "default": "present"},
     )
 
@@ -186,7 +214,7 @@ def main():
 
     result = {
         "changed": False,
-        "state": module.params["state"],
+        "state": module.params["state"],  # type: ignore
         "messages": [],
         "json": {},
     }
@@ -195,7 +223,7 @@ def main():
     changed = True
     existing_setting = get_http_setting(helper)
 
-    if module.params["state"] == "present":
+    if module.params["state"] == "present":  # type: ignore
         content, changed = update_http_setting(helper, existing_setting)
     else:
         content, changed = delete_http_setting(helper)
@@ -203,6 +231,7 @@ def main():
     result["changed"] = changed
 
     module.exit_json(**result)
+
 
 if __name__ == "__main__":
     main()

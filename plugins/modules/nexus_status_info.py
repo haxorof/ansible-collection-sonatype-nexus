@@ -5,13 +5,14 @@
 # MIT License (see COPYING or https://opensource.org/license/mit/)
 
 from __future__ import absolute_import, division, print_function
+
+# pylint: disable-next=invalid-name
+__metaclass__ = type
+
 from ansible.module_utils.basic import AnsibleModule
 from ansible_collections.haxorof.sonatype_nexus.plugins.module_utils.nexus import (
     NexusHelper,
 )
-
-__metaclass__ = type
-
 
 DOCUMENTATION = r"""
 ---
@@ -24,6 +25,7 @@ EXAMPLES = r"""
 
 RETURN = r"""
 """
+
 
 def check_status(helper):
     endpoint = "status"
@@ -49,7 +51,9 @@ def main():
     argument_spec = NexusHelper.nexus_argument_spec()
     argument_spec.update(
         check_type={
-            "type": "str", "choices": ["writable", "readable", "system"], "default": "writable"
+            "type": "str",
+            "choices": ["writable", "readable", "system"],
+            "default": "writable",
         },
     )
     module = AnsibleModule(
@@ -60,14 +64,8 @@ def main():
 
     helper = NexusHelper(module)
 
-    # Seed the result dict in the object
-    result = {
-        "changed": False,
-        "messages": [],
-        "json": {},
-    }
-
     content = check_status(helper)
+    result = NexusHelper.generate_result_struct()
     result["json"] = content
     result["changed"] = False
 

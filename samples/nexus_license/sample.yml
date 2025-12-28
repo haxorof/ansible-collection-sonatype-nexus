@@ -9,6 +9,7 @@
   tasks:
     - name: Get Nexus License Information
       haxorof.sonatype_nexus.nexus_license_info:
+        url: "{{ nexus_url }}"
         validate_certs: false
         username: "{{ nexus_username }}"
         password: "{{ nexus_password }}"

@@ -6,8 +6,14 @@
 
 from __future__ import absolute_import, division, print_function
 
+# pylint: disable-next=invalid-name
 __metaclass__ = type
 
+from ansible.module_utils.basic import AnsibleModule
+from ansible_collections.haxorof.sonatype_nexus.plugins.module_utils.nexus import (
+    NexusHelper,
+    NexusRepositoryHelper,
+)
 
 DOCUMENTATION = r"""
 ---
@@ -20,12 +26,6 @@ EXAMPLES = r"""
 
 RETURN = r"""
 """
-
-from ansible.module_utils.basic import AnsibleModule, env_fallback
-from ansible_collections.haxorof.sonatype_nexus.plugins.module_utils.nexus import (
-    NexusHelper,
-    NexusRepositoryHelper,
-)
 
 
 def generic_repositories_filter(item, helper):
@@ -42,9 +42,9 @@ def generic_repositories_filter(item, helper):
 def main():
     argument_spec = NexusHelper.nexus_argument_spec()
     argument_spec.update(
-        name=dict(type="str", required=False, no_log=False),
-        type=dict(type="str", required=False, no_log=False),
-        format=dict(type="str", required=False, no_log=False),
+        name={"type": "str", "required": False, "no_log": False},
+        type={"type": "str", "required": False, "no_log": False},
+        format={"type": "str", "required": False, "no_log": False},
     )
     module = AnsibleModule(
         argument_spec=argument_spec,
@@ -54,16 +54,10 @@ def main():
 
     helper = NexusHelper(module)
 
-    # Seed the result dict in the object
-    result = dict(
-        changed=False,
-        messages=[],
-        json={},
-    )
-
     content = NexusRepositoryHelper.list_filtered_repositories(
         helper, generic_repositories_filter
     )
+    result = NexusHelper.generate_result_struct()
     result["json"] = content
     result["changed"] = False
 

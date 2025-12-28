@@ -6,8 +6,13 @@
 
 from __future__ import absolute_import, division, print_function
 
+# pylint: disable-next=invalid-name
 __metaclass__ = type
 
+from ansible.module_utils.basic import AnsibleModule
+from ansible_collections.haxorof.sonatype_nexus.plugins.module_utils.nexus import (
+    NexusHelper,
+)
 
 DOCUMENTATION = r"""
 ---
@@ -18,10 +23,7 @@ EXAMPLES = r"""
 """
 RETURN = r"""
 """
-from ansible.module_utils.basic import AnsibleModule
-from ansible_collections.haxorof.sonatype_nexus.plugins.module_utils.nexus import (
-    NexusHelper,
-)
+
 
 def get_role(helper):
     """Retrieve the Nexus role configuration by name."""
@@ -35,9 +37,11 @@ def get_role(helper):
     )
     if info["status"] in [200]:
         return content
-    elif info["status"] in [404]:
+
+    if info["status"] in [404]:
         return {}
-    elif info["status"] == 403:
+
+    if info["status"] == 403:
         helper.module.fail_json(
             msg=f"Insufficient permissions to read role '{helper.module.params['name']}'."
         )
@@ -46,6 +50,7 @@ def get_role(helper):
             msg=f"Failed to read role '{helper.module.params['name']}', http_status={info['status']}."
         )
     return content
+
 
 def list_roles(helper):
     endpoint = "roles"
@@ -61,16 +66,15 @@ def list_roles(helper):
         helper.generic_permission_failure_msg()
     else:
         helper.module.fail_json(
-            msg="Failed to fetch roles, http_status={status}.".format(
-                status=info["status"],
-            )
+            msg=f"Failed to fetch roles, http_status={info['status']}."
         )
     return content
+
 
 def main():
     argument_spec = NexusHelper.nexus_argument_spec()
     argument_spec.update(
-        name=dict(type="str", required=False, no_log=False),
+        name={"type": "str", "required": False, "no_log": False},
     )
     module = AnsibleModule(
         argument_spec=argument_spec,
@@ -80,18 +84,12 @@ def main():
 
     helper = NexusHelper(module)
 
-    # Seed the result dict in the object
-    result = dict(
-        changed=False,
-        messages=[],
-        json={},
-    )
-
-    if module.params["name"]:
+    if module.params["name"]:  # type: ignore
         content = get_role(helper)
     else:
         content = list_roles(helper)
-        
+
+    result = NexusHelper.generate_result_struct()
     result["json"] = content
     result["changed"] = False
 

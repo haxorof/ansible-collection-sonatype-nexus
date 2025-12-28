@@ -6,7 +6,13 @@
 
 from __future__ import absolute_import, division, print_function
 
+# pylint: disable-next=invalid-name
 __metaclass__ = type
+
+from ansible.module_utils.basic import AnsibleModule
+from ansible_collections.haxorof.sonatype_nexus.plugins.module_utils.nexus import (
+    NexusHelper,
+)
 
 DOCUMENTATION = r"""
 ---
@@ -17,8 +23,7 @@ EXAMPLES = r"""
 """
 RETURN = r"""
 """
-from ansible.module_utils.basic import AnsibleModule, env_fallback
-from ansible_collections.haxorof.sonatype_nexus.plugins.module_utils.nexus import NexusHelper
+
 
 def get_ldap_server(helper):
     """Retrieve the LDAP server configuration by name."""
@@ -32,8 +37,9 @@ def get_ldap_server(helper):
     )
     if info["status"] in [200]:
         return content
-    elif info["status"] in [404]:
-        return {}
+
+    if info["status"] in [404]:
+        content = {}
     elif info["status"] == 403:
         helper.module.fail_json(
             msg=f"Insufficient permissions to read LDAP server '{helper.module.params['ldap_name']}'."
@@ -44,10 +50,13 @@ def get_ldap_server(helper):
         )
     return content
 
+
 def list_ldap_servers(helper):
     endpoint = "ldap"
     info, content = helper.request(
-        api_url=helper.NEXUS_API_ENDPOINTS[endpoint].format(url=helper.module.params["url"]),
+        api_url=helper.NEXUS_API_ENDPOINTS[endpoint].format(
+            url=helper.module.params["url"]
+        ),
         method="GET",
     )
     if info["status"] in [200]:
@@ -56,15 +65,16 @@ def list_ldap_servers(helper):
         helper.generic_permission_failure_msg()
     else:
         helper.module.fail_json(
-            msg="Failed to fetch LDAP servers, http_status={status}.".format(status=info["status"])
+            msg=f"Failed to fetch LDAP servers, http_status={info['status']}."
         )
     return content
+
 
 def main():
     argument_spec = NexusHelper.nexus_argument_spec()
     argument_spec.update(
-        method=dict(type="str", choices=["GET"], required=False),
-        ldap_name=dict(type="str", required=False, no_log=False),
+        method={"type": "str", "choices": ["GET"], "required": False},
+        ldap_name={"type": "str", "required": False, "no_log": False},
     )
     module = AnsibleModule(
         argument_spec=argument_spec,
@@ -74,21 +84,17 @@ def main():
 
     helper = NexusHelper(module)
 
-    result = dict(
-        changed=False,
-        messages=[],
-        json={},
-    )
-
-    if module.params["ldap_name"]:
+    if module.params["ldap_name"]:  # type: ignore
         content = get_ldap_server(helper)
     else:
         content = list_ldap_servers(helper)
 
+    result = NexusHelper.generate_result_struct()
     result["json"] = content
     result["changed"] = False
 
     module.exit_json(**result)
+
 
 if __name__ == "__main__":
     main()

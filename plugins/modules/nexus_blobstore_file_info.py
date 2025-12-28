@@ -6,8 +6,14 @@
 
 from __future__ import absolute_import, division, print_function
 
+# pylint: disable-next=invalid-name
 __metaclass__ = type
 
+from ansible.module_utils.basic import AnsibleModule
+from ansible_collections.haxorof.sonatype_nexus.plugins.module_utils.nexus import (
+    NexusHelper,
+    NexusBlobstoreHelper,
+)
 
 DOCUMENTATION = r"""
 ---
@@ -21,16 +27,11 @@ EXAMPLES = r"""
 RETURN = r"""
 """
 
-from ansible.module_utils.basic import AnsibleModule, env_fallback
-from ansible_collections.haxorof.sonatype_nexus.plugins.module_utils.nexus import (
-    NexusHelper,
-    NexusBlobstoreHelper,
-)
 
 def main():
     argument_spec = NexusHelper.nexus_argument_spec()
     argument_spec.update(
-        name=dict(type="str", required=True, no_log=False),
+        name={"type": "str", "required": True, "no_log": False},
     )
     module = AnsibleModule(
         argument_spec=argument_spec,
@@ -41,11 +42,11 @@ def main():
     helper = NexusHelper(module)
 
     # Seed the result dict in the object
-    result = dict(
-        changed=False,
-        messages=[],
-        json={},
-    )
+    result = {
+        "changed": False,
+        "messages": [],
+        "json": {},
+    }
 
     result["json"] = NexusBlobstoreHelper.get_blobstore(helper, "file")
     result["changed"] = False
