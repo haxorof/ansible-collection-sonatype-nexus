@@ -3,9 +3,6 @@
   hosts: localhost
   become: false
   gather_facts: false
-  vars:
-    nexus_username: admin
-    nexus_password: admin123
   tasks:
     - name: Get Nexus License Information
       haxorof.sonatype_nexus.nexus_license_info:

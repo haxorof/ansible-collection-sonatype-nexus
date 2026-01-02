@@ -2,18 +2,6 @@
 - name: Manage Docker Hosted Repositories in Nexus
   hosts: localhost
   gather_facts: false
-
-  vars:
-    nexus_username: "admin"
-    nexus_password: "admin123"
-    nexus_repos_docker_hosted:
-      - name: docker-hosted1
-        storage:
-          blob_store_name: default
-        docker:
-          http_port: 8082
-          https_port: 8083
-
   tasks:
     - name: Create hosted Docker repository
       haxorof.sonatype_nexus.nexus_repository_docker_hosted:
@@ -22,11 +10,32 @@
         username: "{{ nexus_username }}"
         password: "{{ nexus_password }}"
         state: present
-        name: "{{ item.name }}"
-        storage: "{{ item.storage }}"
-        docker: "{{ item.docker }}"
-      with_items: "{{ nexus_repos_docker_hosted }}"
-      register: hosted
+        name: testrepo
+        storage:
+          blob_store_name: default
+        docker:
+          http_port: 8082
+          https_port: 8083
+      loop:
+        - change
+        - no_change # Test idempotency
+
+    - name: Update hosted Docker repository
+      haxorof.sonatype_nexus.nexus_repository_docker_hosted:
+        url: "{{ nexus_url }}"
+        validate_certs: false
+        username: "{{ nexus_username }}"
+        password: "{{ nexus_password }}"
+        state: present
+        name: testrepo
+        storage:
+          blob_store_name: default
+        docker:
+          http_port: 8082
+          https_port: 8084
+      loop:
+        - change
+        - no_change # Test idempotency
 
     - name: Delete hosted Docker repository
       haxorof.sonatype_nexus.nexus_repository_docker_hosted:
@@ -35,5 +44,7 @@
         username: "{{ nexus_username }}"
         password: "{{ nexus_password }}"
         state: absent
-        name: "{{ item.name }}"
-      with_items: "{{ nexus_repos_docker_hosted }}"
+        name: testrepo
+      loop:
+        - change
+        - no_change # Test idempotency

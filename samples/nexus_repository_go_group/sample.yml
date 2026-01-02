@@ -4,8 +4,6 @@
   gather_facts: false
 
   vars:
-    nexus_username: admin
-    nexus_password: admin123
     blob_store_name: default
     go_group_repo_name: go-public
     go_proxy_repo_name: go-proxy1
@@ -23,9 +21,6 @@
           blob_store_name: "{{ blob_store_name }}"
         proxy:
           remote_url: https://proxy.golang.org
-        http_client:
-          auto_block: true
-
 
   tasks:
     - name: Create Go group repository
@@ -38,14 +33,11 @@
         name: "{{ go_group_repo_name }}"
         storage:
           blob_store_name: "{{ blob_store_name }}"
-          strict_content_type_validation: true
         member_repos:
           - "{{ go_proxy_repo_name }}"
-        negative_cache:
-          enabled: true
-          time_to_live: 1440
-        http_client:
-          auto_block: true
+      loop:
+        - change
+        - no_change # Test idempotency
 
     - name: Delete Go group repository if exists
       haxorof.sonatype_nexus.nexus_repository_go_group:
@@ -55,6 +47,9 @@
         password: "{{ nexus_password }}"
         state: absent
         name: "{{ go_group_repo_name }}"
+      loop:
+        - change
+        - no_change # Test idempotency
 
   post_tasks:
     - name: Delete Go proxy repository

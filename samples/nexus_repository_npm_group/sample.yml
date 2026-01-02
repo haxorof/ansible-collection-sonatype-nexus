@@ -2,11 +2,6 @@
 - name: Manage NPM Group Repositories in Nexus
   hosts: localhost
   gather_facts: false
-
-  vars:
-    nexus_username: admin
-    nexus_password: admin123
-
   pre_tasks:
     - name: Create NPM proxy repository
       haxorof.sonatype_nexus.nexus_repository_npm_proxy:

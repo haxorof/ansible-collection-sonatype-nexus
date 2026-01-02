@@ -1,11 +1,7 @@
 - name: Get Nexus scheduled task info
   hosts: localhost
   gather_facts: false
-
   vars:
-    nexus_url: http://localhost:8081
-    nexus_username: admin
-    nexus_password: admin123
     nexus_scheduled_tasks:
       - name: Delete incomplete docker upload-test
         type: repository.docker.upload-purge

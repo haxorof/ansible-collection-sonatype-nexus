@@ -5,8 +5,6 @@
   gather_facts: false
 
   vars:
-    nexus_username: admin
-    nexus_password: admin123
     nexus_repos_raw_hosted:
       - name: raw-hosted
         storage:
@@ -23,7 +21,7 @@
         name: "{{ item.name }}"
         storage: "{{ item.storage }}"
       with_items: "{{ nexus_repos_raw_hosted }}"
- 
+
     - name: Delete hosted raw repository
       haxorof.sonatype_nexus.nexus_repository_raw_hosted:
         url: "{{ nexus_url }}"

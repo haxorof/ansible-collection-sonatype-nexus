@@ -4,8 +4,6 @@
   gather_facts: false
 
   vars:
-    nexus_username: admin
-    nexus_password: admin123
     nexus_repos_npm_hosted:
       - name: npm-hosted
         storage:

@@ -2,7 +2,6 @@
 
 [![GitHub tag](https://img.shields.io/github/tag/haxorof/ansible-collection-sonatype-nexus)](https://github.com/haxorof/ansible-collection-sonatype-nexus)
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow)](https://github.com/haxorof/ansible-collection-sonatype-nexus/blob/master/LICENSE)
-[![Build Status](https://img.shields.io/github/actions/workflow/status/haxorof/ansible-collection-sonatype-nexus/ci.yml)](https://github.com/haxorof/ansible-collection-sonatype-nexus/actions/workflows/ci.yml)
 
 Ansible collection for managing Sonatype Nexus Repository Manager 3.x via its REST API.
 

@@ -2,17 +2,6 @@
 - name: Manage Helm proxy Repositories in Nexus
   hosts: localhost
   gather_facts: false
-
-  vars:
-    nexus_username: admin
-    nexus_password: admin123
-    nexus_repos_helm_proxy:
-      - name: helm-proxy-repo-1
-        storage:
-          blob_store_name: default
-        proxy:
-          remote_url: https://example.com/helm
-
   tasks:
     - name: Create Helm proxy repositories
       haxorof.sonatype_nexus.nexus_repository_helm_proxy:
@@ -21,10 +10,14 @@
         username: "{{ nexus_username }}"
         password: "{{ nexus_password }}"
         state: present
-        name: "{{ item.name }}"
-        storage: "{{ item.storage }}"
-        proxy: "{{ item.proxy }}"
-      loop: "{{ nexus_repos_helm_proxy }}"
+        name: helm-proxy-repo
+        storage:
+          blob_store_name: default
+        proxy:
+          remote_url: https://fabric8.io/helm
+      loop:
+        - change
+        - no_change # Test idempotency
 
     - name: Delete Helm proxy repositories
       haxorof.sonatype_nexus.nexus_repository_helm_proxy:
@@ -33,5 +26,7 @@
         username: "{{ nexus_username }}"
         password: "{{ nexus_password }}"
         state: absent
-        name: "{{ item.name }}"
-      loop: "{{ nexus_repos_helm_proxy }}"
+        name: helm-proxy-repo
+      loop:
+        - change
+        - no_change # Test idempotency

@@ -3,24 +3,16 @@
   hosts: localhost
   become: false
   gather_facts: false
-
-  vars:
-    nexus_username: "admin"
-    nexus_password: "admin123"
-    blobstores:
-      - default2
-
   tasks:
     - name: Create blob store of type file
       haxorof.sonatype_nexus.nexus_blobstore_file:
         url: "{{ nexus_url }}"
         validate_certs: false
         use_proxy: false
-        name: "{{ item }}"
+        name: default2
         username: "{{ nexus_username }}"
         password: "{{ nexus_password }}"
         state: present
-      loop: "{{ blobstores }}"
       register: _result
       tags:
         - molecule-idempotence-notest
@@ -34,10 +26,9 @@
         url: "{{ nexus_url }}"
         validate_certs: false
         use_proxy: false
-        name: "{{ item }}"
+        name: default2
         username: "{{ nexus_username }}"
         password: "{{ nexus_password }}"
-      loop: "{{ blobstores }}"
       register: _result
 
     - name: Print _result
@@ -49,12 +40,11 @@
         url: "{{ nexus_url }}"
         validate_certs: false
         use_proxy: false
-        name: "{{ item }}"
+        name: default2
         username: "{{ nexus_username }}"
         password: "{{ nexus_password }}"
         state: absent
       register: _result
-      loop: "{{ blobstores }}"
       tags:
         - molecule-idempotence-notest
 

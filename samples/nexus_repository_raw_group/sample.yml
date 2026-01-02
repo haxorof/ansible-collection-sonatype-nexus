@@ -2,11 +2,6 @@
 - name: Manage raw group repository in Nexus
   hosts: localhost
   gather_facts: false
-
-  vars:
-    nexus_username: admin
-    nexus_password: admin123
-
   pre_tasks:
     - name: Create Raw proxy repository
       haxorof.sonatype_nexus.nexus_repository_raw_proxy:

@@ -5,8 +5,6 @@
   gather_facts: false
 
   vars:
-    nexus_username: admin
-    nexus_password: admin123
     nexus_capabilities:
       - type: "audit"
         notes: "Automatically added on Mon May 12 14:32:48 GMT 2025"

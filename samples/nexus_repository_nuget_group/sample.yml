@@ -4,8 +4,6 @@
   gather_facts: false
 
   vars:
-    nexus_username: admin
-    nexus_password: admin123
     nexus_repos_nuget_group:
       - name: nuget-group-1
         storage:
@@ -26,7 +24,7 @@
         storage: "{{ item.storage }}"
         member_repos: "{{ item.member_repos }}"
       with_items: "{{ nexus_repos_nuget_group }}"
- 
+
     - name: Delete nuget group
       haxorof.sonatype_nexus.nexus_repository_nuget_group:
         url: "{{ nexus_url }}"

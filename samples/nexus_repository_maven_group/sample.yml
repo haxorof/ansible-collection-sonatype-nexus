@@ -2,11 +2,6 @@
 - name: Manage Maven Group Repositories in Nexus
   hosts: localhost
   gather_facts: false
-
-  vars:
-    nexus_username: admin
-    nexus_password: admin123
-
   tasks:
     - name: Create maven group repository
       haxorof.sonatype_nexus.nexus_repository_maven_group:
