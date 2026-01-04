@@ -6,9 +6,6 @@
   tasks:
     - name: Show current system HTTP setting
       haxorof.sonatype_nexus.nexus_http_info:
-        validate_certs: false
-        username: admin
-        password: admin123
       register: _result
 
     - name: Print _result
@@ -17,10 +14,6 @@
 
     - name: Update current http settings
       haxorof.sonatype_nexus.nexus_http:
-        validate_certs: false
-        username: admin
-        password: admin123
-        use_proxy: false
         non_proxy_hosts: [
           "localhost",
           "127.0.0.*",
@@ -44,10 +37,6 @@
 
     - name: Reset http settings
       haxorof.sonatype_nexus.nexus_http:
-        validate_certs: false
-        username: admin
-        password: admin123
-        use_proxy: false
         state: absent
       register: _result_reset
       delegate_to: 127.0.0.1

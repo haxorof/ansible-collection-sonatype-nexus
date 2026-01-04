@@ -69,9 +69,7 @@ def main():
     helper = NexusHelper(module)
 
     content = list_users(helper)
-    result = NexusHelper.generate_result_struct()
-    result["json"] = content
-    result["changed"] = False
+    result = NexusHelper.generate_result_struct(False, content)
 
     module.exit_json(**result)
 

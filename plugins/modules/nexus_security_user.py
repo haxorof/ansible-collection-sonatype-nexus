@@ -251,9 +251,7 @@ def main():
             content, changed = create_user(helper)
         else:
             changed = False
-    result = NexusHelper.generate_result_struct()
-    result["json"] = content
-    result["changed"] = changed
+    result = NexusHelper.generate_result_struct(changed, content)
 
     module.exit_json(**result)
 

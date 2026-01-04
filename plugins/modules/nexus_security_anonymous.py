@@ -115,9 +115,7 @@ def main():
     helper = NexusHelper(module)
 
     content, changed = update_anonymous_setting(helper, get_anonymous_setting(helper))
-    result = NexusHelper.generate_result_struct()
-    result["json"] = content
-    result["changed"] = changed
+    result = NexusHelper.generate_result_struct(changed, content)
 
     module.exit_json(**result)
 

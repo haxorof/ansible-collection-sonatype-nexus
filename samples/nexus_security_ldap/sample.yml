@@ -2,17 +2,9 @@
 - name: Manage Nexus LDAP Configuration Without Common Vars
   hosts: localhost
   gather_facts: false
-
-  vars:
-    nexus_admin_user: "admin"
-    nexus_admin_password: "admin123"
-
   tasks:
     - name: Get existing LDAP server
       haxorof.sonatype_nexus.nexus_security_ldap:
-        url: "{{ nexus_url }}"
-        username: "{{ nexus_admin_user }}"
-        password: "{{ nexus_admin_password }}"
         method: GET
         ldap_name: "primary"
       register: ldap_server_list
@@ -23,10 +15,6 @@
 
     - name: Create LDAP server primary
       haxorof.sonatype_nexus.nexus_security_ldap:
-        url: "{{ nexus_url }}"
-        username: "{{ nexus_admin_user }}"
-        password: "{{ nexus_admin_password }}"
-        validate_certs: false
         state: present
         ldap_name: "primary"
         ldap_protocol: "ldap"
@@ -48,10 +36,6 @@
 
     - name: UPDATE LDAP server name only (OBS! only run ones)
       haxorof.sonatype_nexus.nexus_security_ldap:
-        url: "{{ nexus_url }}"
-        username: "{{ nexus_admin_user }}"
-        password: "{{ nexus_admin_password }}"
-        validate_certs: false
         state: present
         current_ldap_name: "primary" # Current ldap name
         ldap_name: "secondary" # New ldap name
@@ -79,10 +63,6 @@
 
     - name: UPDATE LDAP server secondary (update LDAP config)
       haxorof.sonatype_nexus.nexus_security_ldap:
-        url: "{{ nexus_url }}"
-        username: "{{ nexus_admin_user }}"
-        password: "{{ nexus_admin_password }}"
-        validate_certs: false
         state: present
         ldap_name: "secondary"
         ldap_protocol: "ldap"
@@ -109,8 +89,5 @@
 
     - name: Remove secondary LDAP server if it exists
       haxorof.sonatype_nexus.nexus_security_ldap:
-        url: "{{ nexus_url }}"
-        username: "{{ nexus_admin_user }}"
-        password: "{{ nexus_admin_password }}"
         ldap_name: secondary
         state: absent

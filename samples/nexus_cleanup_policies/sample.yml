@@ -6,11 +6,6 @@
   tasks:
     - name: Create/Update cleanup policy
       haxorof.sonatype_nexus.nexus_cleanup_policies:
-        url: "{{ nexus_url }}"
-        validate_certs: false
-        use_proxy: false
-        username: admin
-        password: admin123
         name: test
         notes: This is a test cleanup policy
         format: "*"
@@ -25,11 +20,6 @@
 
     - name: Delete cleanup policy
       haxorof.sonatype_nexus.nexus_cleanup_policies:
-        url: "{{ nexus_url }}"
-        validate_certs: false
-        use_proxy: false
-        username: admin
-        password: admin123
         name: test
         state: absent
       register: _delete_result

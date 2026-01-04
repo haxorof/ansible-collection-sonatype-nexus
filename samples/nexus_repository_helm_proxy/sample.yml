@@ -5,10 +5,6 @@
   tasks:
     - name: Create Helm proxy repositories
       haxorof.sonatype_nexus.nexus_repository_helm_proxy:
-        url: "{{ nexus_url }}"
-        validate_certs: false
-        username: "{{ nexus_username }}"
-        password: "{{ nexus_password }}"
         state: present
         name: helm-proxy-repo
         storage:
@@ -21,10 +17,6 @@
 
     - name: Delete Helm proxy repositories
       haxorof.sonatype_nexus.nexus_repository_helm_proxy:
-        url: "{{ nexus_url }}"
-        validate_certs: false
-        username: "{{ nexus_username }}"
-        password: "{{ nexus_password }}"
         state: absent
         name: helm-proxy-repo
       loop:

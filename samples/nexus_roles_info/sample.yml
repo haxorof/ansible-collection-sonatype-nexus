@@ -6,11 +6,7 @@
   tasks:
     - name: Get specific Nexus role
       haxorof.sonatype_nexus.nexus_roles_info:
-        url: "{{ nexus_url }}"
-        username: "{{ nexus_username }}"
-        password: "{{ nexus_password }}"
         name: view-anonymous
-        validate_certs: false
         use_proxy: false
       register: role_info
 
@@ -20,10 +16,6 @@
 
     - name: List all Nexus roles
       haxorof.sonatype_nexus.nexus_roles_info:
-        url: "{{ nexus_url }}"
-        username: "{{ nexus_username }}"
-        password: "{{ nexus_password }}"
-        validate_certs: false
         use_proxy: false
       register: roles_list
 

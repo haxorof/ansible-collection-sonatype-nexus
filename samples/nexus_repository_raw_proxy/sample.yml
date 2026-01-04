@@ -3,34 +3,21 @@
   hosts: localhost
   become: false
   gather_facts: false
-
-  vars:
-    nexus_repository_raw_proxy:
-      - name: raw-proxy-repo-1
-        storage:
-          blob_store_name: default
-        proxy:
-          remote_url: "https://example.com/raw"
-
   tasks:
     - name: Create Raw proxy repositories
       haxorof.sonatype_nexus.nexus_repository_raw_proxy:
-        url: "{{ nexus_url }}"
-        validate_certs: false
-        username: "{{ nexus_username }}"
-        password: "{{ nexus_password }}"
         state: present
-        name: "{{ item.name }}"
-        storage: "{{ item.storage }}"
-        proxy: "{{ item.proxy }}"
-      loop: "{{ nexus_repository_raw_proxy }}"
+        name: testproxy
+        proxy:
+          remote_url: http://mirror.bahnhof.net/pub/almalinux/10.1/isos/x86_64
+      loop:
+        - change
+        - no_change # Test idempotency
 
     - name: Delete proxy raw repository
       haxorof.sonatype_nexus.nexus_repository_raw_proxy:
-        url: "{{ nexus_url }}"
-        validate_certs: false
-        username: "{{ nexus_username }}"
-        password: "{{ nexus_password }}"
         state: absent
-        name: "{{ item.name }}"
-      loop: "{{ nexus_repository_raw_proxy }}"
+        name: testproxy
+      loop:
+        - change
+        - no_change # Test idempotency

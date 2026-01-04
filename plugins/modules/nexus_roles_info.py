@@ -89,9 +89,7 @@ def main():
     else:
         content = list_roles(helper)
 
-    result = NexusHelper.generate_result_struct()
-    result["json"] = content
-    result["changed"] = False
+    result = NexusHelper.generate_result_struct(False, content)
 
     module.exit_json(**result)
 

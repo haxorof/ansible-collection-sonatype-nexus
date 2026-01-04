@@ -3,33 +3,21 @@
   hosts: localhost
   become: false
   gather_facts: false
-
-  vars:
-    nexus_username: "admin"
-    nexus_password: "admin123"
-    rubygems_proxy_repo: "rubygems-proxy-repo-1"
-    blob_store: "default"
-    remote_url: "https://remote.rubygems.com"
-
   tasks:
     - name: Create RubyGems proxy repository
       haxorof.sonatype_nexus.nexus_repository_rubygems_proxy:
-        url: "{{ nexus_url }}"
-        validate_certs: false
-        username: "{{ nexus_username }}"
-        password: "{{ nexus_password }}"
         state: present
-        name: "{{ rubygems_proxy_repo }}"
-        storage:
-          blob_store_name: "{{ blob_store }}"
+        name: testproxy
         proxy:
-          remote_url: "{{ remote_url }}"
+          remote_url: https://rubygems.org/
+      loop:
+        - change
+        - no_change # Test idempotency
 
     - name: Delete RubyGems proxy repository
       haxorof.sonatype_nexus.nexus_repository_rubygems_proxy:
-        url: "{{ nexus_url }}"
-        validate_certs: false
-        username: "{{ nexus_username }}"
-        password: "{{ nexus_password }}"
         state: absent
-        name: "{{ rubygems_proxy_repo }}"
+        name: testproxy
+      loop:
+        - change
+        - no_change # Test idempotency

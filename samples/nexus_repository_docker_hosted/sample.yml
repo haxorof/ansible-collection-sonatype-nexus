@@ -5,14 +5,8 @@
   tasks:
     - name: Create hosted Docker repository
       haxorof.sonatype_nexus.nexus_repository_docker_hosted:
-        url: "{{ nexus_url }}"
-        validate_certs: false
-        username: "{{ nexus_username }}"
-        password: "{{ nexus_password }}"
         state: present
-        name: testrepo
-        storage:
-          blob_store_name: default
+        name: testhosted
         docker:
           http_port: 8082
           https_port: 8083
@@ -22,14 +16,8 @@
 
     - name: Update hosted Docker repository
       haxorof.sonatype_nexus.nexus_repository_docker_hosted:
-        url: "{{ nexus_url }}"
-        validate_certs: false
-        username: "{{ nexus_username }}"
-        password: "{{ nexus_password }}"
         state: present
-        name: testrepo
-        storage:
-          blob_store_name: default
+        name: testhosted
         docker:
           http_port: 8082
           https_port: 8084
@@ -39,12 +27,8 @@
 
     - name: Delete hosted Docker repository
       haxorof.sonatype_nexus.nexus_repository_docker_hosted:
-        url: "{{ nexus_url }}"
-        validate_certs: false
-        username: "{{ nexus_username }}"
-        password: "{{ nexus_password }}"
         state: absent
-        name: testrepo
+        name: testhosted
       loop:
         - change
         - no_change # Test idempotency

@@ -90,9 +90,7 @@ def main():
 
     changed, content = change_ldap_order(helper, module.params["order_list"])  # type: ignore
 
-    result = NexusHelper.generate_result_struct()
-    result["json"] = content
-    result["changed"] = changed
+    result = NexusHelper.generate_result_struct(changed, content)
 
     module.exit_json(**result)
 

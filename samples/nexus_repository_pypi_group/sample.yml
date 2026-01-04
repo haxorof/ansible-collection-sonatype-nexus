@@ -3,59 +3,36 @@
   hosts: localhost
   become: false
   gather_facts: false
-
-  vars:
-    nexus_repos_pypi_group:
-      - name: pypi-group
-        storage:
-          blob_store_name: default
-          strict_content_type_validation: true
-        member_repos:
-          - pypi-proxy-repo-1
-
   pre_tasks:
     - name: Create PyPI proxy repository
       haxorof.sonatype_nexus.nexus_repository_pypi_proxy:
-        url: "{{ nexus_url }}"
-        validate_certs: false
-        username: "{{ nexus_username }}"
-        password: "{{ nexus_password }}"
         state: present
-        name: pypi-proxy-repo-1
-        storage:
-          blob_store_name: default
+        name: testproxy
         proxy:
           remote_url: https://pypi.org/simple
 
   tasks:
-  - name: Create pypi group repository
-    haxorof.sonatype_nexus.nexus_repository_pypi_group:
-      url: "{{ nexus_url }}"
-      validate_certs: false
-      username: "{{ nexus_username }}"
-      password: "{{ nexus_password }}"
-      state: present
-      name: "{{ item.name }}"
-      storage: "{{ item.storage }}"
-      member_repos: "{{ item.member_repos }}"
-    with_items: "{{ nexus_repos_pypi_group }}"
+    - name: Create pypi group repository
+      haxorof.sonatype_nexus.nexus_repository_pypi_group:
+        state: present
+        name: testgroup
+        group:
+          member_names:
+            - testproxy
+      loop:
+        - change
+        - no_change # Test idempotency
 
-  - name: Delete pypi group repository
-    haxorof.sonatype_nexus.nexus_repository_pypi_group:
-      url: "{{ nexus_url }}"
-      validate_certs: false
-      username: "{{ nexus_username }}"
-      password: "{{ nexus_password }}"
-      state: absent
-      name: "{{ item.name }}"
-    with_items: "{{ nexus_repos_pypi_group }}"
+    - name: Delete pypi group repository
+      haxorof.sonatype_nexus.nexus_repository_pypi_group:
+        state: absent
+        name: testgroup
+      loop:
+        - change
+        - no_change # Test idempotency
 
   post_tasks:
     - name: Delete PyPI proxy repository
       haxorof.sonatype_nexus.nexus_repository_pypi_proxy:
-        url: "{{ nexus_url }}"
-        validate_certs: false
-        username: "{{ nexus_username }}"
-        password: "{{ nexus_password }}"
         state: absent
-        name: pypi-proxy-repo-1
+        name: testproxy

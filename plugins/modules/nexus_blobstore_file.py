@@ -36,10 +36,9 @@ def create_blobstore(helper):
         "softQuota": NexusHelper.camalize_param(helper, "soft_quota"),
         "name": helper.module.params["name"],
         "path": (
-            helper.module.params["name"]
-            if helper.module.params["path"] is None
-            or helper.module.params["path"] == ""
-            else helper.module.params["path"]
+            helper.module.params["path"]
+            if helper.module.params["path"]
+            else helper.module.params["name"]
         ),
     }
 
@@ -73,8 +72,7 @@ def update_blobstore(helper, current_data):
         "softQuota": NexusHelper.camalize_param(helper, "soft_quota"),
         "path": (
             helper.module.params["name"]
-            if helper.module.params["path"] is None
-            or helper.module.params["path"] == ""
+            if helper.module.params["path"]
             else helper.module.params["path"]
         ),
     }

@@ -2,51 +2,30 @@
 - name: Manage Nexus Go repositories
   hosts: localhost
   gather_facts: false
-
-  vars:
-    blob_store_name: default
-    go_group_repo_name: go-public
-    go_proxy_repo_name: go-proxy1
-
   pre_tasks:
     - name: Create Go proxy repository
       haxorof.sonatype_nexus.nexus_repository_go_proxy:
-        url: "{{ nexus_url }}"
-        validate_certs: false
-        username: "{{ nexus_username }}"
-        password: "{{ nexus_password }}"
         state: present
-        name: "{{ go_proxy_repo_name }}"
-        storage:
-          blob_store_name: "{{ blob_store_name }}"
+        name: testproxy
         proxy:
           remote_url: https://proxy.golang.org
 
   tasks:
     - name: Create Go group repository
       haxorof.sonatype_nexus.nexus_repository_go_group:
-        url: "{{ nexus_url }}"
-        validate_certs: false
-        username: "{{ nexus_username }}"
-        password: "{{ nexus_password }}"
         state: present
-        name: "{{ go_group_repo_name }}"
-        storage:
-          blob_store_name: "{{ blob_store_name }}"
-        member_repos:
-          - "{{ go_proxy_repo_name }}"
+        name: testgroup
+        group:
+          member_names:
+          - testproxy
       loop:
         - change
         - no_change # Test idempotency
 
     - name: Delete Go group repository if exists
       haxorof.sonatype_nexus.nexus_repository_go_group:
-        url: "{{ nexus_url }}"
-        validate_certs: false
-        username: "{{ nexus_username }}"
-        password: "{{ nexus_password }}"
         state: absent
-        name: "{{ go_group_repo_name }}"
+        name: testgroup
       loop:
         - change
         - no_change # Test idempotency
@@ -54,9 +33,5 @@
   post_tasks:
     - name: Delete Go proxy repository
       haxorof.sonatype_nexus.nexus_repository_go_proxy:
-        url: "{{ nexus_url }}"
-        validate_certs: false
-        username: "{{ nexus_username }}"
-        password: "{{ nexus_password }}"
         state: absent
-        name: "{{ go_proxy_repo_name }}"
+        name: testproxy

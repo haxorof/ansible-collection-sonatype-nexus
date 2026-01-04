@@ -120,9 +120,7 @@ def main():
         content, changed = update_user_token(helper)
     if module.params["invalidate_tokens"]:  # type: ignore
         content, changed = invalidate_user_tokens(helper)
-    result = NexusHelper.generate_result_struct()
-    result["json"] = content
-    result["changed"] = changed
+    result = NexusHelper.generate_result_struct(changed, content)
 
     module.exit_json(**result)
 

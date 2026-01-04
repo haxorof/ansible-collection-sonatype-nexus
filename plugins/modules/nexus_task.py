@@ -223,9 +223,7 @@ def main():
         else:
             changed = False
 
-    result = NexusHelper.generate_result_struct({"state": module.params["state"]})  # type: ignore
-    result["json"] = content
-    result["changed"] = changed
+    result = NexusHelper.generate_result_struct(changed, content, {"state": module.params["state"]})  # type: ignore
 
     module.exit_json(**result)
 

@@ -28,9 +28,8 @@ RETURN = r"""
 
 
 def routing_rule_exists(helper):
-    endpoint = "routing-rules"
     info, content = helper.request(
-        api_url=(helper.NEXUS_API_ENDPOINTS[endpoint] + "/{name}").format(
+        api_url=(helper.NEXUS_API_ENDPOINTS["routing-rules"] + "/{name}").format(
             url=helper.module.params["url"],
             name=helper.module.params["name"],
         ),
@@ -41,8 +40,7 @@ def routing_rule_exists(helper):
     return rule_exists, content
 
 
-def create_routing_rule(helper):
-    endpoint = "routing-rules"
+def create_routing_rule(helper: NexusHelper):
     changed = True
     data = {
         "name": helper.module.params["name"],
@@ -51,7 +49,7 @@ def create_routing_rule(helper):
         "matchers": helper.module.params["matchers"],
     }
     info, content = helper.request(
-        api_url=(helper.NEXUS_API_ENDPOINTS[endpoint]).format(
+        api_url=(helper.NEXUS_API_ENDPOINTS["routing-rules"]).format(
             url=helper.module.params["url"],
         ),
         method="POST",
@@ -76,12 +74,11 @@ def create_routing_rule(helper):
     return content, changed
 
 
-def delete_routing_rule(helper):
-    endpoint = "routing-rules"
+def delete_routing_rule(helper: NexusHelper):
     changed = True
 
     info, content = helper.request(
-        api_url=(helper.NEXUS_API_ENDPOINTS[endpoint] + "/{name}").format(
+        api_url=(helper.NEXUS_API_ENDPOINTS["routing-rules"] + "/{name}").format(
             url=helper.module.params["url"],
             name=helper.module.params["name"],
         ),
@@ -104,8 +101,7 @@ def delete_routing_rule(helper):
     return content, changed
 
 
-def update_routing_rule(helper, current_data):
-    endpoint = "routing-rules"
+def update_routing_rule(helper: NexusHelper, current_data):
     changed = True
     data = {
         "name": helper.module.params["name"],
@@ -115,7 +111,7 @@ def update_routing_rule(helper, current_data):
     }
     changed = not helper.is_json_data_equal(data, current_data)
     info, content = helper.request(
-        api_url=(helper.NEXUS_API_ENDPOINTS[endpoint] + "/{name}").format(
+        api_url=(helper.NEXUS_API_ENDPOINTS["routing-rules"] + "/{name}").format(
             url=helper.module.params["url"],
             name=helper.module.params["name"],
         ),
@@ -187,14 +183,12 @@ def main():
             content, changed = delete_routing_rule(helper)
         else:
             changed = False
-    result = NexusHelper.generate_result_struct(
+    result = NexusHelper.generate_result_struct(changed, content,
         {
             "name": module.params["name"],  # type: ignore
             "state": module.params["state"],  # type: ignore
         }
     )
-    result["json"] = content
-    result["changed"] = changed
 
     module.exit_json(**result)
 

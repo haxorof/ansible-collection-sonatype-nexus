@@ -57,9 +57,7 @@ def main():
     content = NexusRepositoryHelper.list_filtered_repositories(
         helper, generic_repositories_filter
     )
-    result = NexusHelper.generate_result_struct()
-    result["json"] = content
-    result["changed"] = False
+    result = NexusHelper.generate_result_struct(False, content)
 
     module.exit_json(**result)
 

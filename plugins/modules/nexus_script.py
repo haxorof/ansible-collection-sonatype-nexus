@@ -194,9 +194,7 @@ def main():
 
     content, changed = manage_script(helper)
 
-    result = NexusHelper.generate_result_struct()
-    result["json"] = content
-    result["changed"] = changed
+    result = NexusHelper.generate_result_struct(changed, content)
 
     module.exit_json(**result)
 

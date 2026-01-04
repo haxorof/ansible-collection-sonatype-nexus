@@ -220,9 +220,8 @@ def main():
                 msg=f"Role {role_id} does not exist and cannot be deleted."
             )
 
-    result = NexusHelper.generate_result_struct()
-    result["json"] = content
-    result["changed"] = changed
+    result = NexusHelper.generate_result_struct(changed, content)
+
     module.exit_json(**result)
 
 

@@ -3,19 +3,10 @@
   hosts: localhost
   become: false
   gather_facts: false
-
-  vars:
-    nexus_username: "admin"
-    nexus_password: "admin123"
-
   tasks:
     - name: Get Nexus scripts
       haxorof.sonatype_nexus.nexus_script_info:
-        url: "{{ nexus_url }}"
-        username: "{{ nexus_username }}"
-        password: "{{ nexus_password }}"
         method: GET
-        validate_certs: false
         use_proxy: false
       register: nexus_script_list
 

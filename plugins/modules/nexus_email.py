@@ -83,7 +83,7 @@ def update_email_setting(helper, existing_data):
     if not helper.module.params["enabled"] and not existing_data["enabled"]:
         return existing_data, False
 
-    if not changed and helper.module.params["authentication"]["password"] is None:
+    if not changed and not helper.module.params["authentication"]["password"]:
         return existing_data, False
 
     info, content = helper.request(

@@ -6,12 +6,7 @@
   tasks:
     - name: Create blob store of type file
       haxorof.sonatype_nexus.nexus_blobstore_file:
-        url: "{{ nexus_url }}"
-        validate_certs: false
-        use_proxy: false
-        name: default2
-        username: "{{ nexus_username }}"
-        password: "{{ nexus_password }}"
+        name: testblob
         state: present
       register: _result
       tags:
@@ -23,12 +18,7 @@
 
     - name: Get blob store configuration
       haxorof.sonatype_nexus.nexus_blobstore_file_info:
-        url: "{{ nexus_url }}"
-        validate_certs: false
-        use_proxy: false
-        name: default2
-        username: "{{ nexus_username }}"
-        password: "{{ nexus_password }}"
+        name: testblob
       register: _result
 
     - name: Print _result
@@ -37,12 +27,7 @@
 
     - name: Delete blob store of type file
       haxorof.sonatype_nexus.nexus_blobstore_file:
-        url: "{{ nexus_url }}"
-        validate_certs: false
-        use_proxy: false
-        name: default2
-        username: "{{ nexus_username }}"
-        password: "{{ nexus_password }}"
+        name: testblob
         state: absent
       register: _result
       tags:

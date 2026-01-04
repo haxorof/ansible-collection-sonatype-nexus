@@ -14,10 +14,6 @@
   tasks:
     - name: Create Tasks
       nexus_task:
-        url: "{{ nexus_url }}"
-        username: "{{ nexus_username }}"
-        password: "{{ nexus_password }}"
-        validate_certs: false
         type: "{{ item.type }}"
         name: "{{ item.name }}"
         frequency: "{{ item.frequency }}"
@@ -27,10 +23,6 @@
 
     - name: Delete Tasks
       nexus_task:
-        url: "{{ nexus_url }}"
-        username: "{{ nexus_username }}"
-        password: "{{ nexus_password }}"
-        validate_certs: false
         type: "{{ item.type }}"
         name: "{{ item.name }}"
         state: absent

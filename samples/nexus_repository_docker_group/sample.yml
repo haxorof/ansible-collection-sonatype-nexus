@@ -2,22 +2,11 @@
 - name: Manage Docker group repository in Nexus
   hosts: localhost
   gather_facts: false
-
-  vars:
-    nexus_username: admin
-    nexus_password: admin123
-
   pre_tasks:
     - name: Create Docker proxy repository
       haxorof.sonatype_nexus.nexus_repository_docker_proxy:
-        url: "{{ nexus_url }}"
-        validate_certs: false
-        username: "{{ nexus_username }}"
-        password: "{{ nexus_password }}"
         state: present
-        name: testrepo
-        storage:
-          blob_store_name: default
+        name: testproxy
         proxy:
           remote_url: https://registry-1.docker.io
         docker_proxy:
@@ -28,35 +17,27 @@
   tasks:
     - name: Create Docker group repository
       haxorof.sonatype_nexus.nexus_repository_docker_group:
-        url: "{{ nexus_url }}"
-        validate_certs: false
-        username: "{{ nexus_username }}"
-        password: "{{ nexus_password }}"
         state: present
-        name: docker-public
-        storage:
-          blob_store_name: default
-          strict_content_type_validation: true
-        member_repos:
-          - testrepo
+        name: testgroup
+        group:
+          member_names:
+            - testproxy
+      loop:
+        - change
+        - no_change # Test idempotency
 
     - name: Delete Docker group repository
       haxorof.sonatype_nexus.nexus_repository_docker_group:
-        url: "{{ nexus_url }}"
-        validate_certs: false
-        username: "{{ nexus_username }}"
-        password: "{{ nexus_password }}"
         state: absent
-        name: docker-public
+        name: "{{ item }}"
+      loop:
+        - testgroup
+        - testgroup # Test idempotency
 
   post_tasks:
     - name: Delete Docker proxy repository
       haxorof.sonatype_nexus.nexus_repository_docker_proxy:
-        url: "{{ nexus_url }}"
-        validate_certs: false
-        username: "{{ nexus_username }}"
-        password: "{{ nexus_password }}"
-        name: testrepo
+        name: testproxy
         state: absent
       tags:
         - molecule-idempotence-notest

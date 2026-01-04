@@ -18,10 +18,6 @@
   tasks:
   - name: Create/Update Capabilities
     haxorof.sonatype_nexus.nexus_capabilities:
-      url: "{{ nexus_url }}"
-      validate_certs: false
-      username: "{{ nexus_username }}"
-      password: "{{ nexus_password }}"
       state: present
       type: "{{ item.type }}"
       notes: "{{ item.notes }}"
@@ -37,10 +33,6 @@
 
   - name: Delete Capabilities
     haxorof.sonatype_nexus.nexus_capabilities:
-      url: "{{ nexus_url }}"
-      validate_certs: false
-      username: "{{ nexus_username }}"
-      password: "{{ nexus_password }}"
       state: absent
       type: "{{ item.type }}"
     register: _delete_result

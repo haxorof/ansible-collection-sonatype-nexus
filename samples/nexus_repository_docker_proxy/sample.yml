@@ -6,14 +6,8 @@
   tasks:
     - name: Create docker proxy repository
       haxorof.sonatype_nexus.nexus_repository_docker_proxy:
-        url: "{{ nexus_url }}"
-        validate_certs: false
-        username: "{{ nexus_username }}"
-        password: "{{ nexus_password }}"
         state: present
-        name: docker-hub
-        storage:
-          blob_store_name: default
+        name: testproxy
         proxy:
           remote_url: https://registry-1.docker.io
         docker_proxy:
@@ -24,14 +18,8 @@
 
     - name: Update docker proxy repository
       haxorof.sonatype_nexus.nexus_repository_docker_proxy:
-        url: "{{ nexus_url }}"
-        validate_certs: false
-        username: "{{ nexus_username }}"
-        password: "{{ nexus_password }}"
         state: present
-        name: docker-hub
-        storage:
-          blob_store_name: default
+        name: testproxy
         proxy:
           remote_url: https://registry-1.docker.io/
         docker_proxy:
@@ -42,14 +30,10 @@
 
     - name: Delete Docker proxy repository
       haxorof.sonatype_nexus.nexus_repository_docker_proxy:
-        url: "{{ nexus_url }}"
-        validate_certs: false
-        username: "{{ nexus_username }}"
-        password: "{{ nexus_password }}"
         name: "{{ item }}"
         state: absent
       loop:
-        - docker-hub
-        - docker-hub # Test idempotency
+        - testproxy
+        - testproxy # Test idempotency
       tags:
         - molecule-idempotence-notest

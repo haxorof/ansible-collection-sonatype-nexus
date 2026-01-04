@@ -2,18 +2,9 @@
 - name: Manage LDAP servers and set order safely
   hosts: localhost
   gather_facts: false
-
-  vars:
-    nexus_admin_user: "admin"
-    nexus_admin_password: "admin123"
-
   pre_tasks:
     - name: Ensure LDAP server 'primary' exists
       haxorof.sonatype_nexus.nexus_security_ldap:
-        url: "{{ nexus_url }}"
-        username: "{{ nexus_admin_user }}"
-        password: "{{ nexus_admin_password }}"
-        validate_certs: false
         state: present
         ldap_name: "primary"
         ldap_protocol: "ldap"
@@ -35,10 +26,6 @@
 
     - name: Ensure LDAP server 'secondary' exists
       haxorof.sonatype_nexus.nexus_security_ldap:
-        url: "{{ nexus_url }}"
-        username: "{{ nexus_admin_user }}"
-        password: "{{ nexus_admin_password }}"
-        validate_certs: false
         state: present
         ldap_name: "secondary"
         ldap_protocol: "ldap"
@@ -61,10 +48,6 @@
   tasks:
     - name: Set LDAP server order (only if supported)
       haxorof.sonatype_nexus.nexus_security_ldap_order:
-        url: "{{ nexus_url }}"
-        username: "{{ nexus_admin_user }}"
-        password: "{{ nexus_admin_password }}"
-        validate_certs: false
         order_list:
           - primary
           - secondary
@@ -72,18 +55,10 @@
   post_tasks:
     - name: Remove LDAP server 'primary'
       haxorof.sonatype_nexus.nexus_security_ldap:
-        url: "{{ nexus_url }}"
-        username: "{{ nexus_admin_user }}"
-        password: "{{ nexus_admin_password }}"
-        validate_certs: false
         state: absent
         ldap_name: "primary"
 
     - name: Remove LDAP server 'secondary'
       haxorof.sonatype_nexus.nexus_security_ldap:
-        url: "{{ nexus_url }}"
-        username: "{{ nexus_admin_user }}"
-        password: "{{ nexus_admin_password }}"
-        validate_certs: false
         state: absent
         ldap_name: "secondary"

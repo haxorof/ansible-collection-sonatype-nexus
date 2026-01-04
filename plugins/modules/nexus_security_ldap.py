@@ -159,17 +159,14 @@ def update_ldap_server(helper, existing_ldap):
     }
 
     normalized_data = helper.clean_dict_list(new_data)
-    normalized_exisiting_data = helper.clean_dict_list(new_existing_ldap)
+    normalized_existing_data = helper.clean_dict_list(new_existing_ldap)
 
-    changed = not helper.is_json_data_equal(normalized_data, normalized_exisiting_data)
+    changed = not helper.is_json_data_equal(normalized_data, normalized_existing_data)
 
     if (
         changed is False
         and helper.module.params["ldap_auth_username"] == existing_ldap["authUsername"]
-        and (
-            helper.module.params["ldap_auth_password"] is None
-            or helper.module.params["ldap_auth_password"] == ""
-        )
+        and not helper.module.params["ldap_auth_password"]
     ):
         return existing_ldap, False
 
@@ -236,7 +233,6 @@ def main():
             },
             "current_ldap_name": {"type": "str", "required": False},
             "ldap_name": {"type": "str", "required": True},
-            "url": {"type": "str", "required": True},
             "ldap_protocol": {
                 "type": "str",
                 "choices": ["ldap", "ldaps"],
@@ -320,9 +316,8 @@ def main():
             else:
                 changed = False
 
-    result = NexusHelper.generate_result_struct()
-    result["json"] = content
-    result["changed"] = changed
+    result = NexusHelper.generate_result_struct(changed, content)
+
     module.exit_json(**result)
 
 

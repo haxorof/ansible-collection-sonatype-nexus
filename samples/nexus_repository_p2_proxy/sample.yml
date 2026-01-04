@@ -6,22 +6,18 @@
   tasks:
     - name: Create P2 proxy repository
       haxorof.sonatype_nexus.nexus_repository_p2_proxy:
-        url: "{{ nexus_url }}"
-        validate_certs: false
-        username: "{{ nexus_username }}"
-        password: "{{ nexus_password }}"
         state: present
-        name: "p2-proxy-repo-1"
-        storage:
-          blob_store_name: default
+        name: testproxy
         proxy:
-          remote_url: "https://remote.repository.com"
+          remote_url: https://download.eclipse.org/releases/2025-06
+      loop:
+        - change
+        - no_change # Test idempotency
 
     - name: Delete P2 proxy repository
       haxorof.sonatype_nexus.nexus_repository_p2_proxy:
-        url: "{{ nexus_url }}"
-        validate_certs: false
-        username: "{{ nexus_username }}"
-        password: "{{ nexus_password }}"
         state: absent
-        name: "p2-proxy-repo-1"
+        name: testproxy
+      loop:
+        - change
+        - no_change # Test idempotency

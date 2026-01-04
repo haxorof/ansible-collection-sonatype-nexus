@@ -5,10 +5,6 @@
   tasks:
     - name: Create hosted helm repository
       haxorof.sonatype_nexus.nexus_repository_helm_hosted:
-        url: "{{ nexus_url }}"
-        validate_certs: false
-        username: "{{ nexus_username }}"
-        password: "{{ nexus_password }}"
         state: present
         name: helm-hosted
         storage:
@@ -19,10 +15,6 @@
 
     - name: Delete hosted helm repository
       haxorof.sonatype_nexus.nexus_repository_helm_hosted:
-        url: "{{ nexus_url }}"
-        validate_certs: false
-        username: "{{ nexus_username }}"
-        password: "{{ nexus_password }}"
         state: absent
         name: helm-hosted
       loop:

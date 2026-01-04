@@ -5,21 +5,15 @@
   gather_facts: false
 
   vars:
-    nexus_username: "admin"
-    nexus_password: "admin123"
-    new_user_id: "myadminuser"
-    new_user_password: "admin123"
-    new_user_email: "myadmin@localhost"
+    new_user_id: "testadmin"
+    new_user_password: "testadmin"
+    new_user_email: "testadmin@localhost"
     new_user_roles:
       - "nx-admin"
 
   tasks:
     - name: List users
       haxorof.sonatype_nexus.nexus_security_user_info:
-        url: "{{ nexus_url }}"
-        validate_certs: false
-        username: "{{ nexus_username }}"
-        password: "{{ nexus_password }}"
       register: _result
 
     - name: Print _result
@@ -28,10 +22,6 @@
 
     - name: List users from source 'default'
       haxorof.sonatype_nexus.nexus_security_user_info:
-        url: "{{ nexus_url }}"
-        validate_certs: false
-        username: "{{ nexus_username }}"
-        password: "{{ nexus_password }}"
         source: default
       register: _result
 
@@ -41,10 +31,6 @@
 
     - name: Create user
       haxorof.sonatype_nexus.nexus_security_user:
-        url: "{{ nexus_url }}"
-        validate_certs: false
-        username: "{{ nexus_username }}"
-        password: "{{ nexus_password }}"
         user_id: "{{ new_user_id }}"
         user_password: "{{ new_user_password }}"
         first_name: My
@@ -58,10 +44,6 @@
 
     - name: Get created user info
       haxorof.sonatype_nexus.nexus_security_user_info:
-        url: "{{ nexus_url }}"
-        validate_certs: false
-        username: "{{ nexus_username }}"
-        password: "{{ nexus_password }}"
         user_id: "{{ new_user_id }}"
       register: _result
 
@@ -71,10 +53,6 @@
 
     - name: Disable user
       haxorof.sonatype_nexus.nexus_security_user:
-        url: "{{ nexus_url }}"
-        validate_certs: false
-        username: "{{ nexus_username }}"
-        password: "{{ nexus_password }}"
         user_id: "{{ new_user_id }}"
         status: disabled
         state: present
@@ -83,10 +61,6 @@
 
     - name: Delete user
       haxorof.sonatype_nexus.nexus_security_user:
-        url: "{{ nexus_url }}"
-        validate_certs: false
-        username: "{{ nexus_username }}"
-        password: "{{ nexus_password }}"
         user_id: "{{ new_user_id }}"
         state: absent
       tags:

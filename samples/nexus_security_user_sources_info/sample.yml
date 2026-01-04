@@ -3,18 +3,9 @@
   hosts: localhost
   become: false
   gather_facts: false
-
-  vars:
-    nexus_username: "admin"
-    nexus_password: "admin123"
-
   tasks:
     - name: List user sources
       haxorof.sonatype_nexus.nexus_security_user_sources_info:
-        url: "{{ nexus_url }}"
-        validate_certs: false
-        username: "{{ nexus_username }}"
-        password: "{{ nexus_password }}"
       register: _result
 
     - name: Print _result

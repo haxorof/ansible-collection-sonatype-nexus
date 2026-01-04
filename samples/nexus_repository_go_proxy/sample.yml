@@ -5,14 +5,8 @@
   tasks:
     - name: Create Go proxy repositories
       haxorof.sonatype_nexus.nexus_repository_go_proxy:
-        url: "{{ nexus_url }}"
-        validate_certs: false
-        username: "{{ nexus_username }}"
-        password: "{{ nexus_password }}"
         state: present
-        name: go-proxy
-        storage:
-          blob_store_name: default
+        name: testproxy
         proxy:
           remote_url: https://proxy.golang.org
       loop:
@@ -21,12 +15,8 @@
 
     - name: Delete a Go proxy repository
       haxorof.sonatype_nexus.nexus_repository_go_proxy:
-        url: "{{ nexus_url }}"
-        validate_certs: false
-        username: "{{ nexus_username }}"
-        password: "{{ nexus_password }}"
         state: absent
-        name: go-proxy
+        name: testproxy
       loop:
         - change
         - no_change # Test idempotency

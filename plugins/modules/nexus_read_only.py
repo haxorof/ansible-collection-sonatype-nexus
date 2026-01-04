@@ -74,9 +74,7 @@ def main():
     changed = True
     if not module.check_mode:
         content, changed = update_read_only(helper)
-    result = NexusHelper.generate_result_struct({"status": module.params["status"]})  # type: ignore
-    result["json"] = content
-    result["changed"] = changed
+    result = NexusHelper.generate_result_struct(changed, content, {"status": module.params["status"]})  # type: ignore
 
     module.exit_json(**result)
 

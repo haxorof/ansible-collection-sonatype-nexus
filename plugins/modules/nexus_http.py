@@ -120,11 +120,7 @@ def update_http_setting(helper, existing_data):
 
     changed = not helper.is_json_data_equal(normalized_data, normalized_current_data)
 
-    if (
-        changed is False
-        and (password_http_proxy is None or password_http_proxy == "")
-        and (password_https_proxy is None or password_https_proxy == "")
-    ):
+    if changed is False and not password_http_proxy and not password_https_proxy:
         return existing_data, False
 
     info, content = helper.request(

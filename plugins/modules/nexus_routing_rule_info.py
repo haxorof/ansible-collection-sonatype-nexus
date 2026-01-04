@@ -88,13 +88,11 @@ def main():
     helper = NexusHelper(module)
 
     content = {}
-    if module.params["name"] is None:  # type: ignore
+    if not module.params["name"]:  # type: ignore
         content = list_routing_rule(helper)
     else:
         content = get_routing_rule(helper)
-    result = NexusHelper.generate_result_struct()
-    result["json"] = content
-    result["changed"] = False
+    result = NexusHelper.generate_result_struct(False, content)
 
     module.exit_json(**result)
 

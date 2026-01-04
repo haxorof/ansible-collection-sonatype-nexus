@@ -5,47 +5,33 @@
   pre_tasks:
     - name: Create Raw proxy repository
       haxorof.sonatype_nexus.nexus_repository_raw_proxy:
-        url: "{{ nexus_url }}"
-        validate_certs: false
-        username: "{{ nexus_username }}"
-        password: "{{ nexus_password }}"
         state: present
-        name: raw-proxy-repo-1
-        storage:
-          blob_store_name: default
+        name: testproxy
         proxy:
-          remote_url: "https://example.com/raw"
+          remote_url: http://mirror.bahnhof.net/pub/almalinux/10.1/isos/x86_64
 
   tasks:
     - name: Create raw group repository
       haxorof.sonatype_nexus.nexus_repository_raw_group:
-        url: "{{ nexus_url }}"
-        validate_certs: false
-        username: "{{ nexus_username }}"
-        password: "{{ nexus_password }}"
         state: present
-        name: raw-public
-        storage:
-          blob_store_name: default
-          strict_content_type_validation: true
-        member_repos:
-          - raw-proxy-repo-1
+        name: testgroup
+        group:
+          member_names:
+            - testproxy
+      loop:
+        - change
+        - no_change # Test idempotency
 
     - name: Delete raw group repository
       haxorof.sonatype_nexus.nexus_repository_raw_group:
-        url: "{{ nexus_url }}"
-        validate_certs: false
-        username: "{{ nexus_username }}"
-        password: "{{ nexus_password }}"
         state: absent
-        name: raw-public
+        name: testgroup
+      loop:
+        - change
+        - no_change # Test idempotency
 
   post_tasks:
     - name: Delete raw proxy repository
       haxorof.sonatype_nexus.nexus_repository_raw_proxy:
-        url: "{{ nexus_url }}"
-        validate_certs: false
-        username: "{{ nexus_username }}"
-        password: "{{ nexus_password }}"
         state: absent
-        name: raw-proxy-repo-1
+        name: testproxy

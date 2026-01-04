@@ -5,25 +5,19 @@
   tasks:
     - name: Create maven group repository
       haxorof.sonatype_nexus.nexus_repository_maven_group:
-        url: "{{ nexus_url }}"
-        validate_certs: false
-        username: "{{ nexus_username }}"
-        password: "{{ nexus_password }}"
         state: present
-        name: maven-public-1
-        storage:
-          blob_store_name: default
-          strict_content_type_validation: true
-        member_repos:
-          - maven-central
+        name: testgroup
+        group:
+          member_names:
+            - maven-central
+      loop:
+        - change
+        - no_change # Test idempotency
 
     - name: Delete default group maven repository
       haxorof.sonatype_nexus.nexus_repository_maven_group:
-        url: "{{ nexus_url }}"
-        validate_certs: false
-        username: "{{ nexus_username }}"
-        password: "{{ nexus_password }}"
         state: absent
-        name: "{{ item }}"
+        name: testgroup
       loop:
-        - maven-public-1
+        - change
+        - no_change # Test idempotency

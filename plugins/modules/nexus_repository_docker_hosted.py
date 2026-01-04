@@ -9,10 +9,11 @@ from __future__ import absolute_import, division, print_function
 # pylint: disable-next=invalid-name
 __metaclass__ = type
 
-from ansible.module_utils.basic import AnsibleModule
 from ansible_collections.haxorof.sonatype_nexus.plugins.module_utils.nexus import (
-    NexusHelper,
     NexusRepositoryHelper,
+)
+from ansible_collections.haxorof.sonatype_nexus.plugins.module_utils import (
+    nexus_repository_docker_commons,
 )
 
 DOCUMENTATION = r"""
@@ -32,76 +33,40 @@ def repository_filter(item, helper):
     return item["name"] == helper.module.params["name"]
 
 
+def existing_data_normalization(normalized_existing_data):
+    if normalized_existing_data.get("storage"):  # type: ignore
+        if (
+            normalized_existing_data["storage"].get("writePolicy")  # type: ignore
+            and normalized_existing_data["storage"]["writePolicy"]  # type: ignore
+            != "ALLOW_ONCE"
+        ):
+            normalized_existing_data["storage"].pop("latestPolicy", None)  # type: ignore
+    return normalized_existing_data
+
+
+def docker_hosted_storage_attributes():
+    """Directly maps to DockerHostedStorageAttributes"""
+    ret_spec = NexusRepositoryHelper.hosted_storage_attributes()
+    ret_spec["options"]["latest_policy"] = {
+        "type": "bool",
+        "default": False,
+    }
+    return ret_spec
+
+
 def main():
-    endpoint_path_to_use = "/docker/hosted"
-
-    argument_spec = NexusHelper.nexus_argument_spec()
-    argument_spec.update(
-        {
-            "format": {"type": "str", "choices": ["docker"], "required": False},
-            "type": {"type": "str", "choices": ["hosted"], "required": False},
-            "docker": {
-                "type": "dict",
-                "apply_defaults": True,
-                "options": {
-                    "v1_enabled": {"type": "bool", "default": False},
-                    "force_basic_auth": {
-                        "type": "bool",
-                        "default": False,
-                    },  # Adding forceBasicAuth here
-                    "http_port": {"type": "int", "required": False},  # Adding httpPort
-                    "https_port": {
-                        "type": "int",
-                        "required": False,
-                    },  # Adding httpsPort
-                    "subdomain": {"type": "str", "required": False},  # Adding subdomain
-                },
-            },
-            "component": {
-                "type": "dict",
-                "options": {
-                    "proprietary_components": {"type": "bool", "default": False},
-                },
-            },
-        }
+    NexusRepositoryHelper.generic_repository_hosted_module(
+        endpoint_path="/docker/hosted",
+        repository_filter=repository_filter,
+        existing_data_normalization=existing_data_normalization,
+        arg_additions={
+            "docker": nexus_repository_docker_commons.docker_attributes(),
+            "storage": docker_hosted_storage_attributes(),
+        },
+        request_data_additions={
+            "docker": "camalize",
+        },
     )
-    argument_spec.update(
-        NexusRepositoryHelper.common_proxy_argument_spec(endpoint_path_to_use)
-    )
-    module = AnsibleModule(
-        argument_spec=argument_spec,
-        supports_check_mode=True,
-        required_together=[("username", "password")],
-    )
-    helper = NexusHelper(module)
-
-    changed, content = True, {}
-    existing_data = NexusRepositoryHelper.list_filtered_repositories(
-        helper, repository_filter
-    )
-    if module.params["state"] == "present":  # type: ignore
-        endpoint_path = endpoint_path_to_use
-        additional_data = {
-            "docker": NexusHelper.camalize_param(helper, "docker"),
-        }
-        if len(existing_data) > 0:
-            content, changed = NexusRepositoryHelper.update_repository(
-                helper, endpoint_path, additional_data, existing_data[0]
-            )
-        else:
-            content, changed = NexusRepositoryHelper.create_repository(
-                helper, endpoint_path, additional_data
-            )
-    else:
-        if len(existing_data) > 0:
-            content, changed = NexusRepositoryHelper.delete_repository(helper)
-        else:
-            changed = False
-    result = NexusHelper.generate_result_struct()
-    result["json"] = content
-    result["changed"] = changed
-
-    module.exit_json(**result)
 
 
 if __name__ == "__main__":

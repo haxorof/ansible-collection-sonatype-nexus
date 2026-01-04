@@ -64,9 +64,7 @@ def main():
     else:
         helper.module.fail_json(msg=f"Unsupported method: {module.params['method']}")  # type: ignore
 
-    result = NexusHelper.generate_result_struct()
-    result["json"] = content
-    result["changed"] = False
+    result = NexusHelper.generate_result_struct(False, content)
 
     module.exit_json(**result)
 

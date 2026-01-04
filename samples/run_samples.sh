@@ -10,7 +10,11 @@ function run_test() {
     echo ""
     echo "#############"
     echo "# BEGIN ##### $(pwd)"
-    ansible-playbook -c local --extra-vars "nexus_url=http://$NEXUS_HOST:8081" --extra-vars "nexus_username=admin" --extra-vars "nexus_password=admin123" sample.yml
+    export NEXUS_URL=http://$NEXUS_HOST:8081
+    export NEXUS_VALIDATE_CERTS=False
+    export NEXUS_USERNAME=admin
+    export NEXUS_PASSWORD=admin123
+    ansible-playbook -c local sample.yml
     echo "# END ####### $(pwd)"
     echo "#############"
     echo ""
