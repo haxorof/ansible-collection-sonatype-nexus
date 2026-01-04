@@ -18,7 +18,8 @@ from ansible.module_utils._text import to_text
 from ansible.module_utils.basic import env_fallback
 from ansible.module_utils.urls import fetch_url, basic_auth_header
 
-
+def repository_name_filter(item, helper):
+    return item["name"] == helper.module.params["name"]
 class NexusHelper:
     """General Nexus Helper Class"""
 
@@ -492,9 +493,9 @@ class NexusRepositoryHelper:
         return content
 
     @staticmethod
-    def list_filtered_repositories(helper, repository_filter):
+    def list_filtered_repositories(helper, list_filter=repository_name_filter):
         content = NexusRepositoryHelper.list_repositories(helper)
-        content = list(filter(lambda item: repository_filter(item, helper), content))
+        content = list(filter(lambda item: list_filter(item, helper), content))
         return content
 
     @staticmethod
@@ -621,7 +622,7 @@ class NexusRepositoryHelper:
     @staticmethod
     def generic_repository_proxy_module(
         endpoint_path:str,
-        repository_filter,
+        repository_filter=repository_name_filter,
         existing_data_normalization=None,
         arg_additions=None,
         request_data_additions=None
@@ -693,7 +694,7 @@ class NexusRepositoryHelper:
     @staticmethod
     def generic_repository_group_module(
         endpoint_path:str,
-        repository_filter,
+        repository_filter=repository_name_filter,
         existing_data_normalization=None,
         arg_additions=None,
         request_data_additions=None
@@ -755,7 +756,7 @@ class NexusRepositoryHelper:
     @staticmethod
     def generic_repository_hosted_module(
         endpoint_path:str,
-        repository_filter,
+        repository_filter=repository_name_filter,
         existing_data_normalization=None,
         arg_additions=None,
         request_data_additions=None

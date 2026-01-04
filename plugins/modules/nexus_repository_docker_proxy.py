@@ -29,10 +29,6 @@ RETURN = r"""
 """
 
 
-def repository_filter(item, helper):
-    return item["name"] == helper.module.params["name"]
-
-
 def existing_data_normalization(normalized_existing_data):
     if normalized_existing_data.get("storage"):  # type: ignore
         normalized_existing_data["storage"].pop("writePolicy", None)  # type: ignore
@@ -65,7 +61,6 @@ def docker_proxy_attributes():
 def main():
     NexusRepositoryHelper.generic_repository_proxy_module(
         endpoint_path="/docker/proxy",
-        repository_filter=repository_filter,
         existing_data_normalization=existing_data_normalization,
         arg_additions={
             "docker": nexus_repository_docker_commons.docker_attributes(),

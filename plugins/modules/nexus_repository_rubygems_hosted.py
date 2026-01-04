@@ -23,14 +23,9 @@ RETURN = r"""
 """
 
 
-def repository_filter(item, helper):
-    return item["name"] == helper.module.params["name"]
-
-
 def main():
     NexusRepositoryHelper.generic_repository_hosted_module(
         endpoint_path="/rubygems/hosted",
-        repository_filter=repository_filter,
     )
 
 

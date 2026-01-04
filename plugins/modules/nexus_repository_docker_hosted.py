@@ -29,10 +29,6 @@ RETURN = r"""
 """
 
 
-def repository_filter(item, helper):
-    return item["name"] == helper.module.params["name"]
-
-
 def existing_data_normalization(normalized_existing_data):
     if normalized_existing_data.get("storage"):  # type: ignore
         if (
@@ -57,7 +53,6 @@ def docker_hosted_storage_attributes():
 def main():
     NexusRepositoryHelper.generic_repository_hosted_module(
         endpoint_path="/docker/hosted",
-        repository_filter=repository_filter,
         existing_data_normalization=existing_data_normalization,
         arg_additions={
             "docker": nexus_repository_docker_commons.docker_attributes(),

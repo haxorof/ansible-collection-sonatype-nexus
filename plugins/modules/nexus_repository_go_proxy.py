@@ -26,13 +26,9 @@ RETURN = r"""
 """
 
 
-def repository_filter(item, helper):
-    return item["name"] == helper.module.params["name"]
-
-
 def main():
     NexusRepositoryHelper.generic_repository_proxy_module(
-        endpoint_path="/go/proxy", repository_filter=repository_filter
+        endpoint_path="/go/proxy",
     )
 
 

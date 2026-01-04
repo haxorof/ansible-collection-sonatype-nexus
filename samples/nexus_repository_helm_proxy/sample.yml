@@ -6,7 +6,7 @@
     - name: Create Helm proxy repositories
       haxorof.sonatype_nexus.nexus_repository_helm_proxy:
         state: present
-        name: helm-proxy-repo
+        name: testproxy
         storage:
           blob_store_name: default
         proxy:
@@ -18,7 +18,7 @@
     - name: Delete Helm proxy repositories
       haxorof.sonatype_nexus.nexus_repository_helm_proxy:
         state: absent
-        name: helm-proxy-repo
+        name: testproxy
       loop:
         - change
         - no_change # Test idempotency

@@ -26,14 +26,9 @@ RETURN = r"""
 """
 
 
-def repository_filter(item, helper):
-    return item["name"] == helper.module.params["name"]
-
-
 def main():
     NexusRepositoryHelper.generic_repository_hosted_module(
         endpoint_path="/maven/hosted",
-        repository_filter=repository_filter,
         # existing_data_normalization=existing_data_normalization,
         arg_additions={
             "maven": {

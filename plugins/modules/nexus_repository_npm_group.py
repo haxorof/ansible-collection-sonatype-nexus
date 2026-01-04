@@ -26,14 +26,9 @@ RETURN = r"""
 """
 
 
-def repository_filter(item, helper):
-    return item["name"] == helper.module.params["name"]
-
-
 def main():
     NexusRepositoryHelper.generic_repository_group_module(
         endpoint_path="/npm/group",
-        repository_filter=repository_filter,
     )
 
 
