@@ -10,11 +10,17 @@
   tasks:
     - name: Upload Nexus script
       haxorof.sonatype_nexus.nexus_script:
-        method: POST
         name: "{{ nexus_script_name }}"
         content: "println 'Hello, World!'"
+        state: present
+      loop:
+        - change
+        - no_change # Test idempotency
 
     - name: Delete Nexus script
       haxorof.sonatype_nexus.nexus_script:
-        method: DELETE
         name: "{{ nexus_script_name }}"
+        state: absent
+      loop:
+        - change
+        - no_change # Test idempotency

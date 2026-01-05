@@ -7,18 +7,19 @@
   vars:
     nexus_script_name: "hello_world"
 
-  tasks:
+  pre_tasks:
     - name: Upload Nexus script
       haxorof.sonatype_nexus.nexus_script:
-        method: POST
         name: "{{ nexus_script_name }}"
         content: "println 'Hello, World!'"
 
+  tasks:
     - name: Trigger script
       haxorof.sonatype_nexus.nexus_script_run:
         name: "{{ nexus_script_name }}"
 
+  post_tasks:
     - name: Delete Nexus script
       haxorof.sonatype_nexus.nexus_script:
-        method: DELETE
         name: "{{ nexus_script_name }}"
+        state: absent

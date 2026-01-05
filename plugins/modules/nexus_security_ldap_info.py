@@ -13,6 +13,9 @@ from ansible.module_utils.basic import AnsibleModule
 from ansible_collections.haxorof.sonatype_nexus.plugins.module_utils.nexus import (
     NexusHelper,
 )
+from ansible_collections.haxorof.sonatype_nexus.plugins.module_utils import (
+    nexus_ldap_commons,
+)
 
 DOCUMENTATION = r"""
 ---
@@ -25,36 +28,9 @@ RETURN = r"""
 """
 
 
-def get_ldap_server(helper):
-    """Retrieve the LDAP server configuration by name."""
-    endpoint = "ldap"
-    info, content = helper.request(
-        api_url=(helper.NEXUS_API_ENDPOINTS[endpoint] + "/{name}").format(
-            url=helper.module.params["url"],
-            name=helper.module.params["ldap_name"],
-        ),
-        method="GET",
-    )
-    if info["status"] in [200]:
-        return content
-
-    if info["status"] in [404]:
-        content = {}
-    elif info["status"] == 403:
-        helper.module.fail_json(
-            msg=f"Insufficient permissions to read LDAP server '{helper.module.params['ldap_name']}'."
-        )
-    else:
-        helper.module.fail_json(
-            msg=f"Failed to read LDAP server '{helper.module.params['ldap_name']}', http_status={info['status']}."
-        )
-    return content
-
-
 def list_ldap_servers(helper):
-    endpoint = "ldap"
     info, content = helper.request(
-        api_url=helper.NEXUS_API_ENDPOINTS[endpoint].format(
+        api_url=helper.NEXUS_API_ENDPOINTS["ldap"].format(
             url=helper.module.params["url"]
         ),
         method="GET",
@@ -87,7 +63,7 @@ def main():
     helper = NexusHelper(module)
 
     if module.params["ldap_name"]:  # type: ignore
-        content = get_ldap_server(helper)
+        content = nexus_ldap_commons.get_ldap_server(helper)
     else:
         content = list_ldap_servers(helper)
 

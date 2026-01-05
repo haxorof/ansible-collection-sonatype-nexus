@@ -27,9 +27,8 @@ RETURN = r"""
 
 
 def get_current_ldap_order(helper):
-    endpoint = "ldap"
     info, content = helper.request(
-        api_url=(helper.NEXUS_API_ENDPOINTS[endpoint]).format(
+        api_url=(helper.NEXUS_API_ENDPOINTS["ldap"]).format(
             url=helper.module.params["url"]
         ),
         method="GET",
@@ -54,10 +53,9 @@ def change_ldap_order(helper, order_list):
     if current_order == order_list:
         return False, current_order
 
-    endpoint = "ldap"
     data = json.dumps(order_list)
     info, content = helper.request(
-        api_url=(helper.NEXUS_API_ENDPOINTS[endpoint] + "/change-order").format(
+        api_url=(helper.NEXUS_API_ENDPOINTS["ldap"] + "/change-order").format(
             url=helper.module.params["url"]
         ),
         method="POST",

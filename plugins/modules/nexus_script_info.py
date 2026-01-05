@@ -13,6 +13,9 @@ from ansible.module_utils.basic import AnsibleModule
 from ansible_collections.haxorof.sonatype_nexus.plugins.module_utils.nexus import (
     NexusHelper,
 )
+from ansible_collections.haxorof.sonatype_nexus.plugins.module_utils import (
+    nexus_script_commons,
+)
 
 DOCUMENTATION = r"""
 ---
@@ -26,48 +29,17 @@ RETURN = r"""
 """
 
 
-def list_scripts(helper):
-    endpoint = "script"
-    info, content = helper.request(
-        api_url=helper.NEXUS_API_ENDPOINTS[endpoint].format(
-            url=helper.module.params["url"]
-        ),
-        method="GET",
-    )
-    if info["status"] in [200]:
-        content = content["json"]
-    elif info["status"] == 403:
-        helper.module.fail_json(msg="Insufficient permissions to read scripts.")
-    else:
-        helper.module.fail_json(
-            msg=f"Failed to read scripts, http_status={info['status']}."
-        )
-    return content
-
-
-# TODO Review
 def main():
     argument_spec = NexusHelper.nexus_argument_spec()
-    argument_spec.update(
-        {
-            "method": {"type": "str", "choices": ["GET"], "required": True},
-        }
-    )
     module = AnsibleModule(
         argument_spec=argument_spec,
         supports_check_mode=True,
         required_together=[("username", "password")],
     )
-
     helper = NexusHelper(module)
-
-    content = {}
-    if module.params["method"] == "GET":  # type: ignore
-        content = list_scripts(helper)
-    else:
-        helper.module.fail_json(msg=f"Unsupported method: {module.params['method']}")  # type: ignore
-
-    result = NexusHelper.generate_result_struct(False, content)
+    result = NexusHelper.generate_result_struct(
+        False, nexus_script_commons.list_scripts(helper)
+    )
 
     module.exit_json(**result)
 

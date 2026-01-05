@@ -3,10 +3,10 @@
   hosts: localhost
   gather_facts: false
   pre_tasks:
-    - name: Ensure LDAP server 'primary' exists
+    - name: Ensure LDAP server configurations
       haxorof.sonatype_nexus.nexus_security_ldap:
         state: present
-        ldap_name: "primary"
+        ldap_name: "{{ item }}"
         ldap_protocol: "ldap"
         ldap_use_trust_store: false
         ldap_host: "ldap.example.com"
@@ -23,42 +23,34 @@
         ldap_user_id_attribute: "sAMAccountName"
         ldap_user_real_name_attribute: "cn"
         ldap_user_email_address_attribute: "mail"
-
-    - name: Ensure LDAP server 'secondary' exists
-      haxorof.sonatype_nexus.nexus_security_ldap:
-        state: present
-        ldap_name: "secondary"
-        ldap_protocol: "ldap"
-        ldap_use_trust_store: false
-        ldap_host: "ldap.example.com"
-        ldap_port: 633
-        ldap_search_base: "dc=example,dc=com"
-        ldap_auth_scheme: "SIMPLE"
-        ldap_auth_username: "trypass"
-        ldap_auth_password: "secretpassword"
-        ldap_connection_timeout_seconds: 30
-        ldap_connection_retry_delay_seconds: 300
-        ldap_max_incidents_count: 3
-        ldap_user_subtree: true
-        ldap_user_object_class: "user"
-        ldap_user_id_attribute: "sAMAccountName"
-        ldap_user_real_name_attribute: "cn"
-        ldap_user_email_address_attribute: "mail"
+      loop:
+        - primary
+        - secondary
 
   tasks:
-    - name: Set LDAP server order (only if supported)
+    - name: Set LDAP server order - secondary, primary
+      haxorof.sonatype_nexus.nexus_security_ldap_order:
+        order_list:
+          - secondary
+          - primary
+      loop:
+        - change
+        - no_change # Test idempotency
+
+    - name: Set LDAP server order - primary, secondary
       haxorof.sonatype_nexus.nexus_security_ldap_order:
         order_list:
           - primary
           - secondary
+      loop:
+        - change
+        - no_change # Test idempotency
 
   post_tasks:
-    - name: Remove LDAP server 'primary'
+    - name: Remove LDAP server configurations
       haxorof.sonatype_nexus.nexus_security_ldap:
         state: absent
-        ldap_name: "primary"
-
-    - name: Remove LDAP server 'secondary'
-      haxorof.sonatype_nexus.nexus_security_ldap:
-        state: absent
-        ldap_name: "secondary"
+        ldap_name: "{{ item }}"
+      loop:
+        - primary
+        - secondary

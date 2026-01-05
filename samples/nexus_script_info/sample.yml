@@ -6,8 +6,6 @@
   tasks:
     - name: Get Nexus scripts
       haxorof.sonatype_nexus.nexus_script_info:
-        method: GET
-        use_proxy: false
       register: nexus_script_list
 
     - name: Debug script list

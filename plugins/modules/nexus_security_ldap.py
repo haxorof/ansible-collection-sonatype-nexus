@@ -13,6 +13,9 @@ from ansible.module_utils.basic import AnsibleModule
 from ansible_collections.haxorof.sonatype_nexus.plugins.module_utils.nexus import (
     NexusHelper,
 )
+from ansible_collections.haxorof.sonatype_nexus.plugins.module_utils import (
+    nexus_ldap_commons,
+)
 
 DOCUMENTATION = r"""
 ---
@@ -23,37 +26,6 @@ EXAMPLES = r"""
 """
 RETURN = r"""
 """
-
-
-def get_ldap_server(helper):
-    """Retrieve the LDAP server configuration by name."""
-    ldap_name = (
-        helper.module.params.get("current_ldap_name")
-        or helper.module.params["ldap_name"]
-    )  # Use current_ldap_name if specified
-    endpoint = "ldap"
-    info, content = helper.request(
-        api_url=(helper.NEXUS_API_ENDPOINTS[endpoint] + "/{name}").format(
-            url=helper.module.params["url"],
-            name=ldap_name,
-        ),
-        method="GET",
-    )
-    if info["status"] == 200:
-        return content
-
-    if info["status"] == 404:
-        return None  # Return None if not found
-
-    if info["status"] == 403:
-        helper.module.fail_json(
-            msg=f"Insufficient permissions to read LDAP server '{ldap_name}'."
-        )
-    else:
-        helper.module.fail_json(
-            msg=f"Failed to read LDAP server '{ldap_name}', http_status={info['status']}."
-        )
-    return content
 
 
 def get_ldap_data(helper):
@@ -101,15 +73,13 @@ def get_ldap_data(helper):
 def create_ldap_server(helper):
     """Create a new LDAP server."""
     data = get_ldap_data(helper)
-    endpoint = "ldap"
-
     # Check if the LDAP server already exists
-    existing_ldap = get_ldap_server(helper)
+    existing_ldap = nexus_ldap_commons.get_ldap_server(helper)
     if existing_ldap:
         return existing_ldap, False
 
     info, content = helper.request(
-        api_url=(helper.NEXUS_API_ENDPOINTS[endpoint]).format(
+        api_url=(helper.NEXUS_API_ENDPOINTS["ldap"]).format(
             url=helper.module.params["url"]
         ),
         method="POST",
@@ -132,13 +102,6 @@ def create_ldap_server(helper):
 def update_ldap_server(helper, existing_ldap):
     """Update an existing LDAP server if differences are found."""
     data = get_ldap_data(helper)  # Get the desired configuration
-    endpoint = "ldap"
-
-    # Use current_ldap_name if specified; otherwise, use the desired ldap_name
-    ldap_name = (
-        helper.module.params.get("current_ldap_name")
-        or helper.module.params["ldap_name"]
-    )
 
     new_existing_ldap = existing_ldap.copy()
     new_existing_ldap.pop("id", None)
@@ -172,9 +135,9 @@ def update_ldap_server(helper, existing_ldap):
 
     data["id"] = existing_ldap["id"]
     info, content = helper.request(
-        api_url=(helper.NEXUS_API_ENDPOINTS[endpoint] + "/{name}").format(
+        api_url=(helper.NEXUS_API_ENDPOINTS["ldap"] + "/{name}").format(
             url=helper.module.params["url"],
-            name=ldap_name,
+            name=helper.module.params["ldap_name"],
         ),
         method="PUT",
         data=data,
@@ -186,7 +149,7 @@ def update_ldap_server(helper, existing_ldap):
         helper.generic_permission_failure_msg()
     else:
         helper.module.fail_json(
-            msg=f"Failed to update LDAP server {ldap_name}, \
+            msg=f"Failed to update LDAP server {helper.module.params['ldap_name']}, \
                 http_status={info['status']}, error_msg='{info.get('msg', 'Unknown error')}'."
         )
 
@@ -195,10 +158,9 @@ def update_ldap_server(helper, existing_ldap):
 
 def delete_ldap_server(helper):
     """Delete an existing LDAP server."""
-    endpoint = "ldap"
     changed = True
     info, content = helper.request(
-        api_url=(helper.NEXUS_API_ENDPOINTS[endpoint] + "/{name}").format(
+        api_url=(helper.NEXUS_API_ENDPOINTS["ldap"] + "/{name}").format(
             url=helper.module.params["url"],
             name=helper.module.params["ldap_name"],
         ),
@@ -225,13 +187,11 @@ def main():
     argument_spec = NexusHelper.nexus_argument_spec()
     argument_spec.update(
         {
-            "method": {"type": "str", "choices": ["GET"], "required": False},
             "state": {
                 "type": "str",
                 "choices": ["present", "absent"],
                 "required": False,
             },
-            "current_ldap_name": {"type": "str", "required": False},
             "ldap_name": {"type": "str", "required": True},
             "ldap_protocol": {
                 "type": "str",
@@ -299,22 +259,15 @@ def main():
     content = {}
     changed = False
 
-    if module.params["method"] == "GET":  # type: ignore
-        existing_ldap = get_ldap_server(helper)
-        content = existing_ldap if existing_ldap else {}
-    else:
-        existing_ldap = get_ldap_server(helper)
-        if module.params["state"] == "present":  # type: ignore
-            if existing_ldap:
-                content, changed = update_ldap_server(helper, existing_ldap)
-            else:
-                content, changed = create_ldap_server(helper)
-        else:  # state == "absent"
-            if existing_ldap:
-                content, changed = delete_ldap_server(helper)
-                module.params["state"] = "absent"  # type: ignore
-            else:
-                changed = False
+    existing_ldap = nexus_ldap_commons.get_ldap_server(helper)
+    if module.params["state"] == "present":  # type: ignore
+        if existing_ldap:
+            content, changed = update_ldap_server(helper, existing_ldap)
+        else:
+            content, changed = create_ldap_server(helper)
+    else:  # state == "absent"
+        if existing_ldap:
+            content, changed = delete_ldap_server(helper)
 
     result = NexusHelper.generate_result_struct(changed, content)
 

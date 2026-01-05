@@ -13,6 +13,9 @@ from ansible.module_utils.basic import AnsibleModule
 from ansible_collections.haxorof.sonatype_nexus.plugins.module_utils.nexus import (
     NexusHelper,
 )
+from ansible_collections.haxorof.sonatype_nexus.plugins.module_utils import (
+    nexus_script_commons,
+)
 
 DOCUMENTATION = r"""
 ---
@@ -23,25 +26,6 @@ EXAMPLES = r"""
 """
 RETURN = r"""
 """
-
-
-def list_scripts(helper):
-    endpoint = "script"
-    info, content = helper.request(
-        api_url=helper.NEXUS_API_ENDPOINTS[endpoint].format(
-            url=helper.module.params["url"]
-        ),
-        method="GET",
-    )
-    if info["status"] in [200]:
-        content = content["json"]
-    elif info["status"] == 403:
-        helper.generic_permission_failure_msg()
-    else:
-        helper.module.fail_json(
-            msg=f"Failed to fetch scripts, http_status={info['status']}."
-        )
-    return content
 
 
 def create_script(helper):
@@ -130,31 +114,12 @@ def update_script(helper, existing_script):
 
 
 def manage_script(helper):
-    method = helper.module.params["method"]
+    state = helper.module.params["state"]
     content = {}
     changed = True
 
-    if method == "GET":
-        content = list_scripts(helper)
-        changed = False
-    elif method == "POST":
-        existing_scripts = list_scripts(helper)
-        existing_script = next(
-            (
-                script
-                for script in existing_scripts
-                if script["name"] == helper.module.params["name"]
-            ),
-            None,
-        )
-        if existing_script:
-            content, changed = update_script(helper, existing_script)
-        else:
-            content, changed = create_script(helper)
-    elif method == "DELETE":
-        content, changed = delete_script(helper)
-    elif method == "PUT":
-        existing_scripts = list_scripts(helper)
+    if state == "present":
+        existing_scripts = nexus_script_commons.list_scripts(helper)
         existing_script = next(
             (
                 script
@@ -168,7 +133,7 @@ def manage_script(helper):
         else:
             content, changed = create_script(helper)
     else:
-        helper.module.fail_json(msg=f"Unsupported method: {method}")
+        content, changed = delete_script(helper)
 
     return content, changed
 
@@ -179,10 +144,10 @@ def main():
         {
             "name": {"type": "str", "required": True, "no_log": False},
             "content": {"type": "str", "required": False, "no_log": False},
-            "method": {
+            "state": {
                 "type": "str",
-                "choices": ["GET", "POST", "PUT", "DELETE"],
-                "required": True,
+                "choices": ["present", "absent"],
+                "default": "present",
             },
         }
     )
@@ -194,7 +159,25 @@ def main():
 
     helper = NexusHelper(module)
 
-    content, changed = manage_script(helper)
+    content = {}
+    changed = False
+
+    if module.params["state"] == "present":  # type: ignore
+        existing_scripts = nexus_script_commons.list_scripts(helper)
+        existing_script = next(
+            (
+                script
+                for script in existing_scripts
+                if script["name"] == module.params["name"]  # type: ignore
+            ),
+            None,
+        )
+        if existing_script:
+            content, changed = update_script(helper, existing_script)
+        else:
+            content, changed = create_script(helper)
+    else:
+        content, changed = delete_script(helper)
 
     result = NexusHelper.generate_result_struct(changed, content)
 
