@@ -186,19 +186,29 @@ def main():
     }
     argument_spec = NexusHelper.nexus_argument_spec()
     argument_spec.update(
-        state={"type": "str", "choices": ["present", "absent"], "default": "present"},
-        type={"type": "str", "required": True},
-        name={"type": "str", "required": True},
-        enabled={"type": "bool", "required": False, "default": True},
-        alert_email={"type": "str", "required": False, "default": ""},
-        notification_condition={
-            "type": "str",
-            "required": False,
-            "choices": ["FAILURE", "SUCCESS_FAILURE"],
-            "default": "FAILURE",
-        },
-        frequency={"type": "dict", "required": True, "options": frequency_options},
-        properties={"type": "dict", "required": False, "default": {}},
+        {
+            "state": {
+                "type": "str",
+                "choices": ["present", "absent"],
+                "default": "present",
+            },
+            "type": {"type": "str", "required": True},
+            "name": {"type": "str", "required": True},
+            "enabled": {"type": "bool", "required": False, "default": True},
+            "alert_email": {"type": "str", "required": False, "default": ""},
+            "notification_condition": {
+                "type": "str",
+                "required": False,
+                "choices": ["FAILURE", "SUCCESS_FAILURE"],
+                "default": "FAILURE",
+            },
+            "frequency": {
+                "type": "dict",
+                "required": True,
+                "options": frequency_options,
+            },
+            "properties": {"type": "dict", "required": False, "default": {}},
+        }
     )
     module = AnsibleModule(
         argument_spec=argument_spec,

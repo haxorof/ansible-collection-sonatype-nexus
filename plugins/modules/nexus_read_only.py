@@ -56,11 +56,13 @@ def update_read_only(helper):
 def main():
     argument_spec = NexusHelper.nexus_argument_spec()
     argument_spec.update(
-        status={
-            "type": "str",
-            "choices": ["freeze", "release", "force-release"],
-            "default": "freeze",
-        },
+        {
+            "status": {
+                "type": "str",
+                "choices": ["freeze", "release", "force-release"],
+                "default": "freeze",
+            },
+        }
     )
     module = AnsibleModule(
         argument_spec=argument_spec,

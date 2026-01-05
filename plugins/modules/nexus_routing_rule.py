@@ -144,23 +144,29 @@ def update_routing_rule(helper: NexusHelper, current_data):
 def main():
     argument_spec = NexusHelper.nexus_argument_spec()
     argument_spec.update(
-        name={"type": "str", "required": True, "no_log": False},
-        description={"type": "str", "required": False, "no_log": False},
-        mode={
-            "type": "str",
-            "required": False,
-            "no_log": False,
-            "default": "BLOCK",
-            "choices": ["ALLOW", "BLOCK"],
-        },
-        matchers={
-            "type": "list",
-            "elements": "str",
-            "required": False,
-            "no_log": False,
-            "default": [],
-        },
-        state={"type": "str", "choices": ["present", "absent"], "default": "present"},
+        {
+            "name": {"type": "str", "required": True, "no_log": False},
+            "description": {"type": "str", "required": False, "no_log": False},
+            "mode": {
+                "type": "str",
+                "required": False,
+                "no_log": False,
+                "default": "BLOCK",
+                "choices": ["ALLOW", "BLOCK"],
+            },
+            "matchers": {
+                "type": "list",
+                "elements": "str",
+                "required": False,
+                "no_log": False,
+                "default": [],
+            },
+            "state": {
+                "type": "str",
+                "choices": ["present", "absent"],
+                "default": "present",
+            },
+        }
     )
     module = AnsibleModule(
         argument_spec=argument_spec,
@@ -183,11 +189,13 @@ def main():
             content, changed = delete_routing_rule(helper)
         else:
             changed = False
-    result = NexusHelper.generate_result_struct(changed, content,
+    result = NexusHelper.generate_result_struct(
+        changed,
+        content,
         {
             "name": module.params["name"],  # type: ignore
             "state": module.params["state"],  # type: ignore
-        }
+        },
     )
 
     module.exit_json(**result)

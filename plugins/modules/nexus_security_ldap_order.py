@@ -78,7 +78,9 @@ def change_ldap_order(helper, order_list):
 def main():
     argument_spec = NexusHelper.nexus_argument_spec()
     argument_spec.update(
-        order_list={"type": "list", "required": True},
+        {
+            "order_list": {"type": "list", "required": True},
+        }
     )
     module = AnsibleModule(
         argument_spec=argument_spec,

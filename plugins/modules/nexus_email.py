@@ -139,29 +139,43 @@ def delete_email_setting(helper, existing_data):
 def main():
     argument_spec = NexusHelper.nexus_argument_spec()
     argument_spec.update(
-        state={"type": "str", "choices": ["present", "absent"], "default": "present"},
-        enabled={"type": "bool", "required": False},
-        host={"type": "str", "required": False},
-        port={"type": "int", "required": False},
-        authentication={
-            "type": "dict",
-            "default": {},
-            "options": {
-                "username": {"type": "str", "required": False},
-                "password": {"type": "str", "required": False, "no_log": True},
+        {
+            "state": {
+                "type": "str",
+                "choices": ["present", "absent"],
+                "default": "present",
             },
-        },
-        from_address={"type": "str", "required": False},
-        subject_prefix={"type": "str", "required": False},
-        start_tls_enabled={"type": "bool", "required": False, "default": False},
-        start_tls_required={"type": "bool", "required": False, "default": False},
-        ssl_on_connect_enabled={"type": "bool", "required": False, "default": False},
-        ssl_server_identity_check_enabled={
-            "type": "bool",
-            "required": False,
-            "default": False,
-        },
-        nexus_trust_store_enabled={"type": "bool", "required": False, "default": False},
+            "enabled": {"type": "bool", "required": False},
+            "host": {"type": "str", "required": False},
+            "port": {"type": "int", "required": False},
+            "authentication": {
+                "type": "dict",
+                "default": {},
+                "options": {
+                    "username": {"type": "str", "required": False},
+                    "password": {"type": "str", "required": False, "no_log": True},
+                },
+            },
+            "from_address": {"type": "str", "required": False},
+            "subject_prefix": {"type": "str", "required": False},
+            "start_tls_enabled": {"type": "bool", "required": False, "default": False},
+            "start_tls_required": {"type": "bool", "required": False, "default": False},
+            "ssl_on_connect_enabled": {
+                "type": "bool",
+                "required": False,
+                "default": False,
+            },
+            "ssl_server_identity_check_enabled": {
+                "type": "bool",
+                "required": False,
+                "default": False,
+            },
+            "nexus_trust_store_enabled": {
+                "type": "bool",
+                "required": False,
+                "default": False,
+            },
+        }
     )
     module = AnsibleModule(
         argument_spec=argument_spec,

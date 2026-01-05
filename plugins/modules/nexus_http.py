@@ -191,13 +191,19 @@ def main():
     }
     argument_spec = NexusHelper.nexus_argument_spec()
     argument_spec.update(
-        user_agent={"type": "str", "required": False, "default": ""},
-        timeout={"type": "int", "required": False, "default": 20},
-        connection_retries={"type": "int", "required": False, "default": 2},
-        non_proxy_hosts={"type": "list", "required": False, "default": []},
-        http_proxy={"type": "dict", "default": {}, "options": proxy_options},
-        https_proxy={"type": "dict", "default": {}, "options": proxy_options},
-        state={"type": "str", "choices": ["present", "absent"], "default": "present"},
+        {
+            "user_agent": {"type": "str", "required": False, "default": ""},
+            "timeout": {"type": "int", "required": False, "default": 20},
+            "connection_retries": {"type": "int", "required": False, "default": 2},
+            "non_proxy_hosts": {"type": "list", "required": False, "default": []},
+            "http_proxy": {"type": "dict", "default": {}, "options": proxy_options},
+            "https_proxy": {"type": "dict", "default": {}, "options": proxy_options},
+            "state": {
+                "type": "str",
+                "choices": ["present", "absent"],
+                "default": "present",
+            },
+        }
     )
 
     module = AnsibleModule(

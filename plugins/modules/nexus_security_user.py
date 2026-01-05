@@ -203,32 +203,38 @@ def update_user(helper, existing_user):
 def main():
     argument_spec = NexusHelper.nexus_argument_spec()
     argument_spec.update(
-        email_address={"type": "str", "required": False, "no_log": False},
-        first_name={"type": "str", "required": False, "no_log": False},
-        last_name={"type": "str", "required": False, "no_log": False},
-        roles={
-            "type": "list",
-            "elements": "str",
-            "required": False,
-            "no_log": False,
-            "default": [],
-        },
-        state={"type": "str", "choices": ["present", "absent"], "default": "present"},
-        status={
-            "type": "str",
-            "required": False,
-            "no_log": False,
-            "default": "active",
-            "choices": ["active", "disabled"],  # , "locked", "changepassword"
-        },
-        source={
-            "type": "str",
-            "required": False,
-            "default": "default",
-            "no_log": False,
-        },
-        user_id={"type": "str", "required": True, "no_log": False},
-        user_password={"type": "str", "required": False, "no_log": True},
+        {
+            "email_address": {"type": "str", "required": False, "no_log": False},
+            "first_name": {"type": "str", "required": False, "no_log": False},
+            "last_name": {"type": "str", "required": False, "no_log": False},
+            "roles": {
+                "type": "list",
+                "elements": "str",
+                "required": False,
+                "no_log": False,
+                "default": [],
+            },
+            "state": {
+                "type": "str",
+                "choices": ["present", "absent"],
+                "default": "present",
+            },
+            "status": {
+                "type": "str",
+                "required": False,
+                "no_log": False,
+                "default": "active",
+                "choices": ["active", "disabled"],  # , "locked", "changepassword"
+            },
+            "source": {
+                "type": "str",
+                "required": False,
+                "default": "default",
+                "no_log": False,
+            },
+            "user_id": {"type": "str", "required": True, "no_log": False},
+            "user_password": {"type": "str", "required": False, "no_log": True},
+        }
     )
     module = AnsibleModule(
         argument_spec=argument_spec,

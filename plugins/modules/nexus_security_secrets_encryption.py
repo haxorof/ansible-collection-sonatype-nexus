@@ -64,8 +64,10 @@ def reencrypt_secrets(helper):
 def main():
     argument_spec = NexusHelper.nexus_argument_spec()
     argument_spec.update(
-        secret_key_id={"type": "str", "required": True},
-        notify_email={"type": "str", "required": False},
+        {
+            "secret_key_id": {"type": "str", "required": True},
+            "notify_email": {"type": "str", "required": False},
+        }
     )
     module = AnsibleModule(
         argument_spec=argument_spec,

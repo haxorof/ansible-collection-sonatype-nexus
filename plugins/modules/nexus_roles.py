@@ -173,24 +173,30 @@ def main():
     """Main function for the Ansible module."""
     argument_spec = NexusHelper.nexus_argument_spec()
     argument_spec.update(
-        id={"type": "str", "required": True, "no_log": False},
-        name={"type": "str", "required": True, "no_log": False},
-        description={"type": "str", "required": False, "no_log": False},
-        privileges={
-            "type": "list",
-            "elements": "str",
-            "required": False,
-            "no_log": False,
-            "default": [],
-        },
-        roles={
-            "type": "list",
-            "elements": "str",
-            "required": False,
-            "no_log": False,
-            "default": [],
-        },
-        state={"type": "str", "choices": ["present", "absent"], "default": "present"},
+        {
+            "id": {"type": "str", "required": True, "no_log": False},
+            "name": {"type": "str", "required": True, "no_log": False},
+            "description": {"type": "str", "required": False, "no_log": False},
+            "privileges": {
+                "type": "list",
+                "elements": "str",
+                "required": False,
+                "no_log": False,
+                "default": [],
+            },
+            "roles": {
+                "type": "list",
+                "elements": "str",
+                "required": False,
+                "no_log": False,
+                "default": [],
+            },
+            "state": {
+                "type": "str",
+                "choices": ["present", "absent"],
+                "default": "present",
+            },
+        }
     )
 
     module = AnsibleModule(

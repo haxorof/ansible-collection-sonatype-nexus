@@ -77,7 +77,9 @@ def list_routing_rule(helper):
 def main():
     argument_spec = NexusHelper.nexus_argument_spec()
     argument_spec.update(
-        name={"type": "str", "required": False, "no_log": False},
+        {
+            "name": {"type": "str", "required": False, "no_log": False},
+        }
     )
     module = AnsibleModule(
         argument_spec=argument_spec,

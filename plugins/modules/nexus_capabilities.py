@@ -152,12 +152,18 @@ def delete_capability(helper, capability_id):
 def main():
     argument_spec = NexusHelper.nexus_argument_spec()
     argument_spec.update(
-        id={"type": "str", "required": False},
-        type={"type": "str", "required": True},
-        notes={"type": "str", "required": False},
-        enabled={"type": "bool", "required": False},
-        properties={"type": "dict", "required": False, "default": {}},
-        state={"type": "str", "choices": ["present", "absent"], "default": "present"},
+        {
+            "id": {"type": "str", "required": False},
+            "type": {"type": "str", "required": True},
+            "notes": {"type": "str", "required": False},
+            "enabled": {"type": "bool", "required": False},
+            "properties": {"type": "dict", "required": False, "default": {}},
+            "state": {
+                "type": "str",
+                "choices": ["present", "absent"],
+                "default": "present",
+            },
+        }
     )
 
     module = AnsibleModule(

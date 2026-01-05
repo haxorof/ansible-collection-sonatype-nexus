@@ -180,15 +180,21 @@ def delete_cleanup_policy(helper):
 def main():
     argument_spec = NexusHelper.nexus_argument_spec()
     argument_spec.update(
-        notes={"type": "str", "required": False},
-        criteria_last_blob_updated={"type": "int", "required": False},
-        criteria_last_downloaded={"type": "int", "required": False},
-        criteria_release_type={"type": "str", "required": False},
-        criteria_asset_regex={"type": "str", "required": False},
-        retain={"type": "int", "required": False},
-        name={"type": "str", "required": True},
-        format={"type": "str", "required": False},
-        state={"type": "str", "choices": ["present", "absent"], "default": "present"},
+        {
+            "notes": {"type": "str", "required": False},
+            "criteria_last_blob_updated": {"type": "int", "required": False},
+            "criteria_last_downloaded": {"type": "int", "required": False},
+            "criteria_release_type": {"type": "str", "required": False},
+            "criteria_asset_regex": {"type": "str", "required": False},
+            "retain": {"type": "int", "required": False},
+            "name": {"type": "str", "required": True},
+            "format": {"type": "str", "required": False},
+            "state": {
+                "type": "str",
+                "choices": ["present", "absent"],
+                "default": "present",
+            },
+        }
     )
 
     module = AnsibleModule(

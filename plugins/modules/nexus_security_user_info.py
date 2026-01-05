@@ -57,8 +57,10 @@ def list_users(helper):
 def main():
     argument_spec = NexusHelper.nexus_argument_spec()
     argument_spec.update(
-        user_id={"type": "str", "required": False, "no_log": False},
-        source={"type": "str", "required": False, "no_log": False},
+        {
+            "user_id": {"type": "str", "required": False, "no_log": False},
+            "source": {"type": "str", "required": False, "no_log": False},
+        }
     )
     module = AnsibleModule(
         argument_spec=argument_spec,

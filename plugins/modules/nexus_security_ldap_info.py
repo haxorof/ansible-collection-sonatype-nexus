@@ -73,8 +73,10 @@ def list_ldap_servers(helper):
 def main():
     argument_spec = NexusHelper.nexus_argument_spec()
     argument_spec.update(
-        method={"type": "str", "choices": ["GET"], "required": False},
-        ldap_name={"type": "str", "required": False, "no_log": False},
+        {
+            "method": {"type": "str", "choices": ["GET"], "required": False},
+            "ldap_name": {"type": "str", "required": False, "no_log": False},
+        }
     )
     module = AnsibleModule(
         argument_spec=argument_spec,

@@ -50,11 +50,13 @@ def check_status(helper):
 def main():
     argument_spec = NexusHelper.nexus_argument_spec()
     argument_spec.update(
-        check_type={
-            "type": "str",
-            "choices": ["writable", "readable", "system"],
-            "default": "writable",
-        },
+        {
+            "check_type": {
+                "type": "str",
+                "choices": ["writable", "readable", "system"],
+                "default": "writable",
+            },
+        }
     )
     module = AnsibleModule(
         argument_spec=argument_spec,

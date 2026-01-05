@@ -92,11 +92,13 @@ def update_user_token(helper):
 def main():
     argument_spec = NexusHelper.nexus_argument_spec()
     argument_spec.update(
-        enabled={"type": "bool", "default": True},
-        protect_content={"type": "bool", "default": False},
-        invalidate_tokens={"type": "bool", "default": False},
-        expiration_enabled={"type": "bool", "default": False},
-        expiration_days={"type": "int", "default": 30},
+        {
+            "enabled": {"type": "bool", "default": True},
+            "protect_content": {"type": "bool", "default": False},
+            "invalidate_tokens": {"type": "bool", "default": False},
+            "expiration_enabled": {"type": "bool", "default": False},
+            "expiration_days": {"type": "int", "default": 30},
+        }
     )
     module = AnsibleModule(
         argument_spec=argument_spec,

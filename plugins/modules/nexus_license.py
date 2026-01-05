@@ -83,8 +83,14 @@ def delete_license(helper):
 def main():
     argument_spec = NexusHelper.nexus_argument_spec()
     argument_spec.update(
-        state={"type": "str", "choices": ["present", "absent"], "default": "present"},
-        license_data={"type": "str"},
+        {
+            "state": {
+                "type": "str",
+                "choices": ["present", "absent"],
+                "default": "present",
+            },
+            "license_data": {"type": "str"},
+        }
     )
     module = AnsibleModule(
         argument_spec=argument_spec,

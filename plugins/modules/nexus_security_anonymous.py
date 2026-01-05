@@ -102,9 +102,15 @@ def update_anonymous_setting(helper, current_data):
 def main():
     argument_spec = NexusHelper.nexus_argument_spec()
     argument_spec.update(
-        realm_name={"type": "str", "required": False, "no_log": False},
-        state={"type": "str", "choices": ["enabled", "disabled"], "default": "enabled"},
-        user_id={"type": "str", "required": True, "no_log": False},
+        {
+            "realm_name": {"type": "str", "required": False, "no_log": False},
+            "user_id": {"type": "str", "required": True, "no_log": False},
+            "state": {
+                "type": "str",
+                "choices": ["enabled", "disabled"],
+                "default": "enabled",
+            },
+        }
     )
     module = AnsibleModule(
         argument_spec=argument_spec,

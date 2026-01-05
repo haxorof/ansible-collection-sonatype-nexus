@@ -45,10 +45,13 @@ def list_scripts(helper):
     return content
 
 
+# TODO Review
 def main():
     argument_spec = NexusHelper.nexus_argument_spec()
     argument_spec.update(
-        method={"type": "str", "choices": ["GET"], "required": True},
+        {
+            "method": {"type": "str", "choices": ["GET"], "required": True},
+        }
     )
     module = AnsibleModule(
         argument_spec=argument_spec,

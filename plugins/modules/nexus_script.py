@@ -176,13 +176,15 @@ def manage_script(helper):
 def main():
     argument_spec = NexusHelper.nexus_argument_spec()
     argument_spec.update(
-        name={"type": "str", "required": True, "no_log": False},
-        content={"type": "str", "required": False, "no_log": False},
-        method={
-            "type": "str",
-            "choices": ["GET", "POST", "PUT", "DELETE"],
-            "required": True,
-        },
+        {
+            "name": {"type": "str", "required": True, "no_log": False},
+            "content": {"type": "str", "required": False, "no_log": False},
+            "method": {
+                "type": "str",
+                "choices": ["GET", "POST", "PUT", "DELETE"],
+                "required": True,
+            },
+        }
     )
     module = AnsibleModule(
         argument_spec=argument_spec,
