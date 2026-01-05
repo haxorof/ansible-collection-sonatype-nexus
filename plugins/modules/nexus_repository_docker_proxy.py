@@ -29,10 +29,12 @@ RETURN = r"""
 """
 
 
-def existing_data_normalization(normalized_existing_data):
-    if normalized_existing_data.get("storage"):  # type: ignore
-        normalized_existing_data["storage"].pop("writePolicy", None)  # type: ignore
-    return normalized_existing_data
+def existing_data_normalization(input_data):
+    if input_data.get("storage"):  # type: ignore
+        # Possibly this is returned for Docker proxy repos because it is based
+        # on same storage class as Docker hosted repos.
+        input_data["storage"].pop("writePolicy", None)  # type: ignore
+    return input_data
 
 
 def docker_proxy_attributes():

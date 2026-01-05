@@ -14,6 +14,7 @@ from ansible_collections.haxorof.sonatype_nexus.plugins.module_utils.nexus impor
 )
 from ansible_collections.haxorof.sonatype_nexus.plugins.module_utils import (
     nexus_repository_docker_commons,
+    nexus_repository_commons,
 )
 
 DOCUMENTATION = r"""
@@ -29,17 +30,6 @@ RETURN = r"""
 """
 
 
-def existing_data_normalization(normalized_existing_data):
-    if normalized_existing_data.get("storage"):  # type: ignore
-        if (
-            normalized_existing_data["storage"].get("writePolicy")  # type: ignore
-            and normalized_existing_data["storage"]["writePolicy"]  # type: ignore
-            != "ALLOW_ONCE"
-        ):
-            normalized_existing_data["storage"].pop("latestPolicy", None)  # type: ignore
-    return normalized_existing_data
-
-
 def docker_hosted_storage_attributes():
     """Directly maps to DockerHostedStorageAttributes"""
     ret_spec = NexusRepositoryHelper.hosted_storage_attributes()
@@ -53,7 +43,7 @@ def docker_hosted_storage_attributes():
 def main():
     NexusRepositoryHelper.generic_repository_hosted_module(
         endpoint_path="/docker/hosted",
-        existing_data_normalization=existing_data_normalization,
+        data_normalization=nexus_repository_commons.hosted_repo_data_normalization,
         arg_additions={
             "docker": nexus_repository_docker_commons.docker_attributes(),
             "storage": docker_hosted_storage_attributes(),

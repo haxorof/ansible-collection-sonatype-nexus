@@ -7,9 +7,6 @@
       haxorof.sonatype_nexus.nexus_repository_docker_hosted:
         state: present
         name: testhosted
-        docker:
-          http_port: 8082
-          https_port: 8083
       loop:
         - change
         - no_change # Test idempotency
@@ -20,7 +17,7 @@
         name: testhosted
         docker:
           http_port: 8082
-          https_port: 8084
+          https_port: 8083
       loop:
         - change
         - no_change # Test idempotency

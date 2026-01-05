@@ -18,8 +18,11 @@ from ansible.module_utils._text import to_text
 from ansible.module_utils.basic import env_fallback
 from ansible.module_utils.urls import fetch_url, basic_auth_header
 
+
 def repository_name_filter(item, helper):
     return item["name"] == helper.module.params["name"]
+
+
 class NexusHelper:
     """General Nexus Helper Class"""
 
@@ -43,6 +46,7 @@ class NexusHelper:
         "script": "{url}" + NEXUS_API_BASE_PATH + "/v1/script",
         "secret-encryption": "{url}" + NEXUS_API_BASE_PATH + "/v1/secrets/encryption/re-encrypt",
         "status": "{url}" + NEXUS_API_BASE_PATH + "/v1/status",
+        "system": "{url}" + NEXUS_API_BASE_PATH + "/v1/system",
         "tasks": "{url}" + NEXUS_API_BASE_PATH + "/v1/tasks",
         "user-sources": "{url}" + NEXUS_API_BASE_PATH + "/v1/security/user-sources",
         "users": "{url}" + NEXUS_API_BASE_PATH + "/v1/security/users",
@@ -132,10 +136,9 @@ class NexusHelper:
     def generic_failure_msg(self, message, request_info):
         self.module.fail_json(
             msg=message
-            + f", \
-                http_status={request_info['status']}, \
-                error_msg={request_info['msg']}, \
-                body={request_info['body']}."
+            + f", http_status={request_info['status']}"
+            + ", error_msg={request_info['msg']}"
+            + ", body={request_info['body']}."
         )
 
     # pylint: disable-next=too-many-branches
@@ -199,7 +202,7 @@ class NexusHelper:
         elif info["status"] in [503, 500]:
             self.module.fail_json(msg="Unavailable to service requests.")
         elif info["status"] == -1:
-            self.module.fail_json(msg=info['msg'])
+            self.module.fail_json(msg=info["msg"])
 
         # For debugging
         # if info['status'] not in [200]:
@@ -227,7 +230,7 @@ class NexusHelper:
         return "?" + query if len(query) > 0 else ""
 
     def is_json_data_equal(self, new_data, existing_data):
-        """ Compares JSON data and is considered equal if all keys and its values in new_data exists in existing_data.
+        """Compares JSON data and is considered equal if all keys and its values in new_data exists in existing_data.
 
         Args:
             new_data (_type_): new data.
@@ -280,6 +283,7 @@ class NexusHelper:
             return [self.clean_dict_list(i) for i in d if i not in ("", [], {}, None)]
         return d
 
+
 # pylint: disable-next=too-many-public-methods
 class NexusRepositoryHelper:
 
@@ -307,7 +311,7 @@ class NexusRepositoryHelper:
                 "write_policy": {
                     "type": "str",
                     "choices": ["ALLOW", "ALLOW_ONCE", "DENY"],
-                    "default": "ALLOW_ONCE",
+                    "default": "ALLOW",
                 },
             },
         }
@@ -451,7 +455,7 @@ class NexusRepositoryHelper:
                 "auto_block": {"type": "bool", "default": True},
                 "connection": NexusRepositoryHelper.http_client_connection_attributes(),
                 "authentication":
-                NexusRepositoryHelper.http_client_connection_authentication_attributes_with_preemptive(),
+                    NexusRepositoryHelper.http_client_connection_authentication_attributes_with_preemptive(),
             },
         }
 
@@ -499,9 +503,7 @@ class NexusRepositoryHelper:
         return content
 
     @staticmethod
-    def create_repository_new(
-        helper: NexusHelper, endpoint_path: str, data: dict
-    ):
+    def create_repository(helper: NexusHelper, endpoint_path: str, data: dict):
         changed = True
         info, content = helper.request(
             api_url=(helper.NEXUS_API_ENDPOINTS["repositories"] + endpoint_path).format(
@@ -524,12 +526,14 @@ class NexusRepositoryHelper:
         return content, changed
 
     @staticmethod
-    def update_repository_new(
+    # pylint: disable-next=too-many-arguments,too-many-positional-arguments
+    def update_repository(
         helper: NexusHelper,
         endpoint_path: str,
         data: dict,
         existing_data: dict,
-        existing_data_normalization=None
+        existing_data_normalization=None,
+        data_normalization=None,
     ):
         normalized_data = helper.clean_dict_list(data)
         normalized_existing_data = helper.clean_dict_list(existing_data)
@@ -538,12 +542,18 @@ class NexusRepositoryHelper:
         normalized_existing_data.pop("type", None)  # type: ignore
         normalized_existing_data.pop("url", None)  # type: ignore
         if existing_data_normalization:
-            normalized_existing_data = existing_data_normalization(normalized_existing_data)
+            normalized_existing_data = existing_data_normalization(
+                normalized_existing_data
+            )
+        if data_normalization:
+            normalized_data = data_normalization(normalized_data)
         # Delete password from structure because API will never return it.
         got_password = False
-        if (normalized_data.get("httpClient")  # type: ignore
-            and normalized_data["httpClient"].get("authentication")  # type: ignore
-        ):
+        if normalized_data.get("httpClient") and normalized_data[  # type: ignore
+            "httpClient"
+        ].get(
+            "authentication"
+        ):  # type: ignore
             got_password = normalized_data["httpClient"]["authentication"].get("password") is not None  # type: ignore
             normalized_data["httpClient"]["authentication"].pop("password", None)  # type: ignore
 
@@ -608,24 +618,33 @@ class NexusRepositoryHelper:
         return content, changed
 
     @staticmethod
+    # pylint: disable-next=too-many-arguments,too-many-positional-arguments
     def create_update_repository(
-        helper: NexusHelper, endpoint_path: str, data: dict, existing_data: list, existing_data_normalization=None
+        helper: NexusHelper,
+        endpoint_path: str,
+        data: dict,
+        existing_data: list,
+        existing_data_normalization=None,
+        data_normalization=None,
     ):
         if len(existing_data) > 0:
-            return NexusRepositoryHelper.update_repository_new(
-                helper, endpoint_path, data, existing_data[0], existing_data_normalization
+            return NexusRepositoryHelper.update_repository(
+                helper=helper,
+                endpoint_path=endpoint_path,
+                data=data,
+                data_normalization=data_normalization,
+                existing_data=existing_data[0],
+                existing_data_normalization=existing_data_normalization,
             )
-        return NexusRepositoryHelper.create_repository_new(
-            helper, endpoint_path, data
-        )
+        return NexusRepositoryHelper.create_repository(helper, endpoint_path, data)
 
     @staticmethod
     def generic_repository_proxy_module(
-        endpoint_path:str,
+        endpoint_path: str,
         repository_filter=repository_name_filter,
         existing_data_normalization=None,
         arg_additions=None,
-        request_data_additions=None
+        request_data_additions=None,
     ):
         argument_spec = NexusHelper.nexus_argument_spec()
         argument_spec.update(
@@ -642,7 +661,11 @@ class NexusRepositoryHelper:
                 "storage": NexusRepositoryHelper.storage_attributes(),
                 # Optional
                 "cleanup": NexusRepositoryHelper.cleanup_policy_attributes(),
-                "routing_rule_name": {"type": "str", "no_log": False, "required": False},
+                "routing_rule_name": {
+                    "type": "str",
+                    "no_log": False,
+                    "required": False,
+                },
                 "replication": NexusRepositoryHelper.replication_attributes(),
             }
         )
@@ -667,8 +690,8 @@ class NexusRepositoryHelper:
         else:
             # <X>ProxyRepositoryApiRequest
             data = {
-                "name": module.params["name"], # type: ignore
-                "online": module.params["state"] == "online" or module.params["state"] == "present", # type: ignore
+                "name": module.params["name"],  # type: ignore
+                "online": module.params["state"] == "online" or module.params["state"] == "present",  # type: ignore
                 "httpClient": NexusHelper.camalize_param(helper, "http_client"),
                 "negativeCache": NexusHelper.camalize_param(helper, "negative_cache"),
                 "proxy": NexusHelper.camalize_param(helper, "proxy"),
@@ -693,11 +716,11 @@ class NexusRepositoryHelper:
 
     @staticmethod
     def generic_repository_group_module(
-        endpoint_path:str,
+        endpoint_path: str,
         repository_filter=repository_name_filter,
         existing_data_normalization=None,
         arg_additions=None,
-        request_data_additions=None
+        request_data_additions=None,
     ):
         argument_spec = NexusHelper.nexus_argument_spec()
         argument_spec.update(
@@ -754,12 +777,14 @@ class NexusRepositoryHelper:
         module.exit_json(**result)
 
     @staticmethod
+    # pylint: disable-next=too-many-arguments,too-many-positional-arguments,too-many-locals
     def generic_repository_hosted_module(
-        endpoint_path:str,
+        endpoint_path: str,
         repository_filter=repository_name_filter,
+        data_normalization=None,
         existing_data_normalization=None,
         arg_additions=None,
-        request_data_additions=None
+        request_data_additions=None,
     ):
         argument_spec = NexusHelper.nexus_argument_spec()
         argument_spec.update(
@@ -811,9 +836,13 @@ class NexusRepositoryHelper:
                     data[humps.camelize(k)] = module.params[k]
 
             content, changed = NexusRepositoryHelper.create_update_repository(
-                helper, endpoint_path, data, existing_data, existing_data_normalization
+                helper=helper,
+                endpoint_path=endpoint_path,
+                data=data,
+                data_normalization=data_normalization,
+                existing_data=existing_data,
+                existing_data_normalization=existing_data_normalization,
             )
         result = NexusHelper.generate_result_struct(changed, content)
 
         module.exit_json(**result)
-
