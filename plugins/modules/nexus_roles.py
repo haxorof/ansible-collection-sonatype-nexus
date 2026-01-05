@@ -212,19 +212,14 @@ def main():
     role_id = module.params["id"]  # type: ignore
 
     existing_role = list_role(helper, role_id)
-
-    if existing_role is not None:
-        if module.params["state"] == "present":  # type: ignore
+    if module.params["state"] == "present":  # type: ignore
+        if existing_role:
             content, changed = update_role(helper, existing_role)
         else:
-            content, changed = delete_role(helper)
-    else:
-        if module.params["state"] == "present":  # type: ignore
             content, changed = create_role(helper)
-        else:
-            module.fail_json(
-                msg=f"Role {role_id} does not exist and cannot be deleted."
-            )
+    else:
+        if existing_role:
+            content, changed = delete_role(helper)
 
     result = NexusHelper.generate_result_struct(changed, content)
 

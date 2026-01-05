@@ -6,20 +6,19 @@
 
   vars:
     nexus_roles:
-      - id: view-anonymous
-        name: view-anonymous
-        description: "Role for access to anoymous repos"
+      - id: testrole
+        name: testrole
+        description: "testrole"
         privileges:
           - nx-healthcheck-read
           - nx-search-read
-        roles: []
-      - id: test-cd-server
-        name: test-cd-server
-        description: "Role for ci"
+      - id: testrole-wildcard
+        name: testrole-wildcard
+        description: "testrole-wildcard"
         privileges:
-          - nx-apikey-all
-          - nx-repository-view-*-*-add
-        roles: []
+          - nx-repository-admin-*-*-*
+          - nx-repository-admin-*-*-browse
+          - nx-repository-admin-maven2-maven-public-*
 
   tasks:
     - name: Configure Nexus roles
@@ -28,7 +27,15 @@
         name: "{{ item.name }}"
         description: "{{ item.description }}"
         privileges: "{{ item.privileges }}"
-        roles: "{{ item.roles }}"
+        use_proxy: false
+      loop: "{{ nexus_roles }}"
+
+    - name: Configure same Nexus roles (no change expected)
+      haxorof.sonatype_nexus.nexus_roles:
+        id: "{{ item.id }}"
+        name: "{{ item.name }}"
+        description: "{{ item.description }}"
+        privileges: "{{ item.privileges }}"
         use_proxy: false
       loop: "{{ nexus_roles }}"
 
