@@ -1,0 +1,12 @@
+---
+- name: Check collection compatibility with running Nexus instance
+  hosts: localhost
+  gather_facts: false
+  tasks:
+    - name: Nexus compatibility check
+      haxorof.sonatype_nexus.nexus_compat_check:
+      register: _result
+
+    - name: Print compatibility check result
+      ansible.builtin.debug:
+        var: _result

@@ -22,6 +22,7 @@ function run_test() {
 }
 
 SAMPLES=(
+	"nexus_compat_check"
 	"nexus_capabilities"
     "nexus_blobstore_file"
     "nexus_cleanup_policies"
