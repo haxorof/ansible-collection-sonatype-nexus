@@ -12,7 +12,9 @@ __metaclass__ = type
 from ansible.module_utils.basic import AnsibleModule
 from ansible_collections.haxorof.sonatype_nexus.plugins.module_utils.nexus import (
     NexusHelper,
-    NexusBlobstoreHelper,
+)
+from ansible_collections.haxorof.sonatype_nexus.plugins.module_utils import (
+    nexus_blobstore_commons,
 )
 
 DOCUMENTATION = r"""
@@ -48,7 +50,7 @@ def main():
         "json": {},
     }
 
-    result["json"] = NexusBlobstoreHelper.get_blobstore(helper, "file")
+    result["json"] = nexus_blobstore_commons.get_blobstore(helper, "file")
     result["changed"] = False
 
     module.exit_json(**result)

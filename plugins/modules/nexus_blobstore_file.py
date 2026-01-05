@@ -12,7 +12,9 @@ __metaclass__ = type
 from ansible.module_utils.basic import AnsibleModule
 from ansible_collections.haxorof.sonatype_nexus.plugins.module_utils.nexus import (
     NexusHelper,
-    NexusBlobstoreHelper,
+)
+from ansible_collections.haxorof.sonatype_nexus.plugins.module_utils import (
+    nexus_blobstore_commons,
 )
 
 DOCUMENTATION = r"""
@@ -32,6 +34,7 @@ def create_blobstore(helper):
     endpoint = "blobstores"
     blobstore_type = "file"
     changed = True
+    # FileBlobStoreApiCreateRequest
     data = {
         "softQuota": NexusHelper.camalize_param(helper, "soft_quota"),
         "name": helper.module.params["name"],
@@ -68,6 +71,7 @@ def update_blobstore(helper, current_data):
     changed = True
     blobstore_type = "file"
     endpoint = "blobstores"
+    # FileBlobStoreApiUpdateRequest
     data = {
         "softQuota": NexusHelper.camalize_param(helper, "soft_quota"),
         "path": (
@@ -117,9 +121,16 @@ def update_blobstore(helper, current_data):
 def main():
     argument_spec = NexusHelper.nexus_argument_spec()
     argument_spec.update(
-        path={"type": "str", "required": False, "no_log": False},
+        {
+            "state": {
+                "type": "str",
+                "choices": ["present", "absent"],
+                "default": "present",
+            },
+            "name": {"type": "str", "no_log": False, "required": True},
+        }
     )
-    argument_spec.update(NexusBlobstoreHelper.common_argument_spec())
+    argument_spec.update(nexus_blobstore_commons.file_blob_store_api_model())
     module = AnsibleModule(
         argument_spec=argument_spec,
         supports_check_mode=False,
@@ -139,7 +150,7 @@ def main():
 
     content = {}
     changed = True
-    existing_blobstore = NexusBlobstoreHelper.get_blobstore(helper, "file")
+    existing_blobstore = nexus_blobstore_commons.get_blobstore(helper, "file")
     if module.params["state"] == "present":  # type: ignore
         if existing_blobstore:
             content, changed = update_blobstore(helper, existing_blobstore)
@@ -147,7 +158,7 @@ def main():
             content, changed = create_blobstore(helper)
     else:
         if existing_blobstore:
-            content, changed = NexusBlobstoreHelper.delete_blobstore(helper)
+            content, changed = nexus_blobstore_commons.delete_blobstore(helper)
         else:
             changed = False
     result["json"] = content
