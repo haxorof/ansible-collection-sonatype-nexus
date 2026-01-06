@@ -26,10 +26,9 @@ RETURN = r"""
 
 
 def run_script(helper):
-    endpoint = "script"
     headers = {"Content-Type": "application/json"}
     info, content = helper.request(
-        api_url=(helper.NEXUS_API_ENDPOINTS[endpoint] + "/{name}/run").format(
+        api_url=(helper.NEXUS_API_ENDPOINTS["script"] + "/{name}/run").format(
             url=helper.module.params["url"],
             name=helper.module.params["name"],
         ),

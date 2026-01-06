@@ -28,9 +28,8 @@ RETURN = r"""
 
 
 def list_user_sources(helper):
-    endpoint = "user-sources"
     info, content = helper.request(
-        api_url=(helper.NEXUS_API_ENDPOINTS[endpoint]).format(
+        api_url=(helper.NEXUS_API_ENDPOINTS["user-sources"]).format(
             url=helper.module.params["url"],
         ),
         method="GET",
@@ -50,7 +49,7 @@ def main():
     argument_spec = NexusHelper.nexus_argument_spec()
     module = AnsibleModule(
         argument_spec=argument_spec,
-        supports_check_mode=True,
+        supports_check_mode=False,
         required_together=[("username", "password")],
     )
 

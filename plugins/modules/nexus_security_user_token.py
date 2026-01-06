@@ -28,9 +28,8 @@ RETURN = r"""
 
 
 def get_user_token_info(helper):
-    endpoint = "user-tokens"
     info, content = helper.request(
-        api_url=(helper.NEXUS_API_ENDPOINTS[endpoint]).format(
+        api_url=(helper.NEXUS_API_ENDPOINTS["user-tokens"]).format(
             url=helper.module.params["url"],
         ),
         method="GET",
@@ -44,9 +43,8 @@ def get_user_token_info(helper):
 
 def invalidate_user_tokens(helper):
     changed = True
-    endpoint = "user-tokens"
     info, content = helper.request(
-        api_url=(helper.NEXUS_API_ENDPOINTS[endpoint]).format(
+        api_url=(helper.NEXUS_API_ENDPOINTS["user-tokens"]).format(
             url=helper.module.params["url"],
         ),
         method="DELETE",
@@ -68,9 +66,8 @@ def update_user_token(helper):
         "expirationEnabled": helper.module.params.get("expiration_enabled", False),
         "expirationDays": helper.module.params.get("expiration_days", 30),
     }
-    endpoint = "user-tokens"
     info, content = helper.request(
-        api_url=(helper.NEXUS_API_ENDPOINTS[endpoint]).format(
+        api_url=(helper.NEXUS_API_ENDPOINTS["user-tokens"]).format(
             url=helper.module.params["url"],
         ),
         method="PUT",

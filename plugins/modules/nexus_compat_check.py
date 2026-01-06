@@ -29,6 +29,7 @@ RETURN = r"""
 
 def get_compatibility_notes(nexus_version: str, nexus_edition: str) -> list:
     pro_modules = [
+        "nexus_cleanup_policies",
         "nexus_http",
         "nexus_security_user_token",
     ]
@@ -95,7 +96,7 @@ def main():
     argument_spec = NexusHelper.nexus_argument_spec()
     module = AnsibleModule(
         argument_spec=argument_spec,
-        supports_check_mode=True,
+        supports_check_mode=False,
         required_together=[("username", "password")],
     )
 

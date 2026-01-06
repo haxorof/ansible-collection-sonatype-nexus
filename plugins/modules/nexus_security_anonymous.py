@@ -28,9 +28,8 @@ RETURN = r"""
 
 
 def get_anonymous_setting(helper):
-    endpoint = "anonymous"
     info, content = helper.request(
-        api_url=(helper.NEXUS_API_ENDPOINTS[endpoint]).format(
+        api_url=(helper.NEXUS_API_ENDPOINTS["anonymous"]).format(
             url=helper.module.params["url"],
         ),
         method="GET",
@@ -75,10 +74,9 @@ def update_anonymous_setting(helper, current_data):
             }
         )
 
-    endpoint = "anonymous"
     changed = not helper.is_json_data_equal(data, current_data)
     info, content = helper.request(
-        api_url=(helper.NEXUS_API_ENDPOINTS[endpoint]).format(
+        api_url=(helper.NEXUS_API_ENDPOINTS["anonymous"]).format(
             url=helper.module.params["url"],
         ),
         method="PUT",

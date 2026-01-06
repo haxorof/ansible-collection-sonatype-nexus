@@ -28,12 +28,11 @@ RETURN = r"""
 
 
 def get_tasks_list(helper):
-    endpoint = "tasks"
     task_exists = False
     task_id = None
 
     _, content = helper.request(
-        api_url=(helper.NEXUS_API_ENDPOINTS[endpoint] + "?type=" + "{type}").format(
+        api_url=(helper.NEXUS_API_ENDPOINTS["tasks"] + "?type=" + "{type}").format(
             url=helper.module.params["url"],
             type=helper.module.params["type"],
         ),
@@ -62,7 +61,6 @@ def get_tasks_list(helper):
 
 
 def create_task(helper):
-    endpoint = "tasks"
     data = {
         "type": helper.module.params["type"],
         "name": helper.module.params["name"],
@@ -79,7 +77,7 @@ def create_task(helper):
         "properties": NexusHelper.camalize_param(helper, "properties"),
     }
     info, content = helper.request(
-        api_url=helper.NEXUS_API_ENDPOINTS[endpoint].format(
+        api_url=helper.NEXUS_API_ENDPOINTS["tasks"].format(
             url=helper.module.params["url"]
         ),
         method="POST",
@@ -99,8 +97,6 @@ def create_task(helper):
 
 
 def update_task(helper, task_id, existing_data):
-    endpoint = "tasks"
-
     data = {
         "name": helper.module.params["name"],
         "enabled": helper.module.params["enabled"],
@@ -122,7 +118,7 @@ def update_task(helper, task_id, existing_data):
         changed = True
 
     info, content = helper.request(
-        api_url=(helper.NEXUS_API_ENDPOINTS[endpoint] + "/{task_id}").format(
+        api_url=(helper.NEXUS_API_ENDPOINTS["tasks"] + "/{task_id}").format(
             url=helper.module.params["url"],
             task_id=task_id,
         ),
@@ -143,10 +139,8 @@ def update_task(helper, task_id, existing_data):
 
 
 def delete_task(helper, task_id):
-    endpoint = "tasks"
-
     info, content = helper.request(
-        api_url=(helper.NEXUS_API_ENDPOINTS[endpoint] + "/{task_id}").format(
+        api_url=(helper.NEXUS_API_ENDPOINTS["tasks"] + "/{task_id}").format(
             url=helper.module.params["url"],
             task_id=task_id,
         ),
@@ -212,7 +206,7 @@ def main():
     )
     module = AnsibleModule(
         argument_spec=argument_spec,
-        supports_check_mode=True,
+        supports_check_mode=False,
         required_together=[("username", "password")],
     )
 

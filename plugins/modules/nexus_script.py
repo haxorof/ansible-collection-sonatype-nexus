@@ -35,9 +35,8 @@ def create_script(helper):
         "type": "groovy",
         "content": helper.module.params["content"],
     }
-    endpoint = "script"
     info, content = helper.request(
-        api_url=helper.NEXUS_API_ENDPOINTS[endpoint].format(
+        api_url=helper.NEXUS_API_ENDPOINTS["script"].format(
             url=helper.module.params["url"]
         ),
         method="POST",
@@ -57,9 +56,8 @@ def create_script(helper):
 
 def delete_script(helper):
     changed = True
-    endpoint = "script"
     info, content = helper.request(
-        api_url=(helper.NEXUS_API_ENDPOINTS[endpoint] + "/{name}").format(
+        api_url=(helper.NEXUS_API_ENDPOINTS["script"] + "/{name}").format(
             url=helper.module.params["url"],
             name=helper.module.params["name"],
         ),
@@ -87,12 +85,11 @@ def update_script(helper, existing_script):
         "type": "groovy",
         "content": helper.module.params["content"],
     }
-    endpoint = "script"
     if helper.is_json_data_equal(data, existing_script):
         return existing_script, False
 
     info, content = helper.request(
-        api_url=(helper.NEXUS_API_ENDPOINTS[endpoint] + "/{name}").format(
+        api_url=(helper.NEXUS_API_ENDPOINTS["script"] + "/{name}").format(
             url=helper.module.params["url"],
             name=helper.module.params["name"],
         ),

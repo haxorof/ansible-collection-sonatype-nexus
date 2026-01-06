@@ -28,10 +28,9 @@ RETURN = r"""
 
 
 def list_users(helper):
-    endpoint = "users"
     info, content = helper.request(
         api_url=(
-            helper.NEXUS_API_ENDPOINTS[endpoint]
+            helper.NEXUS_API_ENDPOINTS["users"]
             + helper.generate_url_query(
                 {
                     "source": "source",
@@ -64,7 +63,7 @@ def main():
     )
     module = AnsibleModule(
         argument_spec=argument_spec,
-        supports_check_mode=True,
+        supports_check_mode=False,
         required_together=[("username", "password")],
     )
 

@@ -28,9 +28,8 @@ RETURN = r"""
 
 
 def get_email_setting(helper):
-    endpoint = "email"
     info, content = helper.request(
-        api_url=helper.NEXUS_API_ENDPOINTS[endpoint].format(
+        api_url=helper.NEXUS_API_ENDPOINTS["email"].format(
             url=helper.module.params["url"]
         ),
         method="GET",
@@ -50,8 +49,6 @@ def get_email_setting(helper):
 
 
 def update_email_setting(helper, existing_data):
-    endpoint = "email"
-
     data = {
         "enabled": helper.module.params["enabled"],
         "host": helper.module.params["host"],
@@ -87,7 +84,7 @@ def update_email_setting(helper, existing_data):
         return existing_data, False
 
     info, content = helper.request(
-        api_url=helper.NEXUS_API_ENDPOINTS[endpoint].format(
+        api_url=helper.NEXUS_API_ENDPOINTS["email"].format(
             url=helper.module.params["url"]
         ),
         method="PUT",
@@ -110,14 +107,13 @@ def update_email_setting(helper, existing_data):
 
 
 def delete_email_setting(helper, existing_data):
-    endpoint = "email"
     changed = True
 
     if not existing_data["enabled"]:
         return existing_data, False
 
     info, content = helper.request(
-        api_url=helper.NEXUS_API_ENDPOINTS[endpoint].format(
+        api_url=helper.NEXUS_API_ENDPOINTS["email"].format(
             url=helper.module.params["url"]
         ),
         method="DELETE",
@@ -179,7 +175,7 @@ def main():
     )
     module = AnsibleModule(
         argument_spec=argument_spec,
-        supports_check_mode=True,
+        supports_check_mode=False,
         required_together=[("username", "password")],
     )
 

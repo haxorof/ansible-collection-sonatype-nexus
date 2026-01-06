@@ -40,9 +40,8 @@ def reencrypt_secrets(helper):
         "secretKeyId": helper.module.params["secret_key_id"],
         "notifyEmail": helper.module.params.get("notify_email", None),
     }
-    endpoint = "secret-encryption"
     info, content = helper.request(
-        api_url=(helper.NEXUS_API_ENDPOINTS[endpoint]).format(
+        api_url=(helper.NEXUS_API_ENDPOINTS["secret-encryption"]).format(
             url=helper.module.params["url"],
         ),
         method="PUT",

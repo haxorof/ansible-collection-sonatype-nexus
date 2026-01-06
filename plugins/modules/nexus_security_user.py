@@ -28,10 +28,9 @@ RETURN = r"""
 
 
 def list_users(helper):
-    endpoint = "users"
     info, content = helper.request(
         api_url=(
-            helper.NEXUS_API_ENDPOINTS[endpoint]
+            helper.NEXUS_API_ENDPOINTS["users"]
             + helper.generate_url_query({"userId": "user_id", "source": "source"})
         ).format(
             url=helper.module.params["url"],
@@ -61,9 +60,8 @@ def create_user(helper):
         "status": helper.module.params["status"],
         "userId": helper.module.params["user_id"],
     }
-    endpoint = "users"
     info, content = helper.request(
-        api_url=(helper.NEXUS_API_ENDPOINTS[endpoint]).format(
+        api_url=(helper.NEXUS_API_ENDPOINTS["users"]).format(
             url=helper.module.params["url"],
         ),
         method="POST",
@@ -83,9 +81,8 @@ def create_user(helper):
 
 def delete_user(helper):
     changed = True
-    endpoint = "users"
     info, content = helper.request(
-        api_url=(helper.NEXUS_API_ENDPOINTS[endpoint] + "/{user_id}").format(
+        api_url=(helper.NEXUS_API_ENDPOINTS["users"] + "/{user_id}").format(
             url=helper.module.params["url"],
             user_id=helper.module.params["user_id"],
         ),
@@ -174,12 +171,11 @@ def update_user(helper, existing_user):
                 "roles": existing_user["roles"],
             }
         )
-    endpoint = "users"
     if helper.is_json_data_equal(data, existing_user):
         return existing_user, False
 
     info, content = helper.request(
-        api_url=(helper.NEXUS_API_ENDPOINTS[endpoint] + "/{user_id}").format(
+        api_url=(helper.NEXUS_API_ENDPOINTS["users"] + "/{user_id}").format(
             url=helper.module.params["url"],
             user_id=helper.module.params["user_id"],
         ),

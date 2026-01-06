@@ -28,14 +28,13 @@ RETURN = r"""
 
 
 def check_status(helper):
-    endpoint = "status"
     check_type = ""
     if helper.module.params["check_type"] == "writable":
         check_type = "/writable"
     elif helper.module.params["check_type"] == "system":
         check_type = "/check"
     info, content = helper.request(
-        api_url=(helper.NEXUS_API_ENDPOINTS[endpoint] + check_type).format(
+        api_url=(helper.NEXUS_API_ENDPOINTS["status"] + check_type).format(
             url=helper.module.params["url"],
         ),
         method="GET",
@@ -60,7 +59,7 @@ def main():
     )
     module = AnsibleModule(
         argument_spec=argument_spec,
-        supports_check_mode=True,
+        supports_check_mode=False,
         required_together=[("username", "password")],
     )
 

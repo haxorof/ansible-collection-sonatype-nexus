@@ -28,9 +28,8 @@ RETURN = r"""
 
 
 def get_routing_rule(helper):
-    endpoint = "routing-rules"
     info, content = helper.request(
-        api_url=(helper.NEXUS_API_ENDPOINTS[endpoint] + "/{name}").format(
+        api_url=(helper.NEXUS_API_ENDPOINTS["routing-rules"] + "/{name}").format(
             url=helper.module.params["url"],
             name=helper.module.params["name"],
         ),
@@ -52,9 +51,8 @@ def get_routing_rule(helper):
 
 
 def list_routing_rule(helper):
-    endpoint = "routing-rules"
     info, content = helper.request(
-        api_url=(helper.NEXUS_API_ENDPOINTS[endpoint]).format(
+        api_url=(helper.NEXUS_API_ENDPOINTS["routing-rules"]).format(
             url=helper.module.params["url"],
         ),
         method="GET",
@@ -83,7 +81,7 @@ def main():
     )
     module = AnsibleModule(
         argument_spec=argument_spec,
-        supports_check_mode=True,
+        supports_check_mode=False,
         required_together=[("username", "password")],
     )
 

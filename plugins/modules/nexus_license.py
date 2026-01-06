@@ -29,15 +29,13 @@ RETURN = r"""
 
 
 def upload_license(helper):
-    endpoint = "license"
-    changed = True
     encoded_license = helper.module.params["license_data"]
     license_bytes = base64.b64decode(encoded_license)
 
     headers = {"Content-Type": "application/octet-stream", "Accept": "application/json"}
 
     info, content = helper.request(
-        api_url=helper.NEXUS_API_ENDPOINTS[endpoint].format(
+        api_url=helper.NEXUS_API_ENDPOINTS["license"].format(
             url=helper.module.params["url"]
         ),
         method="POST",
@@ -55,15 +53,12 @@ def upload_license(helper):
                 msg=f"Failed to upload license, http_status={info['status']}, error_msg='{info['msg']}'."
             )
 
-    return content, changed
+    return content, True
 
 
 def delete_license(helper):
-    endpoint = "license"
-    changed = True
-
     info, content = helper.request(
-        api_url=helper.NEXUS_API_ENDPOINTS[endpoint].format(
+        api_url=helper.NEXUS_API_ENDPOINTS["license"].format(
             url=helper.module.params["url"]
         ),
         method="DELETE",
@@ -77,7 +72,7 @@ def delete_license(helper):
                 msg=f"Failed to delete license, http_status={info['status']}, error_msg='{info['msg']}'."
             )
 
-    return content, changed
+    return content, True
 
 
 def main():
@@ -94,29 +89,20 @@ def main():
     )
     module = AnsibleModule(
         argument_spec=argument_spec,
-        supports_check_mode=True,
+        supports_check_mode=False,
         required_together=[("username", "password")],
     )
 
     helper = NexusHelper(module)
 
-    # Seed the result dict in the object
-    result = {
-        "changed": False,
-        "state": module.params["state"],  # type: ignore
-        "messages": [],
-        "json": {},
-    }
-
     content = {}
-    changed = True
+    changed = False
 
     if module.params["state"] == "present":  # type: ignore
         content, changed = upload_license(helper)
     else:
         content, changed = delete_license(helper)
-    result["json"] = content
-    result["changed"] = changed
+    result = NexusHelper.generate_result_struct(changed, content)
 
     module.exit_json(**result)
 

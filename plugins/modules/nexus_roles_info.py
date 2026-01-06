@@ -27,9 +27,8 @@ RETURN = r"""
 
 def get_role(helper):
     """Retrieve the Nexus role configuration by name."""
-    endpoint = "roles"
     info, content = helper.request(
-        api_url=(helper.NEXUS_API_ENDPOINTS[endpoint] + "/{name}").format(
+        api_url=(helper.NEXUS_API_ENDPOINTS["roles"] + "/{name}").format(
             url=helper.module.params["url"],
             name=helper.module.params["name"],
         ),
@@ -53,9 +52,8 @@ def get_role(helper):
 
 
 def list_roles(helper):
-    endpoint = "roles"
     info, content = helper.request(
-        api_url=(helper.NEXUS_API_ENDPOINTS[endpoint]).format(
+        api_url=(helper.NEXUS_API_ENDPOINTS["roles"]).format(
             url=helper.module.params["url"],
         ),
         method="GET",
@@ -80,7 +78,7 @@ def main():
     )
     module = AnsibleModule(
         argument_spec=argument_spec,
-        supports_check_mode=True,
+        supports_check_mode=False,
         required_together=[("username", "password")],
     )
 

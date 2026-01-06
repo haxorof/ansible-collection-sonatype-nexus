@@ -35,10 +35,9 @@ def soft_quota_argument_spec():
 
 
 def get_blobstore(helper, blobstore_type):
-    endpoint = "blobstores"
     info, content = helper.request(
         api_url=(
-            helper.NEXUS_API_ENDPOINTS[endpoint] + "/" + blobstore_type + "/{name}"
+            helper.NEXUS_API_ENDPOINTS["blobstores"] + "/" + blobstore_type + "/{name}"
         ).format(
             url=helper.module.params["url"],
             name=helper.module.params["name"],
@@ -64,9 +63,8 @@ def get_blobstore(helper, blobstore_type):
 
 def delete_blobstore(helper):
     changed = True
-    endpoint = "blobstores"
     info, content = helper.request(
-        api_url=(helper.NEXUS_API_ENDPOINTS[endpoint] + "/{name}").format(
+        api_url=(helper.NEXUS_API_ENDPOINTS["blobstores"] + "/{name}").format(
             url=helper.module.params["url"],
             name=helper.module.params["name"],
         ),

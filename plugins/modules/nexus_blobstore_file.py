@@ -31,7 +31,6 @@ RETURN = r"""
 
 
 def create_blobstore(helper):
-    endpoint = "blobstores"
     blobstore_type = "file"
     changed = True
     # FileBlobStoreApiCreateRequest
@@ -46,7 +45,7 @@ def create_blobstore(helper):
     }
 
     info, content = helper.request(
-        api_url=(helper.NEXUS_API_ENDPOINTS[endpoint] + "/" + blobstore_type).format(
+        api_url=(helper.NEXUS_API_ENDPOINTS["blobstores"] + "/" + blobstore_type).format(
             url=helper.module.params["url"],
         ),
         method="POST",
@@ -70,7 +69,6 @@ def create_blobstore(helper):
 def update_blobstore(helper, current_data):
     changed = True
     blobstore_type = "file"
-    endpoint = "blobstores"
     # FileBlobStoreApiUpdateRequest
     data = {
         "softQuota": NexusHelper.camalize_param(helper, "soft_quota"),
@@ -91,7 +89,7 @@ def update_blobstore(helper, current_data):
 
     info, content = helper.request(
         api_url=(
-            helper.NEXUS_API_ENDPOINTS[endpoint] + "/" + blobstore_type + "/{name}"
+            helper.NEXUS_API_ENDPOINTS["blobstores"] + "/" + blobstore_type + "/{name}"
         ).format(
             url=helper.module.params["url"],
             name=helper.module.params["name"],

@@ -28,9 +28,8 @@ RETURN = r"""
 
 
 def read_only_status(helper):
-    endpoint = "read-only"
     info, content = helper.request(
-        api_url=(helper.NEXUS_API_ENDPOINTS[endpoint]).format(
+        api_url=(helper.NEXUS_API_ENDPOINTS["read-only"]).format(
             url=helper.module.params["url"],
         ),
         method="GET",
@@ -49,16 +48,14 @@ def main():
     argument_spec = NexusHelper.nexus_argument_spec()
     module = AnsibleModule(
         argument_spec=argument_spec,
-        supports_check_mode=True,
+        supports_check_mode=False,
         required_together=[("username", "password")],
     )
 
     helper = NexusHelper(module)
 
     content, changed = read_only_status(helper)
-    result = NexusHelper.generate_result_struct()
-    result["json"] = content
-    result["changed"] = changed
+    result = NexusHelper.generate_result_struct(changed, content)
 
     module.exit_json(**result)
 

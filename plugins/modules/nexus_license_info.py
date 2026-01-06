@@ -28,9 +28,8 @@ RETURN = r"""
 
 
 def get_license(helper):
-    endpoint = "license"
     info, content = helper.request(
-        api_url=helper.NEXUS_API_ENDPOINTS[endpoint].format(
+        api_url=helper.NEXUS_API_ENDPOINTS["license"].format(
             url=helper.module.params["url"]
         ),
         method="GET",
@@ -53,20 +52,11 @@ def main():
     argument_spec = NexusHelper.nexus_argument_spec()
     module = AnsibleModule(
         argument_spec=argument_spec,
-        supports_check_mode=True,
+        supports_check_mode=False,
         required_together=[("username", "password")],
     )
-
     helper = NexusHelper(module)
-
-    result = {
-        "changed": False,
-        "messages": [],
-        "json": {},
-    }
-
-    result["json"] = get_license(helper)
-    result["changed"] = False
+    result = NexusHelper.generate_result_struct(False, get_license(helper))
 
     module.exit_json(**result)
 
