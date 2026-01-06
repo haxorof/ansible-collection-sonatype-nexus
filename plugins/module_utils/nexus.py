@@ -237,13 +237,9 @@ class NexusHelper:
 
     def is_json_data_equal(self, left_data, right_data):
         """Compares JSON data and is considered equal if all keys and its values matches."""
-        all_new_in_existing = all(
-            right_data[k] == v for k, v in left_data.items() if k in right_data
-        )
-        all_existing_in_new = all(
-            left_data[k] == v for k, v in right_data.items() if k in left_data
-        )
-        return all_new_in_existing and all_existing_in_new
+        if left_data.keys() != right_data.keys():
+            return False
+        return all(right_data[k] == v for k, v in left_data.items())
 
     def clean_dict_list(self, data_to_clean):
         d = copy.deepcopy(data_to_clean)
