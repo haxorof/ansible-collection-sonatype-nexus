@@ -73,9 +73,9 @@ def update_blobstore(helper, current_data):
     data = {
         "softQuota": NexusHelper.camalize_param(helper, "soft_quota"),
         "path": (
-            helper.module.params["name"]
+            helper.module.params["path"]
             if helper.module.params["path"]
-            else helper.module.params["path"]
+            else helper.module.params["name"]
         ),
     }
 
