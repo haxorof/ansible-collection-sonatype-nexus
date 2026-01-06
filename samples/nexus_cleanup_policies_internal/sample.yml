@@ -1,0 +1,32 @@
+---
+- name: Manage cleanup policies
+  hosts: localhost
+  become: false
+  gather_facts: false
+  tasks:
+    - name: Create/Update cleanup policy
+      haxorof.sonatype_nexus.nexus_cleanup_policies:
+        name: test
+        notes: This is a test cleanup policy
+        format: "*"
+        criteria_last_blob_updated: 30
+        criteria_last_downloaded: 30
+        use_internal_api: true
+      register: _result
+      delegate_to: 127.0.0.1
+
+    - name: Print _result
+      ansible.builtin.debug:
+        var: _result
+
+    - name: Delete cleanup policy
+      haxorof.sonatype_nexus.nexus_cleanup_policies:
+        name: test
+        state: absent
+        use_internal_api: true
+      register: _delete_result
+      delegate_to: 127.0.0.1
+
+    - name: Print _delete_result
+      ansible.builtin.debug:
+        var: _delete_result

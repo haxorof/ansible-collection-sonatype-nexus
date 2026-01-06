@@ -28,9 +28,8 @@ RETURN = r"""
 
 
 def get_capability(helper, match_type):
-    endpoint = "capabilities"
     _, content = helper.request(
-        api_url=(helper.NEXUS_API_ENDPOINTS[endpoint]).format(
+        api_url=(helper.NEXUS_API_ENDPOINTS["capabilities"]).format(
             url=helper.module.params["url"],
         ),
         method="GET",
@@ -48,7 +47,6 @@ def get_capability(helper, match_type):
 
 def create_capability(helper):
     changed = True
-    endpoint = "capabilities"
     data = {
         "id": helper.module.params["id"],
         "type": helper.module.params["type"],
@@ -58,7 +56,7 @@ def create_capability(helper):
     }
 
     info, content = helper.request(
-        api_url=helper.NEXUS_API_ENDPOINTS[endpoint].format(
+        api_url=helper.NEXUS_API_ENDPOINTS["capabilities"].format(
             url=helper.module.params["url"]
         ),
         method="POST",
@@ -84,7 +82,6 @@ def create_capability(helper):
 
 def update_capability(helper, existing_data, capability_id):
     changed = True
-    endpoint = "capabilities"
     data = {
         "id": capability_id,
         "type": helper.module.params["type"],
@@ -101,7 +98,7 @@ def update_capability(helper, existing_data, capability_id):
         return existing_data, False
 
     info, content = helper.request(
-        api_url=(helper.NEXUS_API_ENDPOINTS[endpoint] + "/{capability_id}").format(
+        api_url=(helper.NEXUS_API_ENDPOINTS["capabilities"] + "/{capability_id}").format(
             url=helper.module.params["url"],
             capability_id=capability_id,
         ),
@@ -126,10 +123,9 @@ def update_capability(helper, existing_data, capability_id):
 
 def delete_capability(helper, capability_id):
     changed = True
-    endpoint = "capabilities"
 
     info, content = helper.request(
-        api_url=(helper.NEXUS_API_ENDPOINTS[endpoint] + "/{capability_id}").format(
+        api_url=(helper.NEXUS_API_ENDPOINTS["capabilities"] + "/{capability_id}").format(
             url=helper.module.params["url"],
             capability_id=capability_id,
         ),
@@ -168,7 +164,7 @@ def main():
 
     module = AnsibleModule(
         argument_spec=argument_spec,
-        supports_check_mode=True,
+        supports_check_mode=False,
         required_together=[("username", "password")],
     )
 

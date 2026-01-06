@@ -25,7 +25,7 @@ SAMPLES=(
 	"nexus_compat_check"
 	"nexus_capabilities"
     "nexus_blobstore_file"
-    "nexus_cleanup_policies"
+    "nexus_cleanup_policies_internal"
     "nexus_email"
     "nexus_license"
     "nexus_read_only"
@@ -72,6 +72,7 @@ SAMPLES=(
 )
 
 SAMPLES_PRO=(
+    "nexus_cleanup_policies"
     "nexus_http"
     "nexus_security_user_token"
 )

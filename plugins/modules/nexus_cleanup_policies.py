@@ -28,9 +28,8 @@ RETURN = r"""
 
 
 def get_cleanup_policy(helper):
-    endpoint = "cleanup-policies"
     info, content = helper.request(
-        api_url=(helper.NEXUS_API_ENDPOINTS[endpoint] + "/{name}").format(
+        api_url=(get_api_endpoint(helper) + "/{name}").format(
             url=helper.module.params["url"],
             name=helper.module.params["name"],
         ),
@@ -43,8 +42,7 @@ def get_cleanup_policy(helper):
 
 def create_cleanup_policy(helper):
     changed = True
-    endpoint = "cleanup-policies"
-    _format = helper.module.params["format"]
+    artifact_format = helper.module.params["format"]
     data = {
         "notes": helper.module.params["notes"],
         "name": helper.module.params["name"],
@@ -54,14 +52,14 @@ def create_cleanup_policy(helper):
     }
 
     # Append criteria based on format
-    if _format in ["maven2", "npm"]:
+    if artifact_format in ["maven2", "npm"]:
         data.update(
             {
                 "criteriaReleaseType": helper.module.params["criteria_release_type"],
                 "criteriaAssetRegex": helper.module.params["criteria_asset_regex"],
             }
         )
-    elif _format != "*":
+    elif artifact_format != "*":
         data.update(
             {
                 "criteriaAssetRegex": helper.module.params["criteria_asset_regex"],
@@ -69,9 +67,7 @@ def create_cleanup_policy(helper):
         )
 
     info, content = helper.request(
-        api_url=helper.NEXUS_API_ENDPOINTS[endpoint].format(
-            url=helper.module.params["url"]
-        ),
+        api_url=get_api_endpoint(helper).format(url=helper.module.params["url"]),
         method="POST",
         data=data,
     )
@@ -95,8 +91,7 @@ def create_cleanup_policy(helper):
 
 def update_cleanup_policy(helper, existing_data):
     changed = True
-    endpoint = "cleanup-policies"
-    _format = helper.module.params["format"]
+    artifact_format = helper.module.params["format"]
     data = {
         "notes": helper.module.params["notes"],
         "name": helper.module.params["name"],
@@ -106,14 +101,14 @@ def update_cleanup_policy(helper, existing_data):
     }
 
     # Append criteria based on format
-    if _format in ["maven2", "npm"]:
+    if artifact_format in ["maven2", "npm"]:
         data.update(
             {
                 "criteriaReleaseType": helper.module.params["criteria_release_type"],
                 "criteriaAssetRegex": helper.module.params["criteria_asset_regex"],
             }
         )
-    elif _format != "*":
+    elif artifact_format != "*":
         data.update(
             {
                 "criteriaAssetRegex": helper.module.params["criteria_asset_regex"],
@@ -129,7 +124,7 @@ def update_cleanup_policy(helper, existing_data):
         return existing_data, False
 
     info, content = helper.request(
-        api_url=(helper.NEXUS_API_ENDPOINTS[endpoint] + "/{name}").format(
+        api_url=(get_api_endpoint(helper) + "/{name}").format(
             url=helper.module.params["url"],
             name=helper.module.params["name"],
         ),
@@ -153,11 +148,8 @@ def update_cleanup_policy(helper, existing_data):
 
 
 def delete_cleanup_policy(helper):
-    changed = True
-    endpoint = "cleanup-policies"
-
     info, content = helper.request(
-        api_url=(helper.NEXUS_API_ENDPOINTS[endpoint] + "/{name}").format(
+        api_url=(get_api_endpoint(helper) + "/{name}").format(
             url=helper.module.params["url"],
             name=helper.module.params["name"],
         ),
@@ -174,7 +166,17 @@ def delete_cleanup_policy(helper):
                 msg=f"Failed to delete cleanup policy, http_status={info['status']}, error_msg='{info['msg']}'."
             )
 
-    return content, changed
+    return content, True
+
+
+def get_api_endpoint(helper):
+    return helper.NEXUS_API_ENDPOINTS[
+        (
+            "cleanup-policies-internal"
+            if helper.module.params["use_internal_api"]
+            else "cleanup-policies"
+        )
+    ]
 
 
 def main():
@@ -187,19 +189,23 @@ def main():
             "criteria_release_type": {"type": "str", "required": False},
             "criteria_asset_regex": {"type": "str", "required": False},
             "retain": {"type": "int", "required": False},
-            "name": {"type": "str", "required": True},
+            "name": {"type": "str"},
             "format": {"type": "str", "required": False},
             "state": {
                 "type": "str",
                 "choices": ["present", "absent"],
                 "default": "present",
             },
+            "use_internal_api": {
+                "type": "bool",
+                "default": False,
+            },  # Use internal API at own risk
         }
     )
 
     module = AnsibleModule(
         argument_spec=argument_spec,
-        supports_check_mode=True,
+        supports_check_mode=False,
         required_together=[("username", "password")],
     )
 
