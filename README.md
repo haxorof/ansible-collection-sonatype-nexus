@@ -7,7 +7,7 @@ Ansible collection for managing Sonatype Nexus Repository Manager 3.x via its RE
 
 ## Features
 
-### OSS Features
+### Community/OSS Features
 
 * Manage blob stores (limited)
   * file
