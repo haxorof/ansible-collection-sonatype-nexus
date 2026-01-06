@@ -9,25 +9,43 @@ Ansible collection for managing Sonatype Nexus Repository Manager 3.x via its RE
 
 ### OSS Features
 
-<!-- * Manage read-only system status
+* Manage blob stores (limited)
+  * file
+* Manage capabilities
+* Manage e-mail settings
+* Manage license
+* Manage read-only system status
+* Manage repositories (limited)
+  * docker
+  * go
+  * helm
+  * maven
+  * npm
+  * nuget
+  * p2
+  * pypi
+  * raw
+  * rubygems
+* Manage roles
 * Manage routing rules
+* Manage and run scripts
+* Manage users
+* Manage anonymous access
+* Manage LDAP settings
 * Manage users
 * Retrieve user sources
-* Manage anonymous access
 * Check status
-* List repositories
-* Manage repositories
-* Manage blob stores
--->
-TODO
+* Manage tasks
 
 ### PRO Features
 
-<!--
+* Manage cleanup policies
 * Manage HTTP settings
-* Manage user tokes capability
--->
-TODO
+* Manage user tokens capability
+
+### Other Features
+
+* Compatibility check between collection and Sonatype Nexus
 
 ## Installation
 
