@@ -9,6 +9,7 @@ from __future__ import absolute_import, division, print_function
 # pylint: disable-next=invalid-name
 __metaclass__ = type
 
+import copy
 import json
 import time
 import humps
@@ -33,7 +34,10 @@ class NexusHelper:
         "anonymous": "{url}" + NEXUS_API_BASE_PATH + "/v1/security/anonymous",
         "blobstores": "{url}" + NEXUS_API_BASE_PATH + "/v1/blobstores",
         "capabilities": "{url}" + NEXUS_API_BASE_PATH + "/v1/capabilities",
-        "cleanup-policies": "{url}" + NEXUS_API_BASE_PATH + "/internal/cleanup-policies",
+        "cleanup-policies": "{url}" + NEXUS_API_BASE_PATH + "/v1/cleanup-policies",
+        "cleanup-policies-internal": "{url}"
+        + NEXUS_API_BASE_PATH
+        + "/internal/cleanup-policies",
         "email": "{url}" + NEXUS_API_BASE_PATH + "/v1/email",
         "http": "{url}" + NEXUS_API_BASE_PATH + "/v1/http",
         "ldap": "{url}" + NEXUS_API_BASE_PATH + "/v1/security/ldap",
@@ -44,7 +48,9 @@ class NexusHelper:
         "roles": "{url}" + NEXUS_API_BASE_PATH + "/v1/security/roles",
         "routing-rules": "{url}" + NEXUS_API_BASE_PATH + "/v1/routing-rules",
         "script": "{url}" + NEXUS_API_BASE_PATH + "/v1/script",
-        "secret-encryption": "{url}" + NEXUS_API_BASE_PATH + "/v1/secrets/encryption/re-encrypt",
+        "secret-encryption": "{url}"
+        + NEXUS_API_BASE_PATH
+        + "/v1/secrets/encryption/re-encrypt",
         "status": "{url}" + NEXUS_API_BASE_PATH + "/v1/status",
         "system": "{url}" + NEXUS_API_BASE_PATH + "/v1/system",
         "tasks": "{url}" + NEXUS_API_BASE_PATH + "/v1/tasks",
@@ -229,49 +235,18 @@ class NexusHelper:
         query = "&".join(query_params)
         return "?" + query if len(query) > 0 else ""
 
-    def is_json_data_equal(self, new_data, existing_data):
-        """Compares JSON data and is considered equal if all keys and its values in new_data exists in existing_data.
-
-        Args:
-            new_data (_type_): new data.
-            existing_data (_type_): existing data.
-
-        Returns:
-            _type_: Returns true if all keys and its values in new_data exists in existing_data.
-        """
-        return all(
-            existing_data[k] == v for k, v in new_data.items() if k in existing_data
+    def is_json_data_equal(self, left_data, right_data):
+        """Compares JSON data and is considered equal if all keys and its values matches."""
+        all_new_in_existing = all(
+            right_data[k] == v for k, v in left_data.items() if k in right_data
         )
+        all_existing_in_new = all(
+            left_data[k] == v for k, v in right_data.items() if k in left_data
+        )
+        return all_new_in_existing and all_existing_in_new
 
-    # def is_json_data_equal(self, new_data, existing_data):
-    #     # Handle case where both are dicts
-    #     if isinstance(new_data, dict) and isinstance(existing_data, dict):
-    #         # Case: 'password' only in new_data
-    #         if "password" not in existing_data and "password" in new_data:
-    #             return False
-    #         # Case: 'password' in both and masked in existing_data
-    #         if "password" in new_data and "password" in existing_data:
-    #             new_data = new_data.copy()
-    #             existing_data = existing_data.copy()
-    #             new_data.pop("password", None)
-    #             existing_data.pop("password", None)
-    #         # Compare keys
-    #         if set(new_data.keys()) != set(existing_data.keys()):
-    #             return False
-    #         # Recursively compare values
-    #         return all(
-    #             self.is_json_data_equal(new_data[k], existing_data[k]) for k in new_data
-    #         )
-    #     # Handle case where both are lists
-    #     if isinstance(new_data, list) and isinstance(existing_data, list):
-    #         # Normalize and sort lists for comparison
-    #         new_normalized = sorted([str(item).strip() for item in new_data])
-    #         existing_normalized = sorted([str(item).strip() for item in existing_data])
-    #         return new_normalized == existing_normalized
-    #     # Fallback to direct comparison
-    #     return new_data == existing_data
-
-    def clean_dict_list(self, d):
+    def clean_dict_list(self, data_to_clean):
+        d = copy.deepcopy(data_to_clean)
         if isinstance(d, dict):
             cleaned = {}
             for k, v in d.items():
@@ -282,6 +257,39 @@ class NexusHelper:
         if isinstance(d, list):
             return [self.clean_dict_list(i) for i in d if i not in ("", [], {}, None)]
         return d
+
+    def delete_all_none_values(self, data_to_clean, do_deepcopy=False):
+        """Delete all elements in a list or keys in dicts that is set to None."""
+        d = None
+        if do_deepcopy:
+            d = copy.deepcopy(data_to_clean)
+        else:
+            d = data_to_clean
+        if isinstance(d, dict):
+            cleaned = {}
+            for k, v in d.items():
+                cleaned_value = self.delete_all_none_values(v)
+                if cleaned_value is not None:
+                    cleaned[k] = cleaned_value
+            return cleaned
+        if isinstance(d, list):
+            return [self.delete_all_none_values(i) for i in d if i is not None]
+        return d
+
+    def delete_all_password_keys(self, d: dict):
+        """Delete all keys in a dict that contains word password (case insensitive)."""
+        key_deleted = False
+        if isinstance(d, dict):
+            cleaned = {}
+            for k, v in d.items():
+                if isinstance(k, str) and k.lower() in "password":
+                    key_deleted = True
+                else:
+                    item_key_deleted, cleaned[k] = self.delete_all_password_keys(v)
+                    if item_key_deleted:
+                        key_deleted = True
+            return key_deleted, cleaned
+        return key_deleted, d
 
 
 # pylint: disable-next=too-many-public-methods
@@ -454,8 +462,7 @@ class NexusRepositoryHelper:
                 "blocked": {"type": "bool", "default": False},
                 "auto_block": {"type": "bool", "default": True},
                 "connection": NexusRepositoryHelper.http_client_connection_attributes(),
-                "authentication":
-                    NexusRepositoryHelper.http_client_connection_authentication_attributes_with_preemptive(),
+                "authentication": NexusRepositoryHelper.http_client_connection_authentication_attributes_with_preemptive(),
             },
         }
 
@@ -483,9 +490,8 @@ class NexusRepositoryHelper:
 
     @staticmethod
     def list_repositories(helper):
-        endpoint = "repository-settings"
         info, content = helper.request(
-            api_url=(helper.NEXUS_API_ENDPOINTS[endpoint]).format(
+            api_url=(helper.NEXUS_API_ENDPOINTS["repository-settings"]).format(
                 url=helper.module.params["url"],
             ),
             method="GET",
@@ -674,7 +680,7 @@ class NexusRepositoryHelper:
 
         module = AnsibleModule(
             argument_spec=argument_spec,
-            supports_check_mode=True,
+            supports_check_mode=False,
             required_together=[("username", "password")],
         )
 
@@ -740,7 +746,7 @@ class NexusRepositoryHelper:
 
         module = AnsibleModule(
             argument_spec=argument_spec,
-            supports_check_mode=True,
+            supports_check_mode=False,
             required_together=[("username", "password")],
         )
 
@@ -805,7 +811,7 @@ class NexusRepositoryHelper:
 
         module = AnsibleModule(
             argument_spec=argument_spec,
-            supports_check_mode=True,
+            supports_check_mode=False,
             required_together=[("username", "password")],
         )
 

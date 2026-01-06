@@ -40,9 +40,8 @@ RETURN = r"""
 
 def list_role(helper, role_id):
     """Fetch a role's details from Nexus, ensuring source=default is included."""
-    endpoint = "roles"
     info, content = helper.request(
-        api_url=(helper.NEXUS_API_ENDPOINTS[endpoint] + "/{id}?source=default").format(
+        api_url=(helper.NEXUS_API_ENDPOINTS["roles"] + "/{id}?source=default").format(
             url=helper.module.params["url"], id=role_id
         ),
         method="GET",
@@ -73,9 +72,8 @@ def create_role(helper):
         "privileges": helper.module.params["privileges"],
         "roles": helper.module.params["roles"],
     }
-    endpoint = "roles"
     info, content = helper.request(
-        api_url=(helper.NEXUS_API_ENDPOINTS[endpoint]).format(
+        api_url=(helper.NEXUS_API_ENDPOINTS["roles"]).format(
             url=helper.module.params["url"]
         ),
         method="POST",
@@ -96,9 +94,8 @@ def create_role(helper):
 def delete_role(helper):
     """Delete an existing role from Nexus."""
     changed = True
-    endpoint = "roles"
     info, content = helper.request(
-        api_url=(helper.NEXUS_API_ENDPOINTS[endpoint] + "/{id}").format(
+        api_url=(helper.NEXUS_API_ENDPOINTS["roles"] + "/{id}").format(
             url=helper.module.params["url"],
             id=helper.module.params["id"],
         ),
@@ -121,7 +118,6 @@ def delete_role(helper):
 
 def update_role(helper, existing_role):
     """Update an existing role in Nexus if changes are required."""
-    changed = True
     data = {
         "id": existing_role["id"],
         "name": existing_role["name"],
@@ -136,19 +132,24 @@ def update_role(helper, existing_role):
         data["description"] = helper.module.params["description"]
     if helper.module.params["privileges"]:
         data["privileges"] = helper.module.params["privileges"]
+        data["privileges"].sort()
     if helper.module.params["roles"]:
         data["roles"] = helper.module.params["roles"]
+        data["roles"].sort()
 
     existing_role.pop("readOnly", None)
     existing_role.pop("source", None)
+    if existing_role["privileges"]:
+        existing_role["privileges"].sort()
+    if existing_role["roles"]:
+        existing_role["roles"].sort()
 
-    endpoint = "roles"
-
-    if helper.is_json_data_equal(data, existing_role):
-        return existing_role, False  # No change needed
+    changed = not helper.is_json_data_equal(data, existing_role)
+    if not changed:
+        return existing_role, changed
 
     info, content = helper.request(
-        api_url=(helper.NEXUS_API_ENDPOINTS[endpoint] + "/{id}").format(
+        api_url=(helper.NEXUS_API_ENDPOINTS["roles"] + "/{id}").format(
             url=helper.module.params["url"],
             id=helper.module.params["id"],
         ),

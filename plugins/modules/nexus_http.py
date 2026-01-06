@@ -9,7 +9,6 @@ from __future__ import absolute_import, division, print_function
 # pylint: disable-next=invalid-name
 __metaclass__ = type
 
-import copy
 from ansible.module_utils.basic import AnsibleModule
 from ansible_collections.haxorof.sonatype_nexus.plugins.module_utils.nexus import (
     NexusHelper,
@@ -28,24 +27,9 @@ RETURN = r"""
 """
 
 
-def remove_disabled_proxies_data(config):
-    keys_to_remove = []
-    for key, value in config.items():
-        if isinstance(value, dict):
-            if value.get("enabled") is False:
-                keys_to_remove.append(key)
-            else:
-                # Recursively clean nested dictionaries
-                config[key] = remove_disabled_proxies_data(value)
-    for key in keys_to_remove:
-        del config[key]
-    return config
-
-
-def get_http_setting(helper):
-    endpoint = "http"
+def get_http_setting(helper: NexusHelper):
     info, content = helper.request(
-        api_url=helper.NEXUS_API_ENDPOINTS[endpoint].format(
+        api_url=helper.NEXUS_API_ENDPOINTS["http"].format(
             url=helper.module.params["url"]
         ),
         method="GET",
@@ -64,67 +48,65 @@ def get_http_setting(helper):
     return content
 
 
-def update_http_setting(helper, existing_data):
-    endpoint = "http"
-    changed = True
+def auth_settings_request_data(helper: NexusHelper, root_key: str):
+    return {
+        "enabled": helper.module.params[root_key]["auth_info"]["enabled"],
+        "username": helper.module.params[root_key]["auth_info"]["username"],
+        "password": helper.module.params[root_key]["auth_info"]["password"],
+        "ntlmHost": helper.module.params[root_key]["auth_info"]["ntlm_host"],
+        "ntlmDomain": helper.module.params[root_key]["auth_info"]["ntlm_domain"],
+    }
 
-    data = {
+
+def proxy_settings_request_data(helper: NexusHelper, secure_http: bool):
+    key_suffix = "http"
+    if secure_http:
+        key_suffix = "https"
+    return {
+        "enabled": helper.module.params[f"{key_suffix}_proxy"]["enabled"],
+        "host": helper.module.params[f"{key_suffix}_proxy"]["host"],
+        "port": helper.module.params[f"{key_suffix}_proxy"]["port"],
+        "authInfo": auth_settings_request_data(helper, f"{key_suffix}_proxy"),
+    }
+
+
+def http_settings_request_data(helper: NexusHelper):
+    return {
         "userAgent": helper.module.params["user_agent"],
         "timeout": helper.module.params["timeout"],
         "retries": helper.module.params["connection_retries"],
         "nonProxyHosts": helper.module.params["non_proxy_hosts"],
-        "httpProxy": {
-            "enabled": helper.module.params["http_proxy"]["enabled"],
-            "host": helper.module.params["http_proxy"]["host"],
-            "port": helper.module.params["http_proxy"]["port"],
-            "authInfo": {
-                "enabled": helper.module.params["http_proxy"]["auth_info"]["enabled"],
-                "username": helper.module.params["http_proxy"]["auth_info"]["username"],
-                "password": helper.module.params["http_proxy"]["auth_info"]["password"],
-                "ntlmHost": helper.module.params["http_proxy"]["auth_info"][
-                    "ntlm_host"
-                ],
-                "ntlmDomain": helper.module.params["http_proxy"]["auth_info"][
-                    "ntlm_domain"
-                ],
-            },
-        },
-        "httpsProxy": {
-            "enabled": helper.module.params["https_proxy"]["enabled"],
-            "host": helper.module.params["https_proxy"]["host"],
-            "port": helper.module.params["https_proxy"]["port"],
-            "authInfo": {
-                "enabled": helper.module.params["https_proxy"]["auth_info"]["enabled"],
-                "username": helper.module.params["https_proxy"]["auth_info"][
-                    "username"
-                ],
-                "password": helper.module.params["https_proxy"]["auth_info"][
-                    "password"
-                ],
-                "ntlmHost": helper.module.params["https_proxy"]["auth_info"][
-                    "ntlm_host"
-                ],
-                "ntlmDomain": helper.module.params["https_proxy"]["auth_info"][
-                    "ntlm_domain"
-                ],
-            },
-        },
+        "httpProxy": proxy_settings_request_data(helper, False),
+        "httpsProxy": proxy_settings_request_data(helper, True),
     }
 
-    password_http_proxy = data["httpProxy"]["authInfo"]["password"]
-    password_https_proxy = data["httpsProxy"]["authInfo"]["password"]
-    new_data = copy.deepcopy(data)
-    new_data = remove_disabled_proxies_data(new_data)
-    normalized_data = helper.clean_dict_list(new_data)
-    normalized_current_data = helper.clean_dict_list(existing_data)
 
-    changed = not helper.is_json_data_equal(normalized_data, normalized_current_data)
+def update_http_setting(helper: NexusHelper, existing_data):
+    data = http_settings_request_data(helper)
 
-    if changed is False and not password_http_proxy and not password_https_proxy:
+    normalized_data = helper.delete_all_none_values(data)
+    passwords_removed, normalized_data = helper.delete_all_password_keys(data)
+    if normalized_data["nonProxyHosts"]:  # type: ignore
+        normalized_data["nonProxyHosts"].sort()  # type: ignore
+    if normalized_data["httpProxy"]["authInfo"]["enabled"] is False:  # type: ignore
+        normalized_data["httpProxy"]["authInfo"] = None  # type: ignore
+    if normalized_data["httpsProxy"]["authInfo"]["enabled"] is False:  # type: ignore
+        normalized_data["httpsProxy"]["authInfo"] = None  # type: ignore
+    # Adjust existing data for comparison reason only due to default values of arguments into module
+    existing_passwords_removed, existing_data = helper.delete_all_password_keys(
+        existing_data
+    )
+    if existing_data["nonProxyHosts"]:  # type: ignore
+        existing_data["nonProxyHosts"].sort()  # type: ignore
+    if existing_data["userAgent"] is None:
+        existing_data["userAgent"] = ""  # type: ignore
+
+    changed = not helper.is_json_data_equal(normalized_data, existing_data)
+    if changed is False and not passwords_removed and not existing_passwords_removed:
         return existing_data, False
 
     info, content = helper.request(
-        api_url=helper.NEXUS_API_ENDPOINTS[endpoint].format(
+        api_url=helper.NEXUS_API_ENDPOINTS["http"].format(
             url=helper.module.params["url"]
         ),
         method="PUT",
@@ -146,12 +128,9 @@ def update_http_setting(helper, existing_data):
     return content, changed
 
 
-def delete_http_setting(helper):
-    endpoint = "http"
-    changed = True
-
+def delete_http_setting(helper: NexusHelper):
     info, content = helper.request(
-        api_url=helper.NEXUS_API_ENDPOINTS[endpoint].format(
+        api_url=helper.NEXUS_API_ENDPOINTS["http"].format(
             url=helper.module.params["url"]
         ),
         method="DELETE",
@@ -167,70 +146,80 @@ def delete_http_setting(helper):
                 msg=f"Failed to delete http settings, http_status={info['status']}, error_msg='{info['msg']}'."
             )
 
-    return content, changed
+    return content, True
+
+
+def auth_settings_xo():
+    """Directly maps to AuthSettingsXo"""
+    return {
+        "enabled": {"type": "bool", "default": False},
+        "username": {"type": "str"},
+        "password": {"type": "str", "no_log": True},
+        "ntlm_host": {"type": "str"},
+        "ntlm_domain": {"type": "str"},
+    }
+
+
+def proxy_settings_xo():
+    """Directly maps to ProxySettingsXo"""
+    return {
+        "enabled": {"type": "bool", "default": False},
+        "host": {"type": "str"},
+        "port": {"type": "str"},
+        "auth_info": {
+            "type": "dict",
+            "apply_defaults": True,
+            "options": auth_settings_xo(),
+        },
+    }
+
+
+def http_settings_xo():
+    """Directly maps to HttpSettingsXo"""
+    return {
+        "user_agent": {"type": "str", "default": ""},
+        "timeout": {"type": "int", "default": 10},
+        "connection_retries": {"type": "int", "default": 1},
+        "non_proxy_hosts": {"type": "list", "default": []},
+        "http_proxy": {
+            "type": "dict",
+            "apply_defaults": True,
+            "options": proxy_settings_xo(),
+        },
+        "https_proxy": {
+            "type": "dict",
+            "apply_defaults": True,
+            "options": proxy_settings_xo(),
+        },
+        "state": {
+            "type": "str",
+            "choices": ["present", "absent"],
+            "default": "present",
+        },
+    }
 
 
 def main():
-    # pylint: disable=too-many-locals
-    auth_info_options = {
-        "enabled": {"type": "bool", "default": False},
-        "username": {"type": "str", "default": ""},
-        "password": {"type": "str", "default": "", "no_log": True},
-        "ntlm_host": {"type": "str", "default": ""},
-        "ntlm_domain": {"type": "str", "default": ""},
-    }
-    proxy_options = {
-        "enabled": {"type": "bool", "default": False},
-        "host": {"type": "str", "default": ""},
-        "port": {"type": "str", "default": ""},
-        "auth_info": {
-            "type": "dict",
-            "default": {},
-            "options": auth_info_options,
-        },
-    }
     argument_spec = NexusHelper.nexus_argument_spec()
-    argument_spec.update(
-        {
-            "user_agent": {"type": "str", "required": False, "default": ""},
-            "timeout": {"type": "int", "required": False, "default": 20},
-            "connection_retries": {"type": "int", "required": False, "default": 2},
-            "non_proxy_hosts": {"type": "list", "required": False, "default": []},
-            "http_proxy": {"type": "dict", "default": {}, "options": proxy_options},
-            "https_proxy": {"type": "dict", "default": {}, "options": proxy_options},
-            "state": {
-                "type": "str",
-                "choices": ["present", "absent"],
-                "default": "present",
-            },
-        }
-    )
+    argument_spec.update(http_settings_xo())
 
     module = AnsibleModule(
         argument_spec=argument_spec,
-        supports_check_mode=True,
+        supports_check_mode=False,
         required_together=[("username", "password")],
     )
 
     helper = NexusHelper(module)
 
-    result = {
-        "changed": False,
-        "state": module.params["state"],  # type: ignore
-        "messages": [],
-        "json": {},
-    }
-
     content = {}
-    changed = True
+    changed = False
     existing_setting = get_http_setting(helper)
 
     if module.params["state"] == "present":  # type: ignore
         content, changed = update_http_setting(helper, existing_setting)
     else:
         content, changed = delete_http_setting(helper)
-    result["json"] = content
-    result["changed"] = changed
+    result = NexusHelper.generate_result_struct(changed, content)
 
     module.exit_json(**result)
 
