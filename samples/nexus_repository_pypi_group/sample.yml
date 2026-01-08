@@ -1,0 +1,38 @@
+---
+- name: Manage pypi group repository
+  hosts: localhost
+  become: false
+  gather_facts: false
+  pre_tasks:
+    - name: Create PyPI proxy repository
+      haxorof.sonatype_nexus.nexus_repository_pypi_proxy:
+        state: present
+        name: testproxy
+        proxy:
+          remote_url: https://pypi.org/simple
+
+  tasks:
+    - name: Create pypi group repository
+      haxorof.sonatype_nexus.nexus_repository_pypi_group:
+        state: present
+        name: testgroup
+        group:
+          member_names:
+            - testproxy
+      loop:
+        - change
+        - no_change # Test idempotency
+
+    - name: Delete pypi group repository
+      haxorof.sonatype_nexus.nexus_repository_pypi_group:
+        state: absent
+        name: testgroup
+      loop:
+        - change
+        - no_change # Test idempotency
+
+  post_tasks:
+    - name: Delete PyPI proxy repository
+      haxorof.sonatype_nexus.nexus_repository_pypi_proxy:
+        state: absent
+        name: testproxy

@@ -1,0 +1,20 @@
+---
+- name: Manage Hosted Nuget Repositories in Nexus
+  hosts: localhost
+  gather_facts: false
+  tasks:
+    - name: Create hosted nuget repository
+      haxorof.sonatype_nexus.nexus_repository_nuget_hosted:
+        state: present
+        name:  testhosted
+      loop:
+        - change
+        - no_change # Test idempotency
+
+    - name: Delete hosted nuget repository
+      haxorof.sonatype_nexus.nexus_repository_nuget_hosted:
+        state: absent
+        name:  testhosted
+      loop:
+        - change
+        - no_change # Test idempotency

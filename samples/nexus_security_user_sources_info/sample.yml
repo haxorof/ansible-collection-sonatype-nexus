@@ -2,17 +2,12 @@
 - name: User sources
   hosts: localhost
   become: false
-  gather_facts: no
+  gather_facts: false
   tasks:
-  - name: List user sources
-    haxorof.sonatype_nexus.nexus_security_user_sources_info:
-      url: "{{ nexus_url }}"
-      validate_certs: no
-      username: admin
-      password: admin123
-    register: _result
+    - name: List user sources
+      haxorof.sonatype_nexus.nexus_security_user_sources_info:
+      register: _result
 
-  - name: Print _result
-    ansible.builtin.debug:
-      var: _result
-
+    - name: Print _result
+      ansible.builtin.debug:
+        var: _result

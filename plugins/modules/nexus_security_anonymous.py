@@ -6,8 +6,13 @@
 
 from __future__ import absolute_import, division, print_function
 
+# pylint: disable-next=invalid-name
 __metaclass__ = type
 
+from ansible.module_utils.basic import AnsibleModule
+from ansible_collections.haxorof.sonatype_nexus.plugins.module_utils.nexus import (
+    NexusHelper,
+)
 
 DOCUMENTATION = r"""
 ---
@@ -21,16 +26,10 @@ EXAMPLES = r"""
 RETURN = r"""
 """
 
-from ansible.module_utils.basic import AnsibleModule, env_fallback
-from ansible_collections.haxorof.sonatype_nexus.plugins.module_utils.nexus import (
-    NexusHelper,
-)
-
 
 def get_anonymous_setting(helper):
-    endpoint = "anonymous"
     info, content = helper.request(
-        api_url=(helper.NEXUS_API_ENDPOINTS[endpoint]).format(
+        api_url=(helper.NEXUS_API_ENDPOINTS["anonymous"]).format(
             url=helper.module.params["url"],
         ),
         method="GET",
@@ -42,18 +41,14 @@ def get_anonymous_setting(helper):
             )
         else:
             helper.module.fail_json(
-                msg="Failed to fetch anonymous setting., http_status={status}.".format(
-                    status=info["status"],
-                )
+                msg=f"Failed to fetch anonymous setting., http_status={info['status']}."
             )
     return content
 
 
 def update_anonymous_setting(helper, current_data):
     changed = True
-    data = {
-        "enabled": True if helper.module.params["state"] == "enabled" else False,
-    }
+    data = {"enabled": (helper.module.params["state"] == "enabled")}
     if helper.module.params["user_id"]:
         data.update(
             {
@@ -79,10 +74,9 @@ def update_anonymous_setting(helper, current_data):
             }
         )
 
-    endpoint = "anonymous"
     changed = not helper.is_json_data_equal(data, current_data)
     info, content = helper.request(
-        api_url=(helper.NEXUS_API_ENDPOINTS[endpoint]).format(
+        api_url=(helper.NEXUS_API_ENDPOINTS["anonymous"]).format(
             url=helper.module.params["url"],
         ),
         method="PUT",
@@ -97,10 +91,7 @@ def update_anonymous_setting(helper, current_data):
         )
     else:
         helper.module.fail_json(
-            msg="Failed to update anonymous setting, http_status={http_status}, error_msg='{error_msg}'.".format(
-                error_msg=info["msg"],
-                http_status=info["status"],
-            )
+            msg=f"Failed to update anonymous setting, http_status={info['status']}, error_msg='{info['msg']}'."
         )
 
     return content, changed
@@ -109,9 +100,15 @@ def update_anonymous_setting(helper, current_data):
 def main():
     argument_spec = NexusHelper.nexus_argument_spec()
     argument_spec.update(
-        realm_name=dict(type="str", required=False, no_log=False),
-        state=dict(type="str", choices=["enabled", "disabled"], default="enabled"),
-        user_id=dict(type="str", required=True, no_log=False),
+        {
+            "realm_name": {"type": "str", "required": False, "no_log": False},
+            "user_id": {"type": "str", "required": True, "no_log": False},
+            "state": {
+                "type": "str",
+                "choices": ["enabled", "disabled"],
+                "default": "enabled",
+            },
+        }
     )
     module = AnsibleModule(
         argument_spec=argument_spec,
@@ -121,16 +118,8 @@ def main():
 
     helper = NexusHelper(module)
 
-    # Seed the result dict in the object
-    result = dict(
-        changed=False,
-        messages=[],
-        json={},
-    )
-
     content, changed = update_anonymous_setting(helper, get_anonymous_setting(helper))
-    result["json"] = content
-    result["changed"] = changed
+    result = NexusHelper.generate_result_struct(changed, content)
 
     module.exit_json(**result)
 

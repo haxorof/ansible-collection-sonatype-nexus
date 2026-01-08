@@ -1,0 +1,13 @@
+---
+- name: Get Nexus scripts info
+  hosts: localhost
+  become: false
+  gather_facts: false
+  tasks:
+    - name: Get Nexus scripts
+      haxorof.sonatype_nexus.nexus_script_info:
+      register: nexus_script_list
+
+    - name: Debug script list
+      debug:
+        var: nexus_script_list

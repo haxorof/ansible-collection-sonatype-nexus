@@ -1,15 +1,11 @@
 ---
-- name: Manage Docker proxy repositories
+- name: List Repositories from Nexus
   hosts: localhost
   become: false
-  gather_facts: no
+  gather_facts: false
   tasks:
   - name: List all repositories
     haxorof.sonatype_nexus.nexus_repository_info:
-      url: "{{ nexus_url }}"
-      validate_certs: no
-      username: admin
-      password: admin123
     register: _result
 
   - name: Print _result
@@ -18,10 +14,6 @@
 
   - name: List NuGet proxy repositories
     haxorof.sonatype_nexus.nexus_repository_info:
-      url: "{{ nexus_url }}"
-      validate_certs: no
-      username: admin
-      password: admin123
       type: proxy
       format: nuget
     register: _result
@@ -32,10 +24,6 @@
 
   - name: List Maven proxy repositories
     haxorof.sonatype_nexus.nexus_repository_info:
-      url: "{{ nexus_url }}"
-      validate_certs: no
-      username: admin
-      password: admin123
       type: proxy
       format: maven2
     register: _result
@@ -46,10 +34,6 @@
 
   - name: List maven-central
     haxorof.sonatype_nexus.nexus_repository_info:
-      url: "{{ nexus_url }}"
-      validate_certs: no
-      username: admin
-      password: admin123
       name: maven-central
     register: _result
 

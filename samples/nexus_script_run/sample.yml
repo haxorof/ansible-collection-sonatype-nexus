@@ -1,0 +1,25 @@
+---
+- name: Run Nexus scripts to configure features
+  hosts: localhost
+  become: false
+  gather_facts: false
+
+  vars:
+    nexus_script_name: "hello_world"
+
+  pre_tasks:
+    - name: Upload Nexus script
+      haxorof.sonatype_nexus.nexus_script:
+        name: "{{ nexus_script_name }}"
+        content: "println 'Hello, World!'"
+
+  tasks:
+    - name: Trigger script
+      haxorof.sonatype_nexus.nexus_script_run:
+        name: "{{ nexus_script_name }}"
+
+  post_tasks:
+    - name: Delete Nexus script
+      haxorof.sonatype_nexus.nexus_script:
+        name: "{{ nexus_script_name }}"
+        state: absent

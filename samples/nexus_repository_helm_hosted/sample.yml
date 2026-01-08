@@ -1,0 +1,22 @@
+---
+- name: Manage Helm Hosted Repositories in Nexus
+  hosts: localhost
+  gather_facts: false
+  tasks:
+    - name: Create hosted helm repository
+      haxorof.sonatype_nexus.nexus_repository_helm_hosted:
+        state: present
+        name: helm-hosted
+        storage:
+          blob_store_name: default
+      loop:
+        - change
+        - no_change # Test idempotency
+
+    - name: Delete hosted helm repository
+      haxorof.sonatype_nexus.nexus_repository_helm_hosted:
+        state: absent
+        name: helm-hosted
+      loop:
+        - change
+        - no_change # Test idempotency

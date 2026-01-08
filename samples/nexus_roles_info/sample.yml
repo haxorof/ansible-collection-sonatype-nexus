@@ -1,0 +1,24 @@
+---
+- name: Retrieve Nexus Roles Information
+  hosts: localhost
+  become: false
+  gather_facts: false
+  tasks:
+    - name: Get specific Nexus role
+      haxorof.sonatype_nexus.nexus_roles_info:
+        name: view-anonymous
+        use_proxy: false
+      register: role_info
+
+    - name: Debug roles info
+      debug:
+        var: role_info
+
+    - name: List all Nexus roles
+      haxorof.sonatype_nexus.nexus_roles_info:
+        use_proxy: false
+      register: roles_list
+
+    - name: Debug all roles
+      debug:
+        var: roles_list

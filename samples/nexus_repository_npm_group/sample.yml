@@ -1,0 +1,41 @@
+---
+- name: Manage NPM Group Repositories in Nexus
+  hosts: localhost
+  gather_facts: false
+  pre_tasks:
+    - name: Create NPM proxy repository
+      haxorof.sonatype_nexus.nexus_repository_npm_proxy:
+        state: present
+        name: testproxy
+        storage:
+          blob_store_name: default
+        proxy:
+          remote_url: https://registry.npmjs.org
+        http_client:
+          auto_block: true
+
+  tasks:
+    - name: Create npm group repository
+      haxorof.sonatype_nexus.nexus_repository_npm_group:
+        state: present
+        name: testgroup
+        group:
+          member_names:
+            - testproxy
+      loop:
+        - change
+        - no_change # Test idempotency
+
+    - name: Delete npm group
+      haxorof.sonatype_nexus.nexus_repository_npm_group:
+        state: absent
+        name: testgroup
+      loop:
+        - change
+        - no_change # Test idempotency
+
+  post_tasks:
+    - name: Delete NPM proxy repository
+      haxorof.sonatype_nexus.nexus_repository_npm_proxy:
+        state: absent
+        name: testproxy

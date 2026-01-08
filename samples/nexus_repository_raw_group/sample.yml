@@ -1,0 +1,37 @@
+---
+- name: Manage raw group repository in Nexus
+  hosts: localhost
+  gather_facts: false
+  pre_tasks:
+    - name: Create Raw proxy repository
+      haxorof.sonatype_nexus.nexus_repository_raw_proxy:
+        state: present
+        name: testproxy
+        proxy:
+          remote_url: http://mirror.bahnhof.net/pub/almalinux/10.1/isos/x86_64
+
+  tasks:
+    - name: Create raw group repository
+      haxorof.sonatype_nexus.nexus_repository_raw_group:
+        state: present
+        name: testgroup
+        group:
+          member_names:
+            - testproxy
+      loop:
+        - change
+        - no_change # Test idempotency
+
+    - name: Delete raw group repository
+      haxorof.sonatype_nexus.nexus_repository_raw_group:
+        state: absent
+        name: testgroup
+      loop:
+        - change
+        - no_change # Test idempotency
+
+  post_tasks:
+    - name: Delete raw proxy repository
+      haxorof.sonatype_nexus.nexus_repository_raw_proxy:
+        state: absent
+        name: testproxy

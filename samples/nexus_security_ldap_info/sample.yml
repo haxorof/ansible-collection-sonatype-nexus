@@ -1,0 +1,22 @@
+---
+- name: Manage Ldap servers connect to this Nexus
+  hosts: localhost
+  become: false
+  gather_facts: false
+  tasks:
+    - name: Get all Ldap servers connect to this Nexus
+      haxorof.sonatype_nexus.nexus_security_ldap_info:
+      register: all_ldap_info_servers
+
+    - name: List all current LDAP servers
+      debug:
+        var: all_ldap_info_servers
+
+    - name: Get Ldap server connect to this Nexus
+      haxorof.sonatype_nexus.nexus_security_ldap_info:
+        ldap_name: secondary
+      register: ldap_info_server
+
+    - name: Debug ldap server
+      debug:
+        var: ldap_info_server

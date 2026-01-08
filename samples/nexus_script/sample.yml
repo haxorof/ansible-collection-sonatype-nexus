@@ -1,0 +1,26 @@
+---
+- name: Manage Nexus scripts on localhost
+  hosts: localhost
+  become: false
+  gather_facts: false
+
+  vars:
+    nexus_script_name: "hello_world"
+
+  tasks:
+    - name: Upload Nexus script
+      haxorof.sonatype_nexus.nexus_script:
+        name: "{{ nexus_script_name }}"
+        content: "println 'Hello, World!'"
+        state: present
+      loop:
+        - change
+        - no_change # Test idempotency
+
+    - name: Delete Nexus script
+      haxorof.sonatype_nexus.nexus_script:
+        name: "{{ nexus_script_name }}"
+        state: absent
+      loop:
+        - change
+        - no_change # Test idempotency

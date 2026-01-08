@@ -1,0 +1,24 @@
+---
+- name: Manage Helm proxy Repositories in Nexus
+  hosts: localhost
+  gather_facts: false
+  tasks:
+    - name: Create Helm proxy repositories
+      haxorof.sonatype_nexus.nexus_repository_helm_proxy:
+        state: present
+        name: testproxy
+        storage:
+          blob_store_name: default
+        proxy:
+          remote_url: https://fabric8.io/helm
+      loop:
+        - change
+        - no_change # Test idempotency
+
+    - name: Delete Helm proxy repositories
+      haxorof.sonatype_nexus.nexus_repository_helm_proxy:
+        state: absent
+        name: testproxy
+      loop:
+        - change
+        - no_change # Test idempotency

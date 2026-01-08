@@ -1,0 +1,22 @@
+---
+- name: Manage NPM proxy Repositories in Nexus
+  hosts: localhost
+  gather_facts: false
+  tasks:
+    - name: Create NPM proxy repositories
+      haxorof.sonatype_nexus.nexus_repository_npm_proxy:
+        state: present
+        name: testproxy
+        proxy:
+          remote_url: https://registry.npmjs.org
+      loop:
+        - change
+        - no_change # Test idempotency
+
+    - name: Delete NPM proxy repositories
+      haxorof.sonatype_nexus.nexus_repository_npm_proxy:
+        state: absent
+        name: testproxy
+      loop:
+        - change
+        - no_change # Test idempotency

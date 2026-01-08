@@ -1,0 +1,21 @@
+---
+- name: Manage RubyGems hosted repository
+  hosts: localhost
+  become: false
+  gather_facts: false
+  tasks:
+    - name: Create RubyGems hosted repository
+      haxorof.sonatype_nexus.nexus_repository_rubygems_hosted:
+        state: present
+        name:  testhosted
+      loop:
+        - change
+        - no_change # Test idempotency
+
+    - name: Delete RubyGems hosted repository
+      haxorof.sonatype_nexus.nexus_repository_rubygems_hosted:
+        state: absent
+        name:  testhosted
+      loop:
+        - change
+        - no_change # Test idempotency

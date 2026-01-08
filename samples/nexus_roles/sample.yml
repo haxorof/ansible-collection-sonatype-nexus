@@ -1,0 +1,48 @@
+---
+- name: Manage Nexus roles
+  hosts: localhost
+  become: false
+  gather_facts: false
+
+  vars:
+    nexus_roles:
+      - id: testrole
+        name: testrole
+        description: "testrole"
+        privileges:
+          - nx-healthcheck-read
+          - nx-search-read
+      - id: testrole-wildcard
+        name: testrole-wildcard
+        description: "testrole-wildcard"
+        privileges:
+          - nx-repository-admin-*-*-*
+          - nx-repository-admin-*-*-browse
+          - nx-repository-admin-maven2-maven-public-*
+
+  tasks:
+    - name: Configure Nexus roles
+      haxorof.sonatype_nexus.nexus_roles:
+        id: "{{ item.id }}"
+        name: "{{ item.name }}"
+        description: "{{ item.description }}"
+        privileges: "{{ item.privileges }}"
+        use_proxy: false
+      loop: "{{ nexus_roles }}"
+
+    - name: Configure same Nexus roles (no change expected)
+      haxorof.sonatype_nexus.nexus_roles:
+        id: "{{ item.id }}"
+        name: "{{ item.name }}"
+        description: "{{ item.description }}"
+        privileges: "{{ item.privileges }}"
+        use_proxy: false
+      loop: "{{ nexus_roles }}"
+
+    - name: Remove Nexus role
+      haxorof.sonatype_nexus.nexus_roles:
+        id: "{{ item.id }}"
+        name: "{{ item.name }}"
+        state: absent
+        use_proxy: false
+      loop: "{{ nexus_roles }}"

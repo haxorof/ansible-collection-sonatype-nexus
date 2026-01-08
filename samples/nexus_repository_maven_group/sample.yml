@@ -1,0 +1,23 @@
+---
+- name: Manage Maven Group Repositories in Nexus
+  hosts: localhost
+  gather_facts: false
+  tasks:
+    - name: Create maven group repository
+      haxorof.sonatype_nexus.nexus_repository_maven_group:
+        state: present
+        name: testgroup
+        group:
+          member_names:
+            - maven-central
+      loop:
+        - change
+        - no_change # Test idempotency
+
+    - name: Delete default group maven repository
+      haxorof.sonatype_nexus.nexus_repository_maven_group:
+        state: absent
+        name: testgroup
+      loop:
+        - change
+        - no_change # Test idempotency

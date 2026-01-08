@@ -6,8 +6,13 @@
 
 from __future__ import absolute_import, division, print_function
 
+# pylint: disable-next=invalid-name
 __metaclass__ = type
 
+from ansible.module_utils.basic import AnsibleModule
+from ansible_collections.haxorof.sonatype_nexus.plugins.module_utils.nexus import (
+    NexusHelper,
+)
 
 DOCUMENTATION = r"""
 ---
@@ -21,18 +26,10 @@ EXAMPLES = r"""
 RETURN = r"""
 """
 
-from ansible.module_utils.basic import AnsibleModule, env_fallback
-from ansible_collections.haxorof.sonatype_nexus.plugins.module_utils.nexus import (
-    NexusHelper,
-)
-
 
 def get_user_token_info(helper):
-    endpoint = "user-tokens"
     info, content = helper.request(
-        api_url=(
-            helper.NEXUS_API_ENDPOINTS[endpoint]
-        ).format(
+        api_url=(helper.NEXUS_API_ENDPOINTS["user-tokens"]).format(
             url=helper.module.params["url"],
         ),
         method="GET",
@@ -47,27 +44,21 @@ def get_user_token_info(helper):
 def main():
     argument_spec = NexusHelper.nexus_argument_spec()
     argument_spec.update(
-        user_id=dict(type="str", required=False, no_log=False),
-        source=dict(type="str", required=False, no_log=False),
+        {
+            "user_id": {"type": "str", "required": False, "no_log": False},
+            "source": {"type": "str", "required": False, "no_log": False},
+        }
     )
     module = AnsibleModule(
         argument_spec=argument_spec,
-        supports_check_mode=True,
+        supports_check_mode=False,
         required_together=[("username", "password")],
     )
 
     helper = NexusHelper(module)
 
-    # Seed the result dict in the object
-    result = dict(
-        changed=False,
-        messages=[],
-        json={},
-    )
-
     content = get_user_token_info(helper)
-    result["json"] = content
-    result["changed"] = False
+    result = NexusHelper.generate_result_struct(False, content)
 
     module.exit_json(**result)
 

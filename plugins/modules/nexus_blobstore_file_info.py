@@ -6,8 +6,16 @@
 
 from __future__ import absolute_import, division, print_function
 
+# pylint: disable-next=invalid-name
 __metaclass__ = type
 
+from ansible.module_utils.basic import AnsibleModule
+from ansible_collections.haxorof.sonatype_nexus.plugins.module_utils.nexus import (
+    NexusHelper,
+)
+from ansible_collections.haxorof.sonatype_nexus.plugins.module_utils import (
+    nexus_blobstore_commons,
+)
 
 DOCUMENTATION = r"""
 ---
@@ -21,33 +29,28 @@ EXAMPLES = r"""
 RETURN = r"""
 """
 
-from ansible.module_utils.basic import AnsibleModule, env_fallback
-from ansible_collections.haxorof.sonatype_nexus.plugins.module_utils.nexus import (
-    NexusHelper,
-    NexusBlobstoreHelper,
-)
 
 def main():
     argument_spec = NexusHelper.nexus_argument_spec()
     argument_spec.update(
-        name=dict(type="str", required=True, no_log=False),
+        name={"type": "str", "required": True, "no_log": False},
     )
     module = AnsibleModule(
         argument_spec=argument_spec,
-        supports_check_mode=True,
+        supports_check_mode=False,
         required_together=[("username", "password")],
     )
 
     helper = NexusHelper(module)
 
     # Seed the result dict in the object
-    result = dict(
-        changed=False,
-        messages=[],
-        json={},
-    )
+    result = {
+        "changed": False,
+        "messages": [],
+        "json": {},
+    }
 
-    result["json"] = NexusBlobstoreHelper.get_blobstore(helper, "file")
+    result["json"] = nexus_blobstore_commons.get_blobstore(helper, "file")
     result["changed"] = False
 
     module.exit_json(**result)

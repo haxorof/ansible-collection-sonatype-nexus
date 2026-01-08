@@ -1,0 +1,23 @@
+---
+- name: Manage pypi proxy repository
+  hosts: localhost
+  become: false
+  gather_facts: false
+  tasks:
+    - name: Create proxy pypi repository
+      haxorof.sonatype_nexus.nexus_repository_pypi_proxy:
+        state: present
+        name: testproxy
+        proxy:
+          remote_url: https://pypi.org/simple
+      loop:
+        - change
+        - no_change # Test idempotency
+
+    - name: Delete pypi proxy repository
+      haxorof.sonatype_nexus.nexus_repository_pypi_proxy:
+        state: absent
+        name: testproxy
+      loop:
+        - change
+        - no_change # Test idempotency

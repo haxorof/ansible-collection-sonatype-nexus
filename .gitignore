@@ -1,7 +1,10 @@
+.venv/
 .env/
 .linuxenv/
+.pylibs/
 nexus3_swagger.json
 nexus3_pro_swagger.json
 samples/start_nexus.sh
 samples/stop_nexus.sh
 _tmp/
+*.pyc

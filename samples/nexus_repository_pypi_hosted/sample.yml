@@ -1,0 +1,21 @@
+---
+- name: Manage pypi hosted repository
+  hosts: localhost
+  become: false
+  gather_facts: false
+  tasks:
+    - name: Create hosted pypi repository
+      haxorof.sonatype_nexus.nexus_repository_pypi_hosted:
+        state: present
+        name:  testhosted
+      loop:
+        - change
+        - no_change # Test idempotency
+
+    - name: Delete pypi hosted repository
+      haxorof.sonatype_nexus.nexus_repository_pypi_hosted:
+        state: absent
+        name:  testhosted
+      loop:
+        - change
+        - no_change # Test idempotency

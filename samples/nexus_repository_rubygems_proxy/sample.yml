@@ -1,0 +1,23 @@
+---
+- name: Manage RubyGems proxy repository
+  hosts: localhost
+  become: false
+  gather_facts: false
+  tasks:
+    - name: Create RubyGems proxy repository
+      haxorof.sonatype_nexus.nexus_repository_rubygems_proxy:
+        state: present
+        name: testproxy
+        proxy:
+          remote_url: https://rubygems.org/
+      loop:
+        - change
+        - no_change # Test idempotency
+
+    - name: Delete RubyGems proxy repository
+      haxorof.sonatype_nexus.nexus_repository_rubygems_proxy:
+        state: absent
+        name: testproxy
+      loop:
+        - change
+        - no_change # Test idempotency

@@ -1,0 +1,46 @@
+---
+- name: Manage http settings
+  hosts: localhost
+  become: false
+  gather_facts: false
+  tasks:
+    - name: Show current system HTTP setting
+      haxorof.sonatype_nexus.nexus_http_info:
+      register: _result
+
+    - name: Print _result
+      ansible.builtin.debug:
+        var: _result
+
+    - name: Update current http settings
+      haxorof.sonatype_nexus.nexus_http:
+        non_proxy_hosts: [
+          "localhost",
+          "127.0.0.*",
+          "*.localdomain",
+          "*.local"
+        ]
+        http_proxy:
+          enabled: true
+          host: "proxy.example.com"
+          port: "8080"
+        https_proxy:
+          enabled: true
+          host: "proxy.example.com"
+          port: "8080"
+      register: _result
+      delegate_to: 127.0.0.1
+
+    - name: Print _result
+      ansible.builtin.debug:
+        var: _result
+
+    - name: Reset http settings
+      haxorof.sonatype_nexus.nexus_http:
+        state: absent
+      register: _result_reset
+      delegate_to: 127.0.0.1
+
+    - name: Print _result_reset
+      ansible.builtin.debug:
+        var: _result_reset

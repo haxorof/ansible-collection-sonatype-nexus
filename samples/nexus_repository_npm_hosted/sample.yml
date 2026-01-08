@@ -1,0 +1,20 @@
+---
+- name: Manage Hosted NPM Repositories in Nexus
+  hosts: localhost
+  gather_facts: false
+  tasks:
+    - name: Create hosted npm repository
+      haxorof.sonatype_nexus.nexus_repository_npm_hosted:
+        state: present
+        name:  testhosted
+      loop:
+        - change
+        - no_change # Test idempotency
+
+    - name: Delete hosted npm repository
+      haxorof.sonatype_nexus.nexus_repository_npm_hosted:
+        state: absent
+        name:  testhosted
+      loop:
+        - change
+        - no_change # Test idempotency

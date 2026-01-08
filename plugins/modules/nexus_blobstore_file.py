@@ -6,8 +6,16 @@
 
 from __future__ import absolute_import, division, print_function
 
+# pylint: disable-next=invalid-name
 __metaclass__ = type
 
+from ansible.module_utils.basic import AnsibleModule
+from ansible_collections.haxorof.sonatype_nexus.plugins.module_utils.nexus import (
+    NexusHelper,
+)
+from ansible_collections.haxorof.sonatype_nexus.plugins.module_utils import (
+    nexus_blobstore_commons,
+)
 
 DOCUMENTATION = r"""
 ---
@@ -21,25 +29,23 @@ EXAMPLES = r"""
 RETURN = r"""
 """
 
-from ansible.module_utils.basic import AnsibleModule, env_fallback
-from ansible_collections.haxorof.sonatype_nexus.plugins.module_utils.nexus import (
-    NexusHelper,
-    NexusBlobstoreHelper,
-)
-
 
 def create_blobstore(helper):
-    endpoint = "blobstores"
     blobstore_type = "file"
     changed = True
+    # FileBlobStoreApiCreateRequest
     data = {
         "softQuota": NexusHelper.camalize_param(helper, "soft_quota"),
         "name": helper.module.params["name"],
-        "path": helper.module.params["name"] if helper.module.params["path"] == None or helper.module.params["path"] == "" else helper.module.params["path"],
+        "path": (
+            helper.module.params["path"]
+            if helper.module.params["path"]
+            else helper.module.params["name"]
+        ),
     }
 
     info, content = helper.request(
-        api_url=(helper.NEXUS_API_ENDPOINTS[endpoint] + "/" + blobstore_type).format(
+        api_url=(helper.NEXUS_API_ENDPOINTS["blobstores"] + "/" + blobstore_type).format(
             url=helper.module.params["url"],
         ),
         method="POST",
@@ -48,18 +54,13 @@ def create_blobstore(helper):
     if info["status"] not in [204]:
         if info["status"] == 403:
             helper.module.fail_json(
-                msg="Insufficient permissions to create blob store '{name}' of type '{type}'.".format(
-                    name=helper.module.params["name"],
-                    type=blobstore_type,
-                )
+                msg=f"Insufficient permissions to create blob store \
+                    '{helper.module.params['name']}' of type '{blobstore_type}'."
             )
         else:
             helper.module.fail_json(
-                msg="Failed to create blob store '{name}', http_status={http_status}, error_msg='{error_msg}'.".format(
-                    name=helper.module.params["name"],
-                    http_status=info["status"],
-                    error_msg=info["msg"],
-                )
+                msg=f"Failed to create blob store '{helper.module.params['name']}', \
+                    http_status={info['status']}, error_msg='{info['msg']}'."
             )
 
     return content, changed
@@ -68,14 +69,28 @@ def create_blobstore(helper):
 def update_blobstore(helper, current_data):
     changed = True
     blobstore_type = "file"
-    endpoint = "blobstores"
+    # FileBlobStoreApiUpdateRequest
     data = {
         "softQuota": NexusHelper.camalize_param(helper, "soft_quota"),
-        "path": helper.module.params["name"] if helper.module.params["path"] == None or helper.module.params["path"] == "" else helper.module.params["path"],
+        "path": (
+            helper.module.params["path"]
+            if helper.module.params["path"]
+            else helper.module.params["name"]
+        ),
     }
-    changed = not helper.is_json_data_equal(data, current_data)
+
+    normalized_data = helper.clean_dict_list(data)
+    normalized_current_data = helper.clean_dict_list(current_data)
+
+    changed = not helper.is_json_data_equal(normalized_data, normalized_current_data[0])
+
+    if changed is False:
+        return current_data, False
+
     info, content = helper.request(
-        api_url=(helper.NEXUS_API_ENDPOINTS[endpoint] + "/" + blobstore_type + "/{name}").format(
+        api_url=(
+            helper.NEXUS_API_ENDPOINTS["blobstores"] + "/" + blobstore_type + "/{name}"
+        ).format(
             url=helper.module.params["url"],
             name=helper.module.params["name"],
         ),
@@ -85,26 +100,17 @@ def update_blobstore(helper, current_data):
     if info["status"] not in [204]:
         if info["status"] == 403:
             helper.module.fail_json(
-                msg="Insufficient permissions to update blob store '{name}' of type '{type}'.".format(
-                    name=helper.module.params["name"],
-                    type=blobstore_type,
-                )
+                msg=f"Insufficient permissions to update blob store '{helper.module.params['name']}' \
+                    of type '{blobstore_type}'."
             )
         elif info["status"] == 404:
             helper.module.fail_json(
-                msg="Blob store '{name}' of type '{type}' not found.".format(
-                    name=helper.module.params["name"],
-                    type=blobstore_type,
-                )
+                msg=f"Blob store '{helper.module.params['name']}' of type '{blobstore_type}' not found."
             )
         else:
             helper.module.fail_json(
-                msg="Failed to update blob store '{name}' of type '{type}', http_status={status}, error_msg='{error_msg}.".format(
-                    name=helper.module.params["name"],
-                    type=blobstore_type,
-                    status=info["status"],
-                    error_msg=info["msg"],
-                )
+                msg=f"Failed to update blob store '{helper.module.params['name']}' of type '{blobstore_type}', \
+                    http_status={info['status']}, error_msg='{info['msg']}."
             )
 
     return content, changed
@@ -113,9 +119,16 @@ def update_blobstore(helper, current_data):
 def main():
     argument_spec = NexusHelper.nexus_argument_spec()
     argument_spec.update(
-        path=dict(type="str", required=False, no_log=False),
+        {
+            "state": {
+                "type": "str",
+                "choices": ["present", "absent"],
+                "default": "present",
+            },
+            "name": {"type": "str", "no_log": False, "required": True},
+        }
     )
-    argument_spec.update(NexusBlobstoreHelper.common_argument_spec())
+    argument_spec.update(nexus_blobstore_commons.file_blob_store_api_model())
     module = AnsibleModule(
         argument_spec=argument_spec,
         supports_check_mode=False,
@@ -125,25 +138,25 @@ def main():
     helper = NexusHelper(module)
 
     # Seed the result dict in the object
-    result = dict(
-        changed=False,
-        name=module.params["name"],
-        state=module.params["state"],
-        messages=[],
-        json={},
-    )
+    result = {
+        "changed": False,
+        "name": module.params["name"],  # type: ignore
+        "state": module.params["state"],  # type: ignore
+        "messages": [],
+        "json": {},
+    }
 
     content = {}
     changed = True
-    existing_blobstore = NexusBlobstoreHelper.get_blobstore(helper, "file")
-    if module.params["state"] == "present":
+    existing_blobstore = nexus_blobstore_commons.get_blobstore(helper, "file")
+    if module.params["state"] == "present":  # type: ignore
         if existing_blobstore:
             content, changed = update_blobstore(helper, existing_blobstore)
         else:
             content, changed = create_blobstore(helper)
     else:
         if existing_blobstore:
-            content, changed = NexusBlobstoreHelper.delete_blobstore(helper)
+            content, changed = nexus_blobstore_commons.delete_blobstore(helper)
         else:
             changed = False
     result["json"] = content

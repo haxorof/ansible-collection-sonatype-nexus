@@ -1,0 +1,4 @@
+### List of Python packages required by collection for development
+ansible-core<2.17
+pylint==4.0.4
+pytest==9.0.2

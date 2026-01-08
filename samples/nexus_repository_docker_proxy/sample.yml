@@ -2,75 +2,38 @@
 - name: Manage Docker proxy repositories
   hosts: localhost
   become: false
-  gather_facts: no
+  gather_facts: false
   tasks:
-  - name: Create Docker proxy repository
-    haxorof.sonatype_nexus.nexus_repository_docker_proxy:
-      url: "{{ nexus_url }}"
-      validate_certs: no
-      username: admin
-      password: admin123
-      state: present
-      name: testrepo
-  #     online: yes
-      storage:
-        blob_store_name: default
-  #       strict_content_type_validation: yes
-  #     cleanup:
-  #       policy_names: [
-  #         "string"
-  #       ]
-      proxy:
-        remote_url: https://registry-1.docker.io
-  #       content_max_age: 1440
-  #       meta_data_max_age: 1440
-  #     negative_cache:
-  #       enabled: yes
-  #       time_to_live: 1440
-  #     http_client:
-  #       blocked: no
-  #       auto_block: yes
-  #       connection:
-  #         retries: 0
-  #         user_agent_suffix: string
-  #         timeout: 60
-  #         enable_circular_redirects: no
-  #         enable_cookies: no
-  #         use_trust_store: no
-  #       authentication:
-  #         type: username
-  #         username: string
-  #         password: string
-  #         ntlmHost: string
-  #         ntlmDomain: string
-  #         preemptive: no
-  #     routing_rule: test
-  #     replication:
-  #       preemptive_pull_enabled: no
-  #       asset_path_regex: string
-  #     docker:
-  #       v1_enabled: no
-  #       force_basic_auth: yes
-  #       http_port: 8082
-  #       https_port": 8083
-  #       subdomain: docker-a
-      docker_proxy:
-        index_type: HUB
-  #       index_url: string
-  #       cache_foreign_layers: yes
-  #       foreign_layer_url_whitelist: [
-  #         "string"
-  #       ]
-    tags:
-      - molecule-idempotence-notest
+    - name: Create docker proxy repository
+      haxorof.sonatype_nexus.nexus_repository_docker_proxy:
+        state: present
+        name: testproxy
+        proxy:
+          remote_url: https://registry-1.docker.io
+        docker_proxy:
+            index_type: HUB
+      loop:
+        - change
+        - no_change # Test idempotency
 
-  - name: Delete Docker proxy repository
-    haxorof.sonatype_nexus.nexus_repository_docker_proxy:
-      url: "{{ nexus_url }}"
-      validate_certs: no
-      username: admin
-      password: admin123
-      name: testrepo
-      state: absent
-    tags:
-      - molecule-idempotence-notest
+    - name: Update docker proxy repository
+      haxorof.sonatype_nexus.nexus_repository_docker_proxy:
+        state: present
+        name: testproxy
+        proxy:
+          remote_url: https://registry-1.docker.io/
+        docker_proxy:
+            index_type: HUB
+      loop:
+        - change
+        - no_change # Test idempotency
+
+    - name: Delete Docker proxy repository
+      haxorof.sonatype_nexus.nexus_repository_docker_proxy:
+        name: "{{ item }}"
+        state: absent
+      loop:
+        - testproxy
+        - testproxy # Test idempotency
+      tags:
+        - molecule-idempotence-notest

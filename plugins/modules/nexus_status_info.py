@@ -6,8 +6,13 @@
 
 from __future__ import absolute_import, division, print_function
 
+# pylint: disable-next=invalid-name
 __metaclass__ = type
 
+from ansible.module_utils.basic import AnsibleModule
+from ansible_collections.haxorof.sonatype_nexus.plugins.module_utils.nexus import (
+    NexusHelper,
+)
 
 DOCUMENTATION = r"""
 ---
@@ -21,21 +26,15 @@ EXAMPLES = r"""
 RETURN = r"""
 """
 
-from ansible.module_utils.basic import AnsibleModule, env_fallback
-from ansible_collections.haxorof.sonatype_nexus.plugins.module_utils.nexus import (
-    NexusHelper,
-)
-
 
 def check_status(helper):
-    endpoint = "status"
     check_type = ""
     if helper.module.params["check_type"] == "writable":
         check_type = "/writable"
     elif helper.module.params["check_type"] == "system":
         check_type = "/check"
     info, content = helper.request(
-        api_url=(helper.NEXUS_API_ENDPOINTS[endpoint] + check_type).format(
+        api_url=(helper.NEXUS_API_ENDPOINTS["status"] + check_type).format(
             url=helper.module.params["url"],
         ),
         method="GET",
@@ -50,28 +49,24 @@ def check_status(helper):
 def main():
     argument_spec = NexusHelper.nexus_argument_spec()
     argument_spec.update(
-        check_type=dict(
-            type="str", choices=["writable", "readable", "system"], default="writable"
-        ),
+        {
+            "check_type": {
+                "type": "str",
+                "choices": ["writable", "readable", "system"],
+                "default": "writable",
+            },
+        }
     )
     module = AnsibleModule(
         argument_spec=argument_spec,
-        supports_check_mode=True,
+        supports_check_mode=False,
         required_together=[("username", "password")],
     )
 
     helper = NexusHelper(module)
 
-    # Seed the result dict in the object
-    result = dict(
-        changed=False,
-        messages=[],
-        json={},
-    )
-
     content = check_status(helper)
-    result["json"] = content
-    result["changed"] = False
+    result = NexusHelper.generate_result_struct(False, content)
 
     module.exit_json(**result)
 

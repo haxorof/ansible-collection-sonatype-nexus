@@ -1,0 +1,16 @@
+---
+- name: Configure Nexus License
+  hosts: localhost
+  become: false
+  gather_facts: false
+  tasks:
+    - name: Get Nexus License Information
+      haxorof.sonatype_nexus.nexus_license_info:
+      register: _nexus_lic_info
+      delegate_to: 127.0.0.1
+
+    # - name: Set Nexus License
+    #   haxorof.sonatype_nexus.nexus_license:
+    #     state: "present"
+    #     license_data: "{{ lookup('ansible.builtin.file', 'sonatype-license.lic') | b64encode}}"
+    #   delegate_to: 127.0.0.1

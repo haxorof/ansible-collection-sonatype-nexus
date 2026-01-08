@@ -2,14 +2,10 @@
 - name: Manage routing rules
   hosts: localhost
   become: false
-  gather_facts: no
+  gather_facts: false
   tasks:
   - name: Create routing rule (block)
     haxorof.sonatype_nexus.nexus_routing_rule:
-      url: "{{ nexus_url }}"
-      validate_certs: no
-      username: admin
-      password: admin123
       name: blockrule
       description: This is a blocking routing rule
       mode: BLOCK
@@ -22,10 +18,6 @@
 
   - name: Create routing rule (allow)
     haxorof.sonatype_nexus.nexus_routing_rule:
-      url: "{{ nexus_url }}"
-      validate_certs: no
-      username: admin
-      password: admin123
       name: allowrule
       description: This is an allow routing rule
       mode: ALLOW
@@ -37,10 +29,6 @@
 
   - name: List routing rules
     haxorof.sonatype_nexus.nexus_routing_rule_info:
-      url: "{{ nexus_url }}"
-      validate_certs: no
-      username: admin
-      password: admin123
     register: _result
 
   - name: Print _result
@@ -49,10 +37,6 @@
 
   - name: Get routing rule blockrule
     haxorof.sonatype_nexus.nexus_routing_rule_info:
-      url: "{{ nexus_url }}"
-      validate_certs: no
-      username: admin
-      password: admin123
       name: blockrule
     register: _result
 
@@ -62,10 +46,6 @@
 
   - name: Delete routing rules
     haxorof.sonatype_nexus.nexus_routing_rule:
-      url: "{{ nexus_url }}"
-      validate_certs: no
-      username: admin
-      password: admin123
       name: "{{ item }}"
       state: absent
     with_items:

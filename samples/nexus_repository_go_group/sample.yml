@@ -1,0 +1,37 @@
+---
+- name: Manage Nexus Go repositories
+  hosts: localhost
+  gather_facts: false
+  pre_tasks:
+    - name: Create Go proxy repository
+      haxorof.sonatype_nexus.nexus_repository_go_proxy:
+        state: present
+        name: testproxy
+        proxy:
+          remote_url: https://proxy.golang.org
+
+  tasks:
+    - name: Create Go group repository
+      haxorof.sonatype_nexus.nexus_repository_go_group:
+        state: present
+        name: testgroup
+        group:
+          member_names:
+          - testproxy
+      loop:
+        - change
+        - no_change # Test idempotency
+
+    - name: Delete Go group repository if exists
+      haxorof.sonatype_nexus.nexus_repository_go_group:
+        state: absent
+        name: testgroup
+      loop:
+        - change
+        - no_change # Test idempotency
+
+  post_tasks:
+    - name: Delete Go proxy repository
+      haxorof.sonatype_nexus.nexus_repository_go_proxy:
+        state: absent
+        name: testproxy

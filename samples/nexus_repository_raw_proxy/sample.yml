@@ -1,0 +1,23 @@
+---
+- name: Manage Raw proxy repository
+  hosts: localhost
+  become: false
+  gather_facts: false
+  tasks:
+    - name: Create Raw proxy repositories
+      haxorof.sonatype_nexus.nexus_repository_raw_proxy:
+        state: present
+        name: testproxy
+        proxy:
+          remote_url: http://mirror.bahnhof.net/pub/almalinux/10.1/isos/x86_64
+      loop:
+        - change
+        - no_change # Test idempotency
+
+    - name: Delete proxy raw repository
+      haxorof.sonatype_nexus.nexus_repository_raw_proxy:
+        state: absent
+        name: testproxy
+      loop:
+        - change
+        - no_change # Test idempotency

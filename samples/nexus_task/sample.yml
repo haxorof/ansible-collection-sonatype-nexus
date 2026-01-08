@@ -1,0 +1,29 @@
+- name: Get Nexus scheduled task info
+  hosts: localhost
+  gather_facts: false
+  vars:
+    nexus_scheduled_tasks:
+      - name: Delete incomplete docker upload-test
+        type: repository.docker.upload-purge
+        frequency:
+          schedule: cron
+          cron_expression: '0 0 0 * * ?'
+        properties:
+          age: 24
+
+  tasks:
+    - name: Create Tasks
+      nexus_task:
+        type: "{{ item.type }}"
+        name: "{{ item.name }}"
+        frequency: "{{ item.frequency }}"
+        properties: "{{ item.properties | default({}) }}"
+        state: present
+      loop: "{{ nexus_scheduled_tasks }}"
+
+    - name: Delete Tasks
+      nexus_task:
+        type: "{{ item.type }}"
+        name: "{{ item.name }}"
+        state: absent
+      loop: "{{ nexus_scheduled_tasks }}"

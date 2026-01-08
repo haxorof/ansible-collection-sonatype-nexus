@@ -1,0 +1,24 @@
+---
+- name: Manage NUGET proxy Repositories in Nexus
+  hosts: localhost
+  gather_facts: false
+  tasks:
+    - name: Create proxy nuget repositories
+      haxorof.sonatype_nexus.nexus_repository_nuget_proxy:
+        state: present
+        name: testproxy
+        proxy:
+          remote_url: https://api.nuget.org/v3/index.json
+        nuget_proxy:
+          nuget_version: V3
+      loop:
+        - change
+        - no_change # Test idempotency
+
+    - name: Delete NuGet proxy repository
+      haxorof.sonatype_nexus.nexus_repository_nuget_proxy:
+        state: absent
+        name: testproxy
+      loop:
+        - change
+        - no_change # Test idempotency

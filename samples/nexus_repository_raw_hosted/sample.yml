@@ -1,0 +1,21 @@
+---
+- name: Manage raw hosted repository
+  hosts: localhost
+  become: false
+  gather_facts: false
+  tasks:
+    - name: Create hosted raw repository
+      haxorof.sonatype_nexus.nexus_repository_raw_hosted:
+        state: present
+        name:  testhosted
+      loop:
+        - change
+        - no_change # Test idempotency
+
+    - name: Delete hosted raw repository
+      haxorof.sonatype_nexus.nexus_repository_raw_hosted:
+        state: absent
+        name:  testhosted
+      loop:
+        - change
+        - no_change # Test idempotency

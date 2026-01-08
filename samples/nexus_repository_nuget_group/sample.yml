@@ -1,0 +1,23 @@
+---
+- name: Manage Nuget group repository
+  hosts: localhost
+  gather_facts: false
+  tasks:
+    - name: Create nuget group repository
+      haxorof.sonatype_nexus.nexus_repository_nuget_group:
+        state: present
+        name: testgroup
+        group:
+          member_names:
+            - nuget.org-proxy
+      loop:
+        - change
+        - no_change # Test idempotency
+
+    - name: Delete nuget group
+      haxorof.sonatype_nexus.nexus_repository_nuget_group:
+        state: absent
+        name: testgroup
+      loop:
+        - change
+        - no_change # Test idempotency

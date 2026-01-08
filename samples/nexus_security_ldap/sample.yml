@@ -1,0 +1,36 @@
+---
+- name: Manage Nexus LDAP Configuration Without Common Vars
+  hosts: localhost
+  gather_facts: false
+  tasks:
+    - name: Create LDAP server primary
+      haxorof.sonatype_nexus.nexus_security_ldap:
+        state: present
+        ldap_name: "primary"
+        ldap_protocol: "ldap"
+        ldap_use_trust_store: false
+        ldap_host: "ldap.example.com"
+        ldap_port: 3635
+        ldap_search_base: "dc=example,dc=com"
+        ldap_auth_scheme: "SIMPLE"
+        ldap_auth_username: "trypass"
+        ldap_auth_password: "secretpassword"
+        ldap_connection_timeout_seconds: 30
+        ldap_connection_retry_delay_seconds: 300
+        ldap_max_incidents_count: 3
+        ldap_user_subtree: true
+        ldap_user_object_class: "user"
+        ldap_user_id_attribute: "sAMAccountName"
+        ldap_user_real_name_attribute: "cn"
+        ldap_user_email_address_attribute: "mail"
+      loop:
+        - change
+        - no_change # Test idempotency
+
+    - name: Remove secondary LDAP server if it exists
+      haxorof.sonatype_nexus.nexus_security_ldap:
+        ldap_name: primary
+        state: absent
+      loop:
+        - change
+        - no_change # Test idempotency

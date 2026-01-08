@@ -1,0 +1,43 @@
+---
+- name: Manage Docker group repository in Nexus
+  hosts: localhost
+  gather_facts: false
+  pre_tasks:
+    - name: Create Docker proxy repository
+      haxorof.sonatype_nexus.nexus_repository_docker_proxy:
+        state: present
+        name: testproxy
+        proxy:
+          remote_url: https://registry-1.docker.io
+        docker_proxy:
+          index_type: HUB
+      tags:
+        - molecule-idempotence-notest
+
+  tasks:
+    - name: Create Docker group repository
+      haxorof.sonatype_nexus.nexus_repository_docker_group:
+        state: present
+        name: testgroup
+        group:
+          member_names:
+            - testproxy
+      loop:
+        - change
+        - no_change # Test idempotency
+
+    - name: Delete Docker group repository
+      haxorof.sonatype_nexus.nexus_repository_docker_group:
+        state: absent
+        name: "{{ item }}"
+      loop:
+        - testgroup
+        - testgroup # Test idempotency
+
+  post_tasks:
+    - name: Delete Docker proxy repository
+      haxorof.sonatype_nexus.nexus_repository_docker_proxy:
+        name: testproxy
+        state: absent
+      tags:
+        - molecule-idempotence-notest

@@ -6,8 +6,13 @@
 
 from __future__ import absolute_import, division, print_function
 
+# pylint: disable-next=invalid-name
 __metaclass__ = type
 
+from ansible.module_utils.basic import AnsibleModule
+from ansible_collections.haxorof.sonatype_nexus.plugins.module_utils.nexus import (
+    NexusHelper,
+)
 
 DOCUMENTATION = r"""
 ---
@@ -21,16 +26,10 @@ EXAMPLES = r"""
 RETURN = r"""
 """
 
-from ansible.module_utils.basic import AnsibleModule, env_fallback
-from ansible_collections.haxorof.sonatype_nexus.plugins.module_utils.nexus import (
-    NexusHelper,
-)
-
 
 def get_anonymous_setting(helper):
-    endpoint = "anonymous"
     info, content = helper.request(
-        api_url=(helper.NEXUS_API_ENDPOINTS[endpoint]).format(
+        api_url=(helper.NEXUS_API_ENDPOINTS["anonymous"]).format(
             url=helper.module.params["url"],
         ),
         method="GET",
@@ -40,9 +39,7 @@ def get_anonymous_setting(helper):
             helper.generic_permission_failure_msg()
         else:
             helper.module.fail_json(
-                msg="Failed to fetch anonymous setting., http_status={status}.".format(
-                    status=info["status"],
-                )
+                msg=f"Failed to fetch anonymous setting., http_status={info['status']}."
             )
     return content
 
@@ -51,22 +48,14 @@ def main():
     argument_spec = NexusHelper.nexus_argument_spec()
     module = AnsibleModule(
         argument_spec=argument_spec,
-        supports_check_mode=True,
+        supports_check_mode=False,
         required_together=[("username", "password")],
     )
 
     helper = NexusHelper(module)
 
-    # Seed the result dict in the object
-    result = dict(
-        changed=False,
-        messages=[],
-        json={},
-    )
-
     content = get_anonymous_setting(helper)
-    result["json"] = content
-    result["changed"] = False
+    result = NexusHelper.generate_result_struct(False, content)
 
     module.exit_json(**result)
 
