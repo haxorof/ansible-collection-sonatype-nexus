@@ -14,6 +14,7 @@ function run_test() {
     export NEXUS_VALIDATE_CERTS=False
     export NEXUS_USERNAME=admin
     export NEXUS_PASSWORD=admin123
+	export ANSIBLE_FORCE_COLOR=True
     ansible-playbook -c local sample.yml
     echo "# END ####### $(pwd)"
     echo "#############"
