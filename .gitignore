@@ -8,3 +8,4 @@ samples/start_nexus.sh
 samples/stop_nexus.sh
 _tmp/
 *.pyc
+ansible_debug.log

@@ -36,12 +36,14 @@ def main():
     NexusRepositoryHelper.generic_repository_proxy_module(
         endpoint_path="/pypi/proxy",
         existing_data_normalization=existing_data_normalization,
+        # Directly maps to PyPiProxyAttributes
         arg_additions={
             "pypi": {
                 "type": "dict",
                 "apply_defaults": True,
                 "options": {
-                    "remove_quarantined": {"type": "bool", "default": True},
+
+                    "remove_quarantined": {"type": "bool", "default": False},
                 },
             },
         },

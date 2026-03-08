@@ -9,10 +9,10 @@ from __future__ import absolute_import, division, print_function
 # pylint: disable-next=invalid-name
 __metaclass__ = type
 
-import re
 from packaging.version import Version
 from ansible.module_utils.basic import AnsibleModule
 from ansible_collections.haxorof.sonatype_nexus.plugins.module_utils.nexus import (
+    NexusVersion,
     NexusHelper,
 )
 
@@ -27,7 +27,7 @@ RETURN = r"""
 """
 
 
-def get_compatibility_notes(nexus_version: str, nexus_edition: str) -> list:
+def get_compatibility_notes(nexus_version: NexusVersion) -> list:
     pro_modules = [
         "nexus_cleanup_policies",
         "nexus_http",
@@ -44,7 +44,7 @@ def get_compatibility_notes(nexus_version: str, nexus_edition: str) -> list:
     #         "'Version Policy' and it will always be 'Release' " +
     #         "(NEXUS-45941 / https://github.com/sonatype/nexus-public/issues/702)."
     #     )
-    if Version(nexus_version) < Version("3.87.0"):
+    if Version(nexus_version.version) < Version("3.87.0"):
         # NEXUS-43742 – Cleanup policies in Sonatype Nexus Repository can
         #               now be created via the REST API for all formats
         #               using "*" as the format value, ensuring support
@@ -52,19 +52,19 @@ def get_compatibility_notes(nexus_version: str, nexus_edition: str) -> list:
         compatibility_notes.append(
             "[3.87.0] nexus_cleanup_policies will not handle '*' format correctly (NEXUS-43742)."
         )
-    if Version(nexus_version) < Version("3.82.0"):
+    if Version(nexus_version.version) < Version("3.82.0"):
         # New Cleanup PoCapabilities API to view, create, update, and delete capabilities.
         compatibility_notes.append(
             "[3.82.0] nexus_capabilities will not work due to missing Capabilities API."
         )
-    if Version(nexus_version) < Version("3.70.0"):
+    if Version(nexus_version.version) < Version("3.70.0"):
         # New Cleanup Policies API.
         # https://help.sonatype.com/en/sonatype-nexus-repository-3-70-0-release-notes.html
         compatibility_notes.append(
             "[3.70.0] nexus_cleanup_policies will not work due to missing Cleanup Policies API."
         )
 
-    if nexus_edition == "COMMUNITY":
+    if nexus_version.edition == "COMMUNITY":
         compatibility_notes.append(
             "Some modules will not work that requires PRO edition of Nexus: "
             + ", ".join(pro_modules)
@@ -72,24 +72,6 @@ def get_compatibility_notes(nexus_version: str, nexus_edition: str) -> list:
         )
 
     return compatibility_notes
-
-
-def get_nexus_version(helper: NexusHelper):
-    info, content = helper.request(
-        api_url=(helper.NEXUS_API_ENDPOINTS["system"] + "/node").format(
-            url=helper.module.params["url"],
-        ),
-        method="GET",
-    )
-    if info["status"] in [200]:
-        content = info["server"]
-    elif info["status"] == 403:
-        helper.generic_permission_failure_msg()
-    else:
-        helper.module.fail_json(
-            msg=f"Failed to Nexus version information, http_status={info['status']}."
-        )
-    return content
 
 
 def main():
@@ -102,21 +84,16 @@ def main():
 
     helper = NexusHelper(module)
     content = {}
-    server_header = get_nexus_version(helper)
-    match = re.search(r"Nexus/([^ ]+) \(([^)]+)\)", str(server_header))
-    if match:
-        nexus_version = match.group(1)
-        nexus_edition = match.group(2)
-        compatibility_notes = get_compatibility_notes(nexus_version, nexus_edition)
+    nexus_version:NexusVersion = helper.get_nexus_version(helper.module.params["url"])
+    if nexus_version:
+        compatibility_notes = get_compatibility_notes(nexus_version)
         content = {
-            "version": nexus_version,
-            "edition": nexus_edition,
+            "version": nexus_version.version,
+            "edition": nexus_version.edition,
             "compatiblity_notes": compatibility_notes,
         }
     else:
-        helper.module.fail_json(
-            msg=f"Unsupported Nexus server information format in HTTP header detected, server_header={server_header}."
-        )
+        helper.module.fail_json(msg="Failed to get Nexus version information.")
 
     result = NexusHelper.generate_result_struct(False, content)
 

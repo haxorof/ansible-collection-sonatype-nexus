@@ -3,6 +3,8 @@ set -euo pipefail
 SCRIPT_DIR="$(cd -P -- "$(dirname -- "${BASH_SOURCE[0]}")" && pwd -P)"
 NEXUS_HOST=${NEXUS_HOST:-"nexus.localdomain"}
 VENV_PATH=${VENV_PATH:-$SCRIPT_DIR/../.linuxenv}
+DEBUG_LOG_PATH=$SCRIPT_DIR
+export DEBUG_LOG_PATH
 
 function run_test() {
     _in_path=$1

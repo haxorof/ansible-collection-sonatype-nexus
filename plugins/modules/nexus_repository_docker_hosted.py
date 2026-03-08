@@ -14,7 +14,6 @@ from ansible_collections.haxorof.sonatype_nexus.plugins.module_utils.nexus impor
 )
 from ansible_collections.haxorof.sonatype_nexus.plugins.module_utils import (
     nexus_repository_docker_commons,
-    nexus_repository_commons,
 )
 
 DOCUMENTATION = r"""
@@ -43,7 +42,6 @@ def docker_hosted_storage_attributes():
 def main():
     NexusRepositoryHelper.generic_repository_hosted_module(
         endpoint_path="/docker/hosted",
-        data_normalization=nexus_repository_commons.hosted_repo_data_normalization,
         arg_additions={
             "docker": nexus_repository_docker_commons.docker_attributes(),
             "storage": docker_hosted_storage_attributes(),

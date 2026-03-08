@@ -12,6 +12,8 @@ __metaclass__ = type
 import copy
 import json
 import time
+import re
+import dataclasses
 import humps
 
 from ansible.module_utils.basic import AnsibleModule
@@ -19,10 +21,18 @@ from ansible.module_utils._text import to_text
 from ansible.module_utils.basic import env_fallback
 from ansible.module_utils.urls import fetch_url, basic_auth_header
 
+from ansible_collections.haxorof.sonatype_nexus.plugins.module_utils import (
+    nexus_repository_commons,
+)
+
 
 def repository_name_filter(item, helper):
     return item["name"] == helper.module.params["name"]
 
+@dataclasses.dataclass
+class NexusVersion:
+    version: str
+    edition: str
 
 class NexusHelper:
     """General Nexus Helper Class"""
@@ -210,9 +220,6 @@ class NexusHelper:
         elif info["status"] == -1:
             self.module.fail_json(msg=info["msg"])
 
-        # For debugging
-        # if info['status'] not in [200]:
-        #     self.module.fail_json(msg="{info} # {content}".format(info=info, content=content))
         return info, content
 
     def is_request_status_ok(self, info) -> bool:
@@ -287,6 +294,37 @@ class NexusHelper:
             return key_deleted, cleaned
         return key_deleted, d
 
+    def get_nexus_version(self, nexus_base_url) -> NexusVersion:
+        """Get Nexus server version and parse it into version and edition"""
+        nexus_version = ""
+        nexus_edition = ""
+        info, _ = self.request(
+            api_url=(self.NEXUS_API_ENDPOINTS["system"] + "/node").format(
+                url=nexus_base_url,
+            ),
+            method="GET",
+        )
+        if info["status"] in [200]:
+            server_header = info["server"]
+            match = re.search(r"Nexus/([^ ]+) \(([^)]+)\)", str(server_header))
+            if match:
+                nexus_version = match.group(1)
+                nexus_edition = match.group(2)
+            else:
+                self.module.fail_json(
+                    msg=f"Unsupported Nexus server information format in HTTP header detected, server_header={server_header}."
+                )
+        elif info["status"] == 403:
+            self.generic_permission_failure_msg()
+        else:
+            self.module.fail_json(
+                msg=f"Failed to Nexus version information, http_status={info['status']}."
+            )
+        return NexusVersion(
+            version = nexus_version,
+            edition = nexus_edition
+        )
+
 
 # pylint: disable-next=too-many-public-methods
 class NexusRepositoryHelper:
@@ -351,6 +389,13 @@ class NexusRepositoryHelper:
                 "metadata_max_age": {"type": "int", "default": 1440},
             },
         }
+
+    @staticmethod
+    def proxy_argument_spec_3_90():
+        """Directly maps to ProxyAttributes"""
+        arg_spec = NexusRepositoryHelper.proxy_argument_spec()
+        arg_spec["options"].update({"preserve_encoded_characters": {"type": "bool", "default": False}})
+        return arg_spec
 
     @staticmethod
     def negative_cache_attributes():
@@ -548,7 +593,7 @@ class NexusRepositoryHelper:
                 normalized_existing_data
             )
         if data_normalization:
-            normalized_data = data_normalization(normalized_data)
+            normalized_data = data_normalization(normalized_data, normalized_existing_data)
         # Delete password from structure because API will never return it.
         got_password = False
         if normalized_data.get("httpClient") and normalized_data[  # type: ignore
@@ -564,8 +609,6 @@ class NexusRepositoryHelper:
         )
         if not changed and not got_password:
             return existing_data, False
-
-        # helper.module.fail_json(msg=f"\n\n{changed}\n\n{normalized_existing_data}\n\n{normalized_data}\n")
 
         info, content = helper.request(
             api_url=(
@@ -641,10 +684,12 @@ class NexusRepositoryHelper:
         return NexusRepositoryHelper.create_repository(helper, endpoint_path, data)
 
     @staticmethod
+    # pylint: disable-next=too-many-arguments,too-many-positional-arguments,too-many-locals
     def generic_repository_proxy_module(
         endpoint_path: str,
         repository_filter=repository_name_filter,
         existing_data_normalization=None,
+        data_normalization=nexus_repository_commons.proxy_repo_data_normalization,
         arg_additions=None,
         request_data_additions=None,
     ):
@@ -659,7 +704,7 @@ class NexusRepositoryHelper:
                 "name": {"type": "str", "no_log": False, "required": True},
                 "http_client": NexusRepositoryHelper.http_client_attributes(),
                 "negative_cache": NexusRepositoryHelper.negative_cache_attributes(),
-                "proxy": NexusRepositoryHelper.proxy_argument_spec(),
+                "proxy": NexusRepositoryHelper.proxy_argument_spec_3_90(),
                 "storage": NexusRepositoryHelper.storage_attributes(),
                 # Optional
                 "cleanup": NexusRepositoryHelper.cleanup_policy_attributes(),
@@ -711,7 +756,12 @@ class NexusRepositoryHelper:
                     data[humps.camelize(k)] = module.params[k]
 
             content, changed = NexusRepositoryHelper.create_update_repository(
-                helper, endpoint_path, data, existing_data, existing_data_normalization
+                helper=helper,
+                endpoint_path=endpoint_path,
+                data=data,
+                existing_data=existing_data,
+                existing_data_normalization=existing_data_normalization,
+                data_normalization=data_normalization
             )
         result = NexusHelper.generate_result_struct(changed, content)
         module.exit_json(**result)
@@ -783,7 +833,7 @@ class NexusRepositoryHelper:
     def generic_repository_hosted_module(
         endpoint_path: str,
         repository_filter=repository_name_filter,
-        data_normalization=None,
+        data_normalization=nexus_repository_commons.hosted_repo_data_normalization,
         existing_data_normalization=None,
         arg_additions=None,
         request_data_additions=None,

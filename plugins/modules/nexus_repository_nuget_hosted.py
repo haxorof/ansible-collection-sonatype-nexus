@@ -12,9 +12,6 @@ __metaclass__ = type
 from ansible_collections.haxorof.sonatype_nexus.plugins.module_utils.nexus import (
     NexusRepositoryHelper,
 )
-from ansible_collections.haxorof.sonatype_nexus.plugins.module_utils import (
-    nexus_repository_commons,
-)
 
 DOCUMENTATION = r"""
 ---
@@ -32,7 +29,6 @@ RETURN = r"""
 def main():
     NexusRepositoryHelper.generic_repository_hosted_module(
         endpoint_path="/nuget/hosted",
-        data_normalization=nexus_repository_commons.hosted_repo_data_normalization,
     )
 
 
