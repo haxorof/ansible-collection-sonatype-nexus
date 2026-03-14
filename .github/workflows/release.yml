@@ -26,6 +26,13 @@ jobs:
         id: get_version
         run: echo "VERSION=${GITHUB_REF#refs/tags/}" >> $GITHUB_OUTPUT
 
+      - name: Update galaxy.yml version
+        run: |
+          sed -i "s/version: .*/version: ${{ steps.get_version.outputs.VERSION }}/" galaxy.yml
+
+      - name: Build Ansible collection (dry-run)
+        run: ansible-galaxy collection build --dry-run
+
       - name: Build Ansible collection
         run: ansible-galaxy collection build
 

@@ -9,7 +9,7 @@ name: sonatype_nexus
 
 # The version of the collection. Must be compatible with semantic versioning
 # Important! Versions below 1.0.0 are subjected to change which can be backward incompatible at any given time.
-version: 0.1.0
+version: 0.0.0-dev
 
 # The path to the Markdown (.md) readme file. This path is relative to the root of the collection
 readme: README.md
