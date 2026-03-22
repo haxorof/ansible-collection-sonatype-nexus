@@ -32,7 +32,7 @@ RETURN = r"""
 def main():
     NexusRepositoryHelper.generic_repository_hosted_module(
         endpoint_path="/maven/hosted",
-        data_normalization=nexus_repository_commons.hosted_repo_data_normalization,
+        request_payload_normalization=nexus_repository_commons.hosted_repo_request_payload_normalization,
         arg_additions={
             "maven": {
                 "type": "dict",

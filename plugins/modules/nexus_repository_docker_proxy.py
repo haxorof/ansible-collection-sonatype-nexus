@@ -29,7 +29,7 @@ RETURN = r"""
 """
 
 
-def existing_data_normalization(input_data):
+def api_response_normalization(input_data):
     if input_data.get("storage"):  # type: ignore
         # Possibly this is returned for Docker proxy repos because it is based
         # on same storage class as Docker hosted repos.
@@ -63,7 +63,7 @@ def docker_proxy_attributes():
 def main():
     NexusRepositoryHelper.generic_repository_proxy_module(
         endpoint_path="/docker/proxy",
-        existing_data_normalization=existing_data_normalization,
+        api_response_normalization=api_response_normalization,
         arg_additions={
             "docker": nexus_repository_docker_commons.docker_attributes(),
             "docker_proxy": docker_proxy_attributes(),

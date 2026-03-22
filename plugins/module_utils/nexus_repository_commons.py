@@ -9,7 +9,7 @@ from __future__ import absolute_import, division, print_function
 # pylint: disable-next=invalid-name
 __metaclass__ = type
 
-def hosted_repo_data_normalization(input_data, existing_data = None):
+def hosted_repo_request_payload_normalization(input_data, existing_data = None):
     # This is required because API in some Nexus versions will only return latestPolicy if
     # writePolicy is set to ALLOW_ONCE (Disable redeploy).
     if input_data.get("storage"):  # type: ignore
@@ -20,7 +20,7 @@ def hosted_repo_data_normalization(input_data, existing_data = None):
             input_data["storage"].pop("latestPolicy", None)  # type: ignore
     return input_data
 
-def proxy_repo_data_normalization(input_data, existing_data = None):
+def proxy_repo_request_payload_normalization(input_data, existing_data = None):
     # preserveEncodedCharacters added since 3.90
     if (
         input_data.get("proxy")  # type: ignore

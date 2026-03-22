@@ -579,8 +579,8 @@ class NexusRepositoryHelper:
         endpoint_path: str,
         data: dict,
         existing_data: dict,
-        existing_data_normalization=None,
-        data_normalization=None,
+        api_response_normalization=None,
+        request_payload_normalization=None,
     ):
         normalized_data = helper.clean_dict_list(data)
         normalized_existing_data = helper.clean_dict_list(existing_data)
@@ -588,12 +588,14 @@ class NexusRepositoryHelper:
         normalized_existing_data.pop("format", None)  # type: ignore
         normalized_existing_data.pop("type", None)  # type: ignore
         normalized_existing_data.pop("url", None)  # type: ignore
-        if existing_data_normalization:
-            normalized_existing_data = existing_data_normalization(
+        if api_response_normalization:
+            normalized_existing_data = api_response_normalization(
                 normalized_existing_data
             )
-        if data_normalization:
-            normalized_data = data_normalization(normalized_data, normalized_existing_data)
+        if request_payload_normalization:
+            normalized_data = request_payload_normalization(
+                normalized_data, normalized_existing_data
+            )
         # Delete password from structure because API will never return it.
         got_password = False
         if normalized_data.get("httpClient") and normalized_data[  # type: ignore
@@ -669,17 +671,17 @@ class NexusRepositoryHelper:
         endpoint_path: str,
         data: dict,
         existing_data: list,
-        existing_data_normalization=None,
-        data_normalization=None,
+        api_response_normalization=None,
+        request_payload_normalization=None,
     ):
         if len(existing_data) > 0:
             return NexusRepositoryHelper.update_repository(
                 helper=helper,
                 endpoint_path=endpoint_path,
                 data=data,
-                data_normalization=data_normalization,
+                request_payload_normalization=request_payload_normalization,
                 existing_data=existing_data[0],
-                existing_data_normalization=existing_data_normalization,
+                api_response_normalization=api_response_normalization,
             )
         return NexusRepositoryHelper.create_repository(helper, endpoint_path, data)
 
@@ -688,8 +690,8 @@ class NexusRepositoryHelper:
     def generic_repository_proxy_module(
         endpoint_path: str,
         repository_filter=repository_name_filter,
-        existing_data_normalization=None,
-        data_normalization=nexus_repository_commons.proxy_repo_data_normalization,
+        api_response_normalization=None,
+        request_payload_normalization=nexus_repository_commons.proxy_repo_request_payload_normalization,
         arg_additions=None,
         request_data_additions=None,
     ):
@@ -760,8 +762,8 @@ class NexusRepositoryHelper:
                 endpoint_path=endpoint_path,
                 data=data,
                 existing_data=existing_data,
-                existing_data_normalization=existing_data_normalization,
-                data_normalization=data_normalization
+                api_response_normalization=api_response_normalization,
+                request_payload_normalization=request_payload_normalization,
             )
         result = NexusHelper.generate_result_struct(changed, content)
         module.exit_json(**result)
@@ -770,7 +772,7 @@ class NexusRepositoryHelper:
     def generic_repository_group_module(
         endpoint_path: str,
         repository_filter=repository_name_filter,
-        existing_data_normalization=None,
+        api_response_normalization=None,
         arg_additions=None,
         request_data_additions=None,
     ):
@@ -822,7 +824,11 @@ class NexusRepositoryHelper:
                     data[humps.camelize(k)] = module.params[k]
 
             content, changed = NexusRepositoryHelper.create_update_repository(
-                helper, endpoint_path, data, existing_data, existing_data_normalization
+                helper=helper,
+                endpoint_path=endpoint_path,
+                data=data,
+                existing_data=existing_data,
+                api_response_normalization=api_response_normalization,
             )
         result = NexusHelper.generate_result_struct(changed, content)
 
@@ -833,8 +839,8 @@ class NexusRepositoryHelper:
     def generic_repository_hosted_module(
         endpoint_path: str,
         repository_filter=repository_name_filter,
-        data_normalization=nexus_repository_commons.hosted_repo_data_normalization,
-        existing_data_normalization=None,
+        request_payload_normalization=nexus_repository_commons.hosted_repo_request_payload_normalization,
+        api_response_normalization=None,
         arg_additions=None,
         request_data_additions=None,
     ):
@@ -891,9 +897,9 @@ class NexusRepositoryHelper:
                 helper=helper,
                 endpoint_path=endpoint_path,
                 data=data,
-                data_normalization=data_normalization,
+                request_payload_normalization=request_payload_normalization,
                 existing_data=existing_data,
-                existing_data_normalization=existing_data_normalization,
+                api_response_normalization=api_response_normalization,
             )
         result = NexusHelper.generate_result_struct(changed, content)
 

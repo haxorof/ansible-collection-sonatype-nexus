@@ -26,7 +26,7 @@ RETURN = r"""
 """
 
 
-def existing_data_normalization(normalized_existing_data):
+def api_response_normalization(normalized_existing_data):
     if normalized_existing_data.get("storage"):  # type: ignore
         normalized_existing_data["storage"].pop("writePolicy", None)  # type: ignore
     return normalized_existing_data
@@ -35,7 +35,7 @@ def existing_data_normalization(normalized_existing_data):
 def main():
     NexusRepositoryHelper.generic_repository_proxy_module(
         endpoint_path="/npm/proxy",
-        existing_data_normalization=existing_data_normalization,
+        api_response_normalization=api_response_normalization,
         arg_additions={
             "npm": {
                 "type": "dict",
