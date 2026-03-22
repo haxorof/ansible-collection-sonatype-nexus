@@ -1,0 +1,22 @@
+---
+- name: WORKAROUND for 3.89.1 and 3.90.1 due to issue https://github.com/sonatype/nexus-public/issues/946
+  hosts: localhost
+  gather_facts: false
+  tasks:
+    - name: GET /v1/repositories for all pre-populated repos in Nexus 3 container image
+      ansible.builtin.uri:
+        url: "{{ lookup('env', 'NEXUS_URL') }}/service/rest/v1/repositories/{{ item }}"
+        method: GET
+        user: "{{ lookup('env', 'NEXUS_USERNAME') | default('admin') }}"
+        password: "{{ lookup('env', 'NEXUS_PASSWORD') | default('admin123') }}"
+        force_basic_auth: true
+        status_code: 200
+        return_content: false
+      loop:
+        - maven-releases
+        - maven-snapshots
+        - maven-central
+        - maven-public
+        - nuget-hosted
+        - nuget.org-proxy
+        - nuget-group

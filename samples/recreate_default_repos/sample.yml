@@ -1,0 +1,115 @@
+---
+- name: Recreate default repositories in Nexus
+  hosts: localhost
+  gather_facts: false
+  tasks:
+    - name: Delete Maven hosted repositories if they exist
+      haxorof.sonatype_nexus.nexus_repository_maven_hosted:
+        state: absent
+        name: "{{ item }}"
+      loop:
+        - maven-releases
+        - maven-snapshots
+
+    - name: Ensure Maven releases hosted repository exists
+      haxorof.sonatype_nexus.nexus_repository_maven_hosted:
+        state: present
+        name: maven-releases
+        maven:
+          version_policy: RELEASE
+        storage:
+          strict_content_type_validation: false
+          write_policy: ALLOW_ONCE
+
+    - name: Ensure Maven snapshots hosted repository exists
+      haxorof.sonatype_nexus.nexus_repository_maven_hosted:
+        state: present
+        name: maven-snapshots
+        maven:
+          version_policy: SNAPSHOT
+        storage:
+          strict_content_type_validation: false
+          write_policy: ALLOW
+
+    - name: Delete Maven proxy repository if it exists
+      haxorof.sonatype_nexus.nexus_repository_maven_proxy:
+        state: absent
+        name: maven-central
+
+    - name: Ensure Maven proxy repository exists
+      haxorof.sonatype_nexus.nexus_repository_maven_proxy:
+        state: present
+        name: maven-central
+        proxy:
+          remote_url: https://repo1.maven.org/maven2/
+          content_max_age: -1
+        storage:
+          strict_content_type_validation: false
+        http_client:
+          auto_block: false
+        maven:
+          layout_policy: PERMISSIVE
+
+    - name: Delete Maven group repository if it exists
+      haxorof.sonatype_nexus.nexus_repository_maven_group:
+        state: absent
+        name: maven-public
+
+    - name: Ensure Maven group repository exists
+      haxorof.sonatype_nexus.nexus_repository_maven_group:
+        state: present
+        name: maven-public
+        group:
+          member_names:
+            - maven-releases
+            - maven-snapshots
+            - maven-central
+        storage:
+          strict_content_type_validation: false
+
+    - name: Delete NuGet hosted repository if it exists
+      haxorof.sonatype_nexus.nexus_repository_nuget_hosted:
+        state: absent
+        name: nuget-hosted
+
+    - name: Ensure NuGet hosted repository exists
+      haxorof.sonatype_nexus.nexus_repository_nuget_hosted:
+        state: present
+        name: nuget-hosted
+        storage:
+          strict_content_type_validation: true
+
+    - name: Delete NuGet proxy repository if it exists
+      haxorof.sonatype_nexus.nexus_repository_nuget_proxy:
+        state: absent
+        name: nuget.org-proxy
+
+    - name: Ensure NuGet proxy repository exists
+      haxorof.sonatype_nexus.nexus_repository_nuget_proxy:
+        state: present
+        name: nuget.org-proxy
+        proxy:
+          remote_url: https://api.nuget.org/v3/index.json
+          content_max_age: 1440
+        nuget_proxy:
+          nuget_version: V3
+        storage:
+          strict_content_type_validation: true
+        http_client:
+          auto_block: false
+
+    - name: Delete NuGet group repository if it exists
+      haxorof.sonatype_nexus.nexus_repository_nuget_group:
+        state: absent
+        name: nuget-group
+
+    - name: Ensure NuGet group repository exists
+      haxorof.sonatype_nexus.nexus_repository_nuget_group:
+        state: present
+        name: nuget-group
+        group:
+          member_names:
+            - nuget-hosted
+            - nuget.org-proxy
+        storage:
+          strict_content_type_validation: true
