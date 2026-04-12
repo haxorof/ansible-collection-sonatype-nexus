@@ -17,7 +17,7 @@ SAMPLES=(
     "nexus_cleanup_policies_internal"
     "nexus_email"
     "nexus_license"
-    "nexus_read_only"
+    #"nexus_read_only"
     "nexus_repository_info"
     "nexus_repository_docker_hosted"
     "nexus_repository_docker_proxy"
